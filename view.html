@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<script src="src/gate.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cob Trip Book — the plan, illustrated</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="food-page">
+
+<main class="ft vw">
+  <header class="ft-hero">
+    <div class="stripe" aria-hidden="true"></div>
+    <nav class="site-nav">
+      <a href="index.html">Route map</a>
+      <a href="food.html">Food tour</a>
+      <a href="activities.html">Activities</a>
+      <a href="shopping.html">Shopping</a>
+      <a href="questions.html">Questions</a>
+      <a href="planner.html">Planner</a>
+      <a href="view.html" aria-current="page">Trip book</a>
+      <a href="overview.html">Overview</a>
+    </nav>
+    <p class="fx" hidden></p>
+    <p class="hero-eyebrow" id="vwEyebrow">the plan, illustrated</p>
+    <h1>Cob<br>Trip<br>Book</h1>
+    <p class="hero-sub" id="vwSub">The plan from the planner, laid out with pictures — for
+      reading on the sofa, printing for the glovebox, or forwarding to whoever asks
+      "so what's the plan?".</p>
+    <div class="hero-actions">
+      <a class="summary-open" href="planner.html" id="vwEdit">Edit in planner ↗</a>
+      <button class="summary-open ov-link" id="vwPrint" type="button">Print / save PDF</button>
+    </div>
+  </header>
+
+  <div id="vwMap" class="vw-map" aria-label="Plan overview map"></div>
+
+  <ol id="vwList" class="ft-list"><!-- built by view.js --></ol>
+
+  <footer class="outro">
+    <div class="stripe" aria-hidden="true"></div>
+    <p id="vwOutro">See you at the oyster shack.</p>
+    <p class="outro-small">Part of Cobs on Tour · photos courtesy of Wikimedia Commons</p>
+  </footer>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script type="module" src="src/view.js"></script>
+</body>
+</html>
