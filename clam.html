@@ -357,11 +357,11 @@
   const pitchforkArm = document.getElementById('pitchforkArm');
   const farmerSpeech = document.getElementById('farmerSpeech');
   const FARMER_RANTS = [
-    'OI!! That’s MY Barbour, that is!',
-    'THIS IS REAL BARBOUR!!',
-    'Forty years I’ve waxed that jacket!',
-    'A CLAM?! In MY jacket?!',
-    'Give it back or I’m calling the coastguard!',
+    'OH LÀ LÀ!! Zat is MY Barbour, zat is!',
+    'ZIS IS REAL BARBOUR!!',
+    'Forty years I ’ave waxed zat jacket! FORTY YEARS!',
+    'A CLAM?! In MY jacket?! Sacrebleu!',
+    'Geev it back or I call ze gendarmes!',
   ];
   let farmerHere = false, farmerTimers = [], rantIdx = 0;
 
@@ -403,7 +403,7 @@
     document.getElementById('steam').setAttribute('opacity', '0');
     // calm face: shut the shouting mouth
     document.getElementById('farmerMouth').setAttribute('ry', '1.5');
-    farmerSay('Hmph. As you were. Lovely scallops, mind.', 2800);
+    farmerSay('Bof. As you were. Magnifique scallops, by ze way.', 2800);
     farmerTimers.push(setTimeout(() => {
       farmer.classList.remove('here');
       farmer.classList.add('leaving');
