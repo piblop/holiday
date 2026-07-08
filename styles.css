@@ -725,6 +725,59 @@ a.summary-open.ov-link:hover { background: var(--ink); color: var(--paper); }
 .ll-nav a:hover { background: rgba(164,33,46,0.08); }
 .ll-cat { scroll-margin-top: 1rem; }
 .ll-maps { text-decoration: none; font-size: 0.72rem; }
+
+/* venue hover card */
+#venueCard {
+  position: fixed;
+  z-index: 3200;
+  width: 280px;
+  background: var(--paper);
+  border: 1px solid rgba(43,38,32,0.25);
+  box-shadow: 0 14px 40px rgba(43,38,32,0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.14s ease;
+}
+#venueCard.show { opacity: 1; }
+#venueCard .vc-photo {
+  margin: 0;
+  aspect-ratio: 16 / 9;
+  background: var(--paper-deep);
+  overflow: hidden;
+  position: relative;
+}
+#venueCard .vc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#venueCard .vc-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  color: rgba(43,38,32,0.35);
+}
+#venueCard .vc-text { padding: 0.6rem 0.75rem 0.7rem; }
+#venueCard h4 {
+  margin: 0 0 0.15rem;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+#venueCard .vc-meta {
+  margin: 0 0 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rioja);
+}
+#venueCard .vc-desc { margin: 0; font-size: 0.78rem; color: var(--ink-soft); }
+@media (hover: none) { #venueCard { display: none; } }
 .ll-cat {
   display: flex;
   gap: 1.2rem;
