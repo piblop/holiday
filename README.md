@@ -2,7 +2,8 @@
 
 Interactive scrollytelling map of the October 2027 trip, built from
 `Spain advice from annette.docx` plus the date-anchored plan (Fri 1 Oct → Fri 22 Oct 2027,
-one direction north→south via La Rochelle).
+one direction north→south via La Rochelle, finishing with the Bamberg beer finale
+before flying home from Frankfurt).
 
 ## Run
 
@@ -31,6 +32,7 @@ the Basque-linen design system.
 
 ## Open decisions (mirrored in the app hero)
 
-1. Bamberg — keep or cut (frees ~3 nights).
+1. ~~Bamberg — keep or cut~~ — **settled**: moved to the end of the trip (Tue 19 – Thu 21 Oct,
+   2 nights minimum), fly Bilbao → Germany, home from Frankfurt Fri 22.
 2. Île de Ré — priciest, most optional.
 3. Rental car one-way France→Spain fee — check, or return the car in France.

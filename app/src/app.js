@@ -120,9 +120,9 @@ function buildSummary() {
       <tbody>${rows}</tbody>
     </table>
     <div class="sm-foot">
-      <p><b>Frame.</b> Depart Sydney Wed 29/Thu 30 Sep 2027 · on the ground Fri 1 Oct · fly Bilbao→Paris→Sydney Fri 22 Oct · land Sun 24 Oct (Mon 25 deadline clear). 21 nights, ~${Math.round(cumKm[cumKm.length - 1])} km as the crow flies.</p>
-      <p><b>Book-now list.</b> ① Leave request 29/30 Sep → 22 Oct. ② Long-haul flights + BIO→CDG hop. ③ Rental car (check France→Spain one-way fee). ④ Etxebarri — alarm for the 1st of the month, target Tue 19 Oct lunch. ⑤ Echaurren El Portal, Wed 20 Oct lunch. ⑥ Hétéroclito Bayonne, sunset table. ⑦ Bordeaux château visits. ⑧ Gaztelugatxe free ticket. ⑨ Watch WSL France dates vs 8–9 Oct.</p>
-      <p><b>Still to decide.</b> Bamberg keep/cut (frees ~3 nights) · Île de Ré keep/drop (Royan covers oysters) · car return country.</p>
+      <p><b>Frame.</b> Depart Sydney Wed 29/Thu 30 Sep 2027 · on the ground Fri 1 Oct · Bamberg finale Tue 19–Thu 21 Oct · fly Frankfurt→Sydney Fri 22 Oct · land Sun 24 Oct (Mon 25 deadline clear). 21 nights, ~${Math.round(cumKm[cumKm.length - 1])} km as the crow flies.</p>
+      <p><b>Book-now list.</b> ① Leave request 29/30 Sep → 22 Oct. ② Long-haul flights, open-jaw: Paris in, Frankfurt out. ③ Rental car (check France→Spain one-way fee). ④ Etxebarri — alarm for the 1st of the month, target Sun 17 Oct lunch. ⑤ Echaurren El Portal, Mon 18 Oct lunch. ⑥ Hétéroclito Bayonne, sunset table Fri 8/Sat 9. ⑦ Bordeaux château visits. ⑧ Gaztelugatxe free ticket. ⑨ Watch WSL France dates vs 6–7 Oct (swap days with Bordeaux if needed). ⑩ Bilbao→Frankfurt/Munich hop + Bamberg hotel.</p>
+      <p><b>Still to decide.</b> Île de Ré keep/drop (Royan covers oysters) · car return country. Bamberg is settled: last stop, 2 nights minimum.</p>
       <p><a class="summary-open food-link" href="food.html">Eat the route → Cob Food Tour ↗</a></p>
     </div>`;
 
