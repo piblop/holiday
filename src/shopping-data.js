@@ -7,7 +7,7 @@ export const SHOPS = [
   {
     name: 'Golden Triangle & Rue Sainte-Catherine',
     town: 'Bordeaux',
-    date: 'Wed 6 – Thu 7 Oct',
+    date: 'Mon 4 – Tue 5 Oct',
     url: maps('Triangle d\'Or Bordeaux boutiques'),
     qs: ['Rue Sainte-Catherine Bordeaux', 'Cours de l\'Intendance Bordeaux', 'Galeries Lafayette'],
     note: 'The Triangle d’Or holds the designer flagships; Rue Sainte-Catherine is Europe’s longest shopping street for everything else. Galeries Lafayette anchors the middle.',
@@ -37,7 +37,7 @@ export const SHOPS = [
   {
     name: 'Surf-brand outlets',
     town: 'Hossegor & Capbreton',
-    date: 'Fri 8 – Sat 9 Oct',
+    date: 'Wed 6 – Thu 7 Oct',
     url: maps('surf shop outlet Soorts-Hossegor'),
     qs: ['Hossegor surfers beach', 'surfboards', 'Capbreton beach'],
     note: 'The European surf industry is headquartered here — Quiksilver, Billabong, Rip Curl and co. run outlet stores between Hossegor and Capbreton. Comp weekend brings pop-ups too.',
@@ -47,7 +47,7 @@ export const SHOPS = [
   {
     name: 'Basque linen: Jean-Vier & Tissage de Luz',
     town: 'Bayonne / Saint-Jean-de-Luz',
-    date: 'Sun 10 – Tue 12 Oct',
+    date: 'Fri 8 – Sun 10 Oct',
     url: maps('Jean-Vier Saint-Jean-de-Luz'),
     qs: ['Saint-Jean-de-Luz rue Gambetta', 'espadrilles', 'Saint-Jean-de-Luz houses'],
     note: 'The striped Basque linen you’ll see on every table, from the two classic houses. Tablecloths, tea towels, deck chairs — the useful souvenir.',
@@ -57,7 +57,7 @@ export const SHOPS = [
   {
     name: 'A proper French beret',
     town: 'Bayonne',
-    date: 'Sun 10 – Mon 11 Oct',
+    date: 'Fri 8 – Sat 9 Oct',
     url: maps('beret shop Bayonne'),
     qs: ['man wearing beret', 'txapela', 'Bayonne cathedral France'],
     note: 'The real ones come from Laulhère (weaving since 1840) and sell through Bayonne and Biarritz hatters. One each for the road-trip photos.',
@@ -67,7 +67,7 @@ export const SHOPS = [
   {
     name: 'Biarritz boutiques, Place Clemenceau',
     town: 'Biarritz',
-    date: 'Sun 10 – Mon 11 Oct',
+    date: 'Fri 8 – Sat 9 Oct',
     url: maps('Place Clemenceau Biarritz boutiques'),
     qs: ['Hôtel du Palais Biarritz', 'Biarritz Sainte-Eugénie', 'Biarritz Grande Plage'],
     note: 'The fancy-shops part Annette mentioned: French and Basque labels around Place Clemenceau and Avenue Édouard VII, plus 64 — the Basque-country brand — for hoodies with the region’s postcode.',
@@ -77,7 +77,7 @@ export const SHOPS = [
   {
     name: 'Espadrilles, made to order',
     town: 'Saint-Jean-de-Luz',
-    date: 'Tue 12 Oct',
+    date: 'Sun 10 Oct',
     url: maps('espadrilles Saint-Jean-de-Luz'),
     qs: ['espadrilles', 'espadrille maker Basque', 'Saint-Jean-de-Luz rue Gambetta'],
     note: 'Rue Gambetta’s makers still hand-stitch espadrilles — pick sole and canvas and they’re done while you eat macarons.',
@@ -87,7 +87,7 @@ export const SHOPS = [
   {
     name: 'Loreak Mendian & the Gros quarter',
     town: 'San Sebastián',
-    date: 'Tue 12 – Thu 14 Oct',
+    date: 'Sun 10 – Tue 12 Oct',
     url: maps('Loreak Mendian San Sebastian'),
     qs: ['San Sebastian Gros', 'clothing boutique interior', 'Zurriola beach'],
     note: 'San Seb’s own label — graphic knits and surf-adjacent basics — plus the independent boutiques of the Gros surf quarter behind Zurriola beach.',
@@ -97,7 +97,7 @@ export const SHOPS = [
   {
     name: 'Balenciaga Museum shop',
     town: 'Getaria',
-    date: 'Fri 15 Oct',
+    date: 'Wed 13 Oct',
     url: maps('Cristobal Balenciaga Museoa Getaria'),
     qs: ['Balenciaga dress museum', 'Cristobal Balenciaga Museoa', 'Getaria Gipuzkoa'],
     note: 'You can’t buy couture, but the museum shop’s books, scarves and prints are the classiest souvenir on the route — from the fishing village that produced fashion’s greatest cutter.',
@@ -107,7 +107,7 @@ export const SHOPS = [
   {
     name: 'El Corte Inglés Gran Vía',
     town: 'Bilbao',
-    date: 'Mon 18 Oct',
+    date: 'Sat 16 Oct',
     url: maps('El Corte Ingles Gran Via Bilbao'),
     qs: ['El Corte Ingles Bilbao', 'department store menswear', 'Gran Via Bilbao'],
     note: 'Annette’s haul-home stop, and the reliable Barbour bet in Spain — the menswear floor usually carries the core waxed and quilted range. Cheese, tins and txakoli in the food hall on the way out.',
@@ -117,7 +117,7 @@ export const SHOPS = [
   {
     name: 'Casco Viejo independents',
     town: 'Bilbao',
-    date: 'Mon 18 Oct',
+    date: 'Sat 16 Oct',
     url: maps('Casco Viejo Bilbao tiendas'),
     qs: ['Casco Viejo Bilbao street', 'Plaza Nueva Bilbao', 'boutique shop window'],
     note: 'The Seven Streets hide Bilbao’s independents — Basque streetwear, txapela (beret) shops and old-school gentleman’s outfitters between the pintxos bars.',
@@ -127,10 +127,10 @@ export const SHOPS = [
   {
     name: 'Cellar-door Rioja',
     town: 'Haro',
-    date: 'Tue 19 Oct',
+    date: 'Sun 17 Oct',
     url: maps('Barrio de la Estacion Haro'),
     qs: ['Rioja wine bottles', 'Lopez de Heredia', 'wine shop Haro'],
-    note: 'The shopping finale: reservas and gran reservas straight from the Barrio de la Estación bodegas at cellar-door prices. Buy the boot-load on the last drive — no more nights to lug it through.',
+    note: 'The Spanish shopping finale: reservas and gran reservas straight from the Barrio de la Estación bodegas at cellar-door prices. Remember the bottles now fly with you to Bamberg on the 19th — buy what the checked bags can carry, bubble-wrap included.',
     cost: 'bottles €10–40 · gran reserva €40+',
     badge: 'liquid souvenirs',
   },

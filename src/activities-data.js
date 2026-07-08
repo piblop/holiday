@@ -7,7 +7,7 @@ export const ACTIVITIES = [
   {
     name: 'Climb the Phare des Baleines',
     town: 'Île de Ré',
-    date: 'Mon 4 Oct',
+    date: 'Sat 2 Oct',
     url: maps('Phare des Baleines Ile de Re'),
     qs: ['Phare des Baleines', 'Ile de Re lighthouse', 'Ile de Re coast'],
     note: '257 steps up the lighthouse at the island’s tip for the full Atlantic sweep, then bikes between the white villages — the island is dead flat and made for it.',
@@ -17,7 +17,7 @@ export const ACTIVITIES = [
   {
     name: 'Talmont-sur-Gironde & Brouage citadel',
     town: 'Royan',
-    date: 'Tue 5 Oct',
+    date: 'Sun 3 Oct',
     url: maps('Talmont-sur-Gironde'),
     qs: ['Talmont-sur-Gironde', 'Brouage citadelle', 'Gironde estuary'],
     note: 'Two detours off the oyster run: the clifftop church hanging over the estuary, and a star-shaped fortress stranded in the marshes.',
@@ -27,7 +27,7 @@ export const ACTIVITIES = [
   {
     name: 'Dune du Pilat',
     town: 'Bordeaux (1 h west)',
-    date: 'Wed 6 – Thu 7 Oct',
+    date: 'Mon 4 – Tue 5 Oct',
     url: maps('Dune du Pilat'),
     qs: ['Dune du Pilat', 'Arcachon bay', 'Banc d Arguin'],
     note: 'Europe’s tallest sand dune — climb the ridge for the Banc d’Arguin panorama, pair with Arcachon oysters on the way back.',
@@ -37,7 +37,7 @@ export const ACTIVITIES = [
   {
     name: 'Médoc château tour & tasting',
     town: 'Bordeaux',
-    date: 'Wed 6 – Thu 7 Oct',
+    date: 'Mon 4 – Tue 5 Oct',
     url: maps('Chateau Margaux Medoc'),
     qs: ['Chateau Margaux', 'Medoc vineyard', 'Bordeaux wine barrels'],
     note: 'Pick two châteaux, not five — one grand cru estate, one family grower. Book visits ahead; harvest may still be running early October.',
@@ -47,7 +47,7 @@ export const ACTIVITIES = [
   {
     name: 'Surf lesson (or watch the pros) at La Gravière',
     town: 'Hossegor',
-    date: 'Fri 8 – Sat 9 Oct',
+    date: 'Wed 6 – Thu 7 Oct',
     url: 'https://www.worldsurfleague.com/events',
     qs: ['Hossegor surf', 'La Graviere wave', 'surfers beach France'],
     note: 'If the WSL comp lands on your weekend, watching from the sand is free and electric. Otherwise take a beginner lesson on the mellower Capbreton side.',
@@ -57,7 +57,7 @@ export const ACTIVITIES = [
   {
     name: 'Basque cheese farm crawl',
     town: 'Bidarray – Cambo-les-Bains',
-    date: 'Sun 10 – Mon 11 Oct',
+    date: 'Fri 8 – Sat 9 Oct',
     url: maps('Fromagerie Agour Helette'),
     qs: ['Ossau-Iraty cheese', 'Basque sheep pastures', 'Espelette peppers drying'],
     note: 'Farm-gate Ossau-Iraty in the hills, then Espelette with its façades strung in drying red peppers. Carry cash, fill the boot.',
@@ -67,7 +67,7 @@ export const ACTIVITIES = [
   {
     name: 'Biarritz lighthouse-to-Le Surfing coastal walk',
     town: 'Biarritz',
-    date: 'Sun 10 – Mon 11 Oct',
+    date: 'Fri 8 – Sat 9 Oct',
     url: maps('Phare de Biarritz'),
     qs: ['Phare de Biarritz', 'Rocher de la Vierge', 'Biarritz coast'],
     note: 'Annette’s walk: from the Phare de Biarritz south along the whole seafront — Grande Plage, Rocher de la Vierge footbridge — finishing inside Le Surfing.',
@@ -77,7 +77,7 @@ export const ACTIVITIES = [
   {
     name: 'Rugby night: Aviron Bayonnais',
     town: 'Bayonne',
-    date: 'Sun 10 – Mon 11 Oct (fixture-dependent)',
+    date: 'Fri 8 – Sat 9 Oct (fixture-dependent)',
     url: maps('Stade Jean Dauger Bayonne'),
     qs: ['Aviron Bayonnais rugby', 'Stade Jean-Dauger', 'rugby match crowd'],
     note: 'Bayonne is a rugby town before anything else — Aviron Bayonnais play Top 14 at Jean-Dauger and home weekends are a festival of blue-and-white, bandas and grilled everything. Check the 2027–28 Top 14 calendar when it drops; Biarritz Olympique (ProD2) is the backup fixture next door.',
@@ -87,7 +87,7 @@ export const ACTIVITIES = [
   {
     name: 'La Rhune summit — cog railway or hike',
     town: 'Ascain (20 min from Saint-Jean-de-Luz)',
-    date: 'Sun 10 – Tue 12 Oct',
+    date: 'Fri 8 – Sun 10 Oct',
     url: maps('Petit train de la Rhune'),
     qs: ['La Rhune train', 'La Rhune summit', 'Pottok ponies'],
     note: 'The Basque country’s sacred mountain: a 1924 wooden cog train rattles to the 905 m summit for a view from Biarritz to Spain, with wild pottok ponies on the slopes. Walkers: up ~2.5 h from Col de Saint-Ignace, train down.',
@@ -97,7 +97,7 @@ export const ACTIVITIES = [
   {
     name: 'Monte Igueldo funicular & vintage funfair',
     town: 'San Sebastián',
-    date: 'Tue 12 Oct — do it first',
+    date: 'Sun 10 Oct — do it first',
     url: 'https://www.monteigueldo.es/',
     qs: ['Monte Igueldo funicular', 'Monte Igueldo view La Concha', 'San Sebastian bay'],
     note: 'The dodgy, hectic 1912 amusement park with the best view of the bay. Go before anything else in San Seb — that’s the instruction.',
@@ -107,7 +107,7 @@ export const ACTIVITIES = [
   {
     name: 'La Concha swim & Peine del Viento',
     town: 'San Sebastián',
-    date: 'Tue 12 – Thu 14 Oct',
+    date: 'Sun 10 – Tue 12 Oct',
     url: maps('Peine del Viento San Sebastian'),
     qs: ['La Concha beach San Sebastian', 'Peine del Viento', 'Ondarreta beach'],
     note: 'Walk the full crescent of one of the world’s great city beaches (swim if October is kind), ending at Chillida’s wind combs bolted into the rocks.',
@@ -117,7 +117,7 @@ export const ACTIVITIES = [
   {
     name: 'Monte Ulia walk to Pasaia',
     town: 'San Sebastián',
-    date: 'Tue 12 – Thu 14 Oct',
+    date: 'Sun 10 – Tue 12 Oct',
     url: maps('Monte Ulia Pasaia coastal path'),
     qs: ['Monte Ulia San Sebastian', 'Pasaia San Juan', 'Basque coast cliffs'],
     note: 'The locals’ walk: from the east end of Zurriola beach over Monte Ulia to the impossibly narrow fishing port of Pasaia San Juan (~2.5 h), grilled fish at the bottom, bus back. The quiet counterweight to the old-town crowds.',
@@ -127,7 +127,7 @@ export const ACTIVITIES = [
   {
     name: 'Getaria–Zarautz clifftop path + Balenciaga Museum',
     town: 'Getaria',
-    date: 'Fri 15 Oct',
+    date: 'Wed 13 Oct',
     url: maps('Cristobal Balenciaga Museoa Getaria'),
     qs: ['Getaria Gipuzkoa', 'Zarautz coast path', 'Balenciaga dress museum'],
     note: '40 minutes above the sea between the two towns, then couture in the fishing village where Balenciaga was born. Walk one way, taxi back.',
@@ -137,7 +137,7 @@ export const ACTIVITIES = [
   {
     name: 'Flysch cliffs walk, Zumaia',
     town: 'Zumaia (15 min past Getaria)',
-    date: 'Fri 15 Oct',
+    date: 'Wed 13 Oct',
     url: maps('Flysch Zumaia Itzurun'),
     qs: ['Zumaia flysch', 'Itzurun beach cliffs', 'Basque Coast Geopark'],
     note: 'Sixty million years of rock strata tilted on their side along Itzurun beach — the Basque Coast Geopark, and another Game of Thrones location. Walk the clifftop stretch towards Deba for an hour at low tide if the schedule allows.',
@@ -147,7 +147,7 @@ export const ACTIVITIES = [
   {
     name: 'Watch the Mundaka left (or paddle Urdaibai)',
     town: 'Mundaka',
-    date: 'Fri 15 – Sat 16 Oct',
+    date: 'Wed 13 – Thu 14 Oct',
     url: maps('Mundaka surf spot'),
     qs: ['Mundaka wave', 'Urdaibai estuary', 'Mundaka harbour'],
     note: 'If a swell runs, one of the best left-hand waves on earth breaks off the church terrace. Flat day? SUP or kayak the Urdaibai biosphere estuary instead.',
@@ -157,7 +157,7 @@ export const ACTIVITIES = [
   {
     name: 'San Juan de Gaztelugatxe hike',
     town: 'Bermeo',
-    date: 'Sun 17 Oct',
+    date: 'Fri 15 Oct',
     url: maps('San Juan de Gaztelugatxe'),
     qs: ['Gaztelugatxe', 'Gaztelugatxe stairs', 'Matxitxako coast'],
     note: '241 steps out along the stone causeway to the hermitage — ring the bell three times at the top. Dragonstone, for the Game of Thrones contingent.',
@@ -167,7 +167,7 @@ export const ACTIVITIES = [
   {
     name: 'Pelota at the frontón',
     town: 'Gernika / Markina',
-    date: 'Fri 15 – Sun 17 Oct',
+    date: 'Wed 13 – Fri 15 Oct',
     url: maps('Jai Alai Gernika fronton'),
     qs: ['Basque pelota fronton', 'jai alai cesta punta', 'pelota vasca'],
     note: 'The world’s fastest ball game, in its homeland. Gernika’s Jai-Alai frontón is a cathedral of cesta punta, and Markina (just inland from Lekeitio) calls itself the "university of pelota" — check local listings for weekend matches; watching amateurs train is free and half the fun.',
@@ -177,7 +177,7 @@ export const ACTIVITIES = [
   {
     name: 'Football: Real Sociedad or Athletic Club',
     town: 'San Sebastián / Bilbao',
-    date: 'likely Sat 16 – Sun 17 Oct',
+    date: 'likely Sat 16 Oct (Bilbao night)',
     url: maps('San Mames Bilbao'),
     qs: ['San Mamés stadium', 'Reale Arena Anoeta', 'La Liga football match'],
     note: 'Two of Spain’s great one-city clubs sit right on the route: Real Sociedad at the Reale Arena and Athletic Club (Basque players only, forever) at San Mamés — "the Cathedral". October usually has an international break early in the month, so the home-game window most likely falls on your 16–17 Oct weekend. Buy from the official club sites when the fixture list firms up; San Mamés also runs stadium tours on non-match days.',
@@ -187,7 +187,7 @@ export const ACTIVITIES = [
   {
     name: 'Cross the Vizcaya Bridge',
     town: 'Portugalete / Getxo',
-    date: 'Sun 17 – Mon 18 Oct',
+    date: 'Fri 15 – Sat 16 Oct',
     url: maps('Puente de Vizcaya Portugalete'),
     qs: ['Vizcaya Bridge', 'Puente Colgante gondola', 'Portugalete'],
     note: 'The world’s oldest transporter bridge, UNESCO-listed — ride the hanging gondola across the ría, or take the high walkway for the view.',
@@ -197,7 +197,7 @@ export const ACTIVITIES = [
   {
     name: 'Guggenheim + Artxanda funicular',
     town: 'Bilbao',
-    date: 'Mon 18 Oct',
+    date: 'Sat 16 Oct',
     url: 'https://www.guggenheim-bilbao.eus/en',
     qs: ['Guggenheim Bilbao', 'Artxanda funicular', 'Bilbao panorama'],
     note: 'Gehry’s titanium ship (and Puppy out front), then the funicular up Artxanda for the city-in-a-bowl panorama. Ribera Market on the way.',
@@ -207,7 +207,7 @@ export const ACTIVITIES = [
   {
     name: 'Barrio de la Estación winery tours',
     town: 'Haro',
-    date: 'Tue 19 Oct',
+    date: 'Sun 17 Oct',
     url: maps('Barrio de la Estacion Haro'),
     qs: ['Haro wineries', 'Rioja barrel cellar', 'La Rioja vineyards autumn'],
     note: 'The densest square kilometre of century-old wineries on earth: López de Heredia, Muga, La Rioja Alta. Tour one, taste at two more. Harvest colours in October.',
@@ -217,11 +217,31 @@ export const ACTIVITIES = [
   {
     name: 'San Millán monasteries (Yuso & Suso)',
     town: 'Ezcaray (30 min)',
-    date: 'Wed 20 – Thu 21 Oct',
+    date: 'Mon 18 Oct',
     url: maps('Monasterio de Yuso San Millan de la Cogolla'),
     qs: ['Monasterio de Yuso', 'Monasterio de Suso', 'San Millan de la Cogolla'],
-    note: 'The UNESCO pair where written Spanish was born — a proper cultural full stop for the trip, between Echaurren recovery meals.',
+    note: 'The UNESCO pair where written Spanish was born — the cultural full stop of the Spanish leg, between Echaurren recovery meals.',
     cost: 'guided tour ~€8',
     badge: 'UNESCO',
+  },
+  {
+    name: 'Bamberg brewery crawl — nine breweries, one small town',
+    town: 'Bamberg',
+    date: 'Tue 19 – Thu 21 Oct',
+    url: maps('Schlenkerla Bamberg'),
+    qs: ['Bamberg Altes Rathaus', 'Schlenkerla Bamberg', 'Bamberg Klein Venedig'],
+    note: 'Schlenkerla → Spezial → Fässla → Mahrs, with the Altes Rathaus, the Dom and Klein Venedig as the walking route between pints. Climb to Altenburg castle or the Spezial-Keller beer garden for the view over all of it. The Franconian Brewery Museum on Michaelsberg is the rainy-hour backup.',
+    cost: 'beers ~€3.50 · museum ~€5',
+    badge: 'Claude pick · the finale',
+  },
+  {
+    name: 'Rollercoasters: Freizeit-Land Geiselwind / Schloss Thurn',
+    town: 'Bamberg (30–45 min)',
+    date: 'Tue 19 – Thu 21 Oct — check calendars',
+    url: maps('Freizeit-Land Geiselwind'),
+    qs: ['Freizeit-Land Geiselwind', 'Erlebnispark Schloss Thurn', 'rollercoaster Franconia'],
+    note: 'The honest answer on coasters: Geiselwind (~45 min east, proper coasters including a boomerang) and family-scale Schloss Thurn (~30 min south) are the only parks in range — but by mid-October both mostly run weekends and Bavarian holidays only, and your dates are Tue–Thu. Check the October calendars before building a day around it; otherwise the thrill quota was already covered at Monte Igueldo. Europa-Park — Germany’s world-class one — is 4 h away and doesn’t fit.',
+    cost: 'Geiselwind ~€30 · Schloss Thurn ~€25',
+    badge: 'check opening days',
   },
 ];

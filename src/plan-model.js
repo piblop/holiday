@@ -40,10 +40,11 @@ export function encodePlanHash(plan) {
 // the suggested plan: every stop of the Cobs route, with the flagship bookings woven in
 export function suggestedPlan() {
   const extrasAfter = {
-    bayonne: [{ type: 'meal', title: 'Hétéroclito — sunset dinner', date: 'Sun 10 or Mon 11 Oct', notes: 'book ahead, outside table', place: 'Bayonne', coords: [43.4929, -1.4748] }],
-    sansebastian: [{ type: 'activity', title: 'Monte Igueldo — do it first', date: 'Tue 12 Oct', notes: 'funicular + the view', place: 'San Sebastián', coords: [43.3219, -2.0058] }],
-    bilbao: [{ type: 'meal', title: 'Asador Etxebarri — the big lunch', date: 'Tue 19 Oct', notes: 'alarm on the 1st of the month', place: 'Axpe', coords: [43.1136, -2.6035] }],
-    ezcaray: [{ type: 'meal', title: 'Echaurren El Portal — 4–5 h lunch', date: 'Wed 20 Oct', notes: 'book 2–4 weeks out', place: 'Ezcaray', coords: [42.3251, -3.0087] }],
+    bayonne: [{ type: 'meal', title: 'Hétéroclito — sunset dinner', date: 'Fri 8 or Sat 9 Oct', notes: 'book ahead, outside table', place: 'Bayonne', coords: [43.4929, -1.4748] }],
+    sansebastian: [{ type: 'activity', title: 'Monte Igueldo — do it first', date: 'Sun 10 Oct', notes: 'funicular + the view', place: 'San Sebastián', coords: [43.3219, -2.0058] }],
+    bilbao: [{ type: 'meal', title: 'Asador Etxebarri — the big lunch', date: 'Sun 17 Oct', notes: 'alarm on the 1st of the month', place: 'Axpe', coords: [43.1136, -2.6035] }],
+    ezcaray: [{ type: 'meal', title: 'Echaurren El Portal — 4–5 h lunch', date: 'Mon 18 Oct', notes: 'book 2–4 weeks out', place: 'Ezcaray', coords: [42.3251, -3.0087] }],
+    bamberg: [{ type: 'meal', title: 'Schlenkerla — Rauchbier & the beer crawl', date: 'Tue 19 – Thu 21 Oct', notes: 'Spezial, Mahrs, Fässla to follow', place: 'Bamberg', coords: [49.8917, 10.8917] }],
   };
   const items = [];
   for (const s of STOPS) {
