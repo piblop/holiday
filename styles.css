@@ -703,8 +703,28 @@ a.summary-open.ov-link:hover { background: var(--ink); color: var(--paper); }
   text-transform: uppercase;
   margin: 0 0 0.4rem;
 }
-.ll-intro { margin: 0 0 1.6rem; font-size: 0.88rem; color: var(--ink-soft); max-width: 60ch; }
+.ll-intro { margin: 0 0 1.1rem; font-size: 0.88rem; color: var(--ink-soft); max-width: 60ch; }
 .ll-intro b { color: var(--rioja); }
+.ll-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0 0 1.4rem;
+}
+.ll-nav a {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rioja);
+  text-decoration: none;
+  border: 1px solid rgba(164,33,46,0.3);
+  border-radius: 999px;
+  padding: 0.18rem 0.6rem;
+}
+.ll-nav a:hover { background: rgba(164,33,46,0.08); }
+.ll-cat { scroll-margin-top: 1rem; }
+.ll-maps { text-decoration: none; font-size: 0.72rem; }
 .ll-cat {
   display: flex;
   gap: 1.2rem;
