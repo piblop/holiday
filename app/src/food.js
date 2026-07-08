@@ -34,9 +34,14 @@ const FLAG = {
   star: '<span class="ll-flag ll-star" title="Michelin star">★</span>',
 };
 
+const slug = (t) => 'll-' + t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+const nav = document.getElementById('localNav');
+nav.innerHTML = LOCAL_LIST.map((cat) => `<a href="#${slug(cat.title)}">${esc(cat.title)}</a>`).join('');
+
 const localEl = document.getElementById('localList');
 localEl.innerHTML = LOCAL_LIST.map(
-  (cat) => `<article class="ll-cat">
+  (cat) => `<article class="ll-cat" id="${slug(cat.title)}">
     <div class="ft-photos ll-photos">${cat.qs
       .map(
         (q, j) => `<figure class="photo ft-photo ${j === 0 ? 'ft-lead' : ''}" data-q="${esc(q)}" data-fb="${esc(cat.area)}" data-j="${j}" title="${esc(q)}">
@@ -48,11 +53,13 @@ localEl.innerHTML = LOCAL_LIST.map(
       <h3>${esc(cat.title)}</h3>
       ${cat.sub ? `<p class="ll-sub">${esc(cat.sub)}</p>` : ''}
       <ul class="ll-spots">${cat.spots
-        .map(
-          (sp) => `<li><a href="${esc(localMaps(`${sp.name} ${sp.area ?? cat.area}`))}" target="_blank" rel="noopener">${esc(sp.name)}</a>${FLAG[sp.flag] ?? ''}${
-            sp.note ? `<span class="ll-note">${esc(sp.note)}</span>` : ''
-          }</li>`
-        )
+        .map((sp) => {
+          const mapsUrl = localMaps(`${sp.name} ${sp.area ?? cat.area}`);
+          const main = sp.url ?? mapsUrl;
+          return `<li><a href="${esc(main)}" target="_blank" rel="noopener">${esc(sp.name)}</a>${FLAG[sp.flag] ?? ''}${
+            sp.url ? `<a class="ll-maps" href="${esc(mapsUrl)}" target="_blank" rel="noopener" title="find on Google Maps">📍</a>` : ''
+          }${sp.note ? `<span class="ll-note">${esc(sp.note)}</span>` : ''}</li>`;
+        })
         .join('')}</ul>
     </div>
   </article>`

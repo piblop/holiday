@@ -308,6 +308,7 @@ export const STOPS = [
       { title: 'Mundaka rivermouth wave', url: maps('Mundaka surf spot'), note: 'watch the famous left from the church terrace if a swell is running', cost: 'free' },
       { title: 'San Nicolás island, Lekeitio', url: maps('Isla de San Nicolas Lekeitio'), note: 'walk out across the seabed at low tide', cost: 'free' },
       { title: 'Gernika (Guernica)', url: maps('Casa de Juntas Gernika'), note: '10 min off-route: the Basque assembly house, the Tree, and the Picasso story', cost: 'free' },
+      { title: 'Portuondo & the Gernika tables (local list)', url: 'food.html#ll-traditional-cooking', note: 'Asador Portuondo in Mundaka; Remenetxe, 1000 Colorau and Baserri Maitea ❤ in Gernika', cost: '€30–60 pp' },
       { title: 'Urdaibai estuary viewpoints', url: maps('Urdaibai mirador'), note: 'the biosphere reserve the coast road threads through', cost: 'free' },
     ],
     booking: 'Book same-day/next-day on Booking.com as you drive — small-town pensións rarely sell out in October.',
@@ -331,6 +332,7 @@ export const STOPS = [
     highlights: [
       { title: 'San Juan de Gaztelugatxe', url: maps('San Juan de Gaztelugatxe'), note: '241 steps out and back — free timed ticket often required, ~1 km walk from the car park', cost: 'free (ticket required)' },
       { title: 'Bermeo canneries', url: maps('conservas Bermeo'), note: 'tinned bonito del norte and anchovies for the boot', cost: '€5–15/tin' },
+      { title: 'Skura — sushi in Bermeo (local list)', url: 'food.html#ll-sushi-ramen-japanese', note: 'top value-for-quality per the insider list — the curveball lunch option', cost: '€25–40 pp' },
       { title: 'Bermeo old port', url: maps('Puerto Viejo Bermeo'), note: 'stacked painted fishermen’s houses around the working harbour', cost: 'free' },
       { title: 'Matxitxako lighthouse', url: maps('Cabo Matxitxako faro'), note: 'the cape between Bermeo and Gaztelugatxe — whale-watch point', cost: 'free' },
     ],
@@ -354,6 +356,7 @@ export const STOPS = [
     annette: 'Definitely visit Plentzia — not touristy, very good, 30 min drive to Bilbao.',
     highlights: [
       { title: 'Plentzia old town & ría', url: maps('Plentzia casco viejo'), note: 'beachfront pintxos, no menu in English', cost: 'pintxos €15–25 pp' },
+      { title: 'Getxo pintxos & tortillas — the local list', url: 'food.html#ll-pintxos-getxo', note: 'Algorta, Neguri and Las Arenas picks from the insider list, all 15 min down the coast', cost: '' },
       { title: 'Vizcaya Bridge (Puente Colgante)', url: maps('Puente de Vizcaya Portugalete'), note: 'UNESCO hanging transporter bridge on the way into Bilbao — ride the gondola across', cost: 'crossing ~€0.55, walkway ~€10' },
     ],
     booking: 'Nothing to book.',
@@ -375,6 +378,7 @@ export const STOPS = [
     desc: 'Close out the coast run in the big city. Go to the Puerto Viejo in Getxo — lots of people go there, it’s great. El Corte Inglés is the high-end mall for cheese, clothes and anything else worth hauling home. And if you can get a booking, Asador Etxebarri in Axpe (an hour inland) is one of the best restaurants on earth — it slots neatly between here and Rioja on the 17th.',
     annette: 'In Bilbao go to Puerto Viejo — lots of people go there, it’s great. Stuart says: Etxebarri. El Corte Inglés for cheese and clothes and anything else.',
     highlights: [
+      { title: 'The local list — 277 Bilbao & Getxo spots', url: 'food.html#local-list', note: 'the insider list on the food tour: pintxos, the tortilla league, txuleta, vermouth, cheesecake', cost: '' },
       { title: 'Asador Etxebarri', url: 'https://www.asadoretxebarri.com/', note: 'Axpe, ~50 min south — everything over the grill, world top-10; on the way to Rioja', cost: 'tasting ~€290 pp + wine' },
       { title: 'Puerto Viejo, Algorta (Getxo)', url: maps('Puerto Viejo Algorta Getxo'), note: 'stacked white fishing quarter full of txakoli bars', cost: 'pintxos €15–30 pp' },
       { title: 'Guggenheim Bilbao', url: 'https://www.guggenheim-bilbao.eus/en', note: 'if the weather turns', cost: '~€18' },
