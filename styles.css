@@ -694,6 +694,67 @@ a.summary-open.ov-link:hover { background: var(--ink); color: var(--paper); }
   .ft-photos { flex-basis: 100%; }
 }
 
+/* ── The local list (Bilbao & Getxo little black book) ── */
+.local-list { padding: 2.4rem 2rem 0; }
+.local-list > h2 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.9rem;
+  text-transform: uppercase;
+  margin: 0 0 0.4rem;
+}
+.ll-intro { margin: 0 0 1.6rem; font-size: 0.88rem; color: var(--ink-soft); max-width: 60ch; }
+.ll-intro b { color: var(--rioja); }
+.ll-cat {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+  padding: 1.3rem 0;
+  border-bottom: 1px solid rgba(43,38,32,0.16);
+}
+.ll-photos { flex: 0 0 200px; }
+.ll-body { flex: 1; min-width: 0; }
+.ll-body h3 {
+  margin: 0 0 0.25rem;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.ll-sub { margin: 0 0 0.6rem; font-size: 0.78rem; color: var(--ink-soft); }
+.ll-spots {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.ll-spots li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  background: rgba(43,38,32,0.05);
+  border: 1px solid rgba(43,38,32,0.14);
+  border-radius: 999px;
+  padding: 0.22rem 0.65rem;
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+.ll-spots a { color: var(--ink); font-weight: 600; text-decoration: none; }
+.ll-spots a:hover { color: var(--rioja); text-decoration: underline; }
+.ll-note { color: var(--ink-soft); font-size: 0.7rem; }
+.ll-flag { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; }
+.ll-fav { color: var(--rioja); }
+.ll-top { color: var(--green); }
+.ll-star { color: var(--gold); font-size: 0.8rem; }
+
+@media (max-width: 640px) {
+  .ll-cat { flex-wrap: wrap; }
+  .ll-photos { flex-basis: 100%; }
+}
+
 /* ── Site nav (sub-pages) ── */
 .site-nav {
   display: flex;

@@ -1,4 +1,5 @@
 import { COURSES } from './food-data.js';
+import { LOCAL_LIST, localMaps } from './local-list-data.js';
 import { esc, loadAllThumbs, initPeek, initFx } from './gallery.js';
 
 initFx();
@@ -23,6 +24,38 @@ list.innerHTML = COURSES.map(
       <p class="ft-cost">${esc(c.cost)}</p>
     </div>
   </li>`
+).join('');
+
+/* ── the local list: Bilbao & Getxo little black book ────── */
+
+const FLAG = {
+  fav: '<span class="ll-flag ll-fav" title="local favourite">❤</span>',
+  top: '<span class="ll-flag ll-top" title="top pick">TOP</span>',
+  star: '<span class="ll-flag ll-star" title="Michelin star">★</span>',
+};
+
+const localEl = document.getElementById('localList');
+localEl.innerHTML = LOCAL_LIST.map(
+  (cat) => `<article class="ll-cat">
+    <div class="ft-photos ll-photos">${cat.qs
+      .map(
+        (q, j) => `<figure class="photo ft-photo ${j === 0 ? 'ft-lead' : ''}" data-q="${esc(q)}" data-fb="${esc(cat.area)}" data-j="${j}" title="${esc(q)}">
+          <div class="ph-fallback">${esc(q.slice(0, 10))}</div>
+        </figure>`
+      )
+      .join('')}</div>
+    <div class="ll-body">
+      <h3>${esc(cat.title)}</h3>
+      ${cat.sub ? `<p class="ll-sub">${esc(cat.sub)}</p>` : ''}
+      <ul class="ll-spots">${cat.spots
+        .map(
+          (sp) => `<li><a href="${esc(localMaps(`${sp.name} ${sp.area ?? cat.area}`))}" target="_blank" rel="noopener">${esc(sp.name)}</a>${FLAG[sp.flag] ?? ''}${
+            sp.note ? `<span class="ll-note">${esc(sp.note)}</span>` : ''
+          }</li>`
+        )
+        .join('')}</ul>
+    </div>
+  </article>`
 ).join('');
 
 loadAllThumbs('.ft-photo');
