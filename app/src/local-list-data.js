@@ -9,7 +9,110 @@ const maps = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURI
 // spot helper: name, default-area maps query built by the renderer unless q given
 const s = (name, opts = {}) => ({ name, ...opts });
 
+// Signature plates for the named, sit-down restaurants — verified from official sites,
+// the Michelin Guide, or reputable regional press. p = approx price where published
+// (/kg for steaks sold by weight). Surfaced in the venue hover card. Tiny pintxo/tortilla
+// bars are deliberately left to their one-line signature note — they publish no menu.
+const M = {
+  nerua: [
+    { d: 'Ventresca de bonito, salsa negra y pil-pil de pimiento verde', p: '€38' },
+    { d: 'Lubina, puré de berros y pimiento verde (sea bass)', p: '€42' },
+    { d: 'Chipirón encebollado (squid with onion)', p: '€42' },
+    { d: 'Ensaladilla rusa con txangurro y gambas rojas', p: '€35' },
+    { d: 'Menú degustación Muina (seasonal tasting)', p: '€110' },
+  ],
+  mina: [
+    { d: 'Salmonete ahumado con coliflor y sidra (smoked red mullet)' },
+    { d: 'Vieira curada en kombu (scallop cured in kombu)' },
+    { d: 'Bacalao con soufflé de pomelo (cod, grapefruit soufflé)' },
+    { d: 'Bonito (Cantabrian bonito tuna)' },
+    { d: 'Menú degustación (local produce)' },
+  ],
+  zarate: [
+    { d: 'Rodaballo a la parrilla (griddled wild turbot)' },
+    { d: 'Kokotxas de merluza al pil-pil' },
+    { d: 'Merluza en salsa verde con berberechos' },
+    { d: 'Txangurro al horno (baked spider crab)' },
+    { d: 'Tartar de atún rojo Balfegó y ostra' },
+  ],
+  atelierEtxanobe: [
+    { d: 'Lasaña fría de anchoas en sopa de tomate' },
+    { d: 'Ajoblanco de trufa con espárrago verde' },
+    { d: 'Merluza con algas, jugo de mejillones y azafrán' },
+    { d: 'Salmonete asado (roasted red mullet)' },
+    { d: 'Menú Chef Atelier (16-course tasting)', p: '€130' },
+  ],
+  eneko: [
+    { d: 'Menú Sutan (‘in flames’ tasting menu)' },
+    { d: 'Ravioli de rabo de buey (oxtail ravioli)' },
+    { d: 'Yema de caserío sobre trigo (farmhouse egg yolk)' },
+    { d: 'Pescados y carnes a la brasa' },
+  ],
+  boroa: [
+    { d: 'Bombón de foie con txakoli Urezti', p: '€24' },
+    { d: 'Merluza a la brasa con almejas en salsa verde', p: '€40' },
+    { d: 'Degustación de bacalao (vizcaína, pil-pil, grilled)', p: '€42' },
+    { d: 'Chipiron a la brasa con esfera de su tinta', p: '€42' },
+    { d: 'Huevo a baja temperatura con setas, foie y trufa', p: '€22' },
+  ],
+  andraMari: [
+    { d: 'Merluza a la koxkera (hake koxkera style)' },
+    { d: 'Ensalada templada de bogavante (warm lobster salad)' },
+    { d: 'Txipiron a la brasa con su tinta' },
+    { d: 'Marmitako (tuna & potato stew)' },
+    { d: 'Lomo de ciervo con boniato, membrillo y cacao (venison)' },
+  ],
+  casaRufo: [
+    { d: 'Txuleta a la brasa (grilled T-bone steak)', p: '€66/kg' },
+    { d: 'Croquetas de huevo caseras' },
+    { d: 'Salmón ahumado en casa (in-house smoked salmon)', p: '€23' },
+    { d: 'Kokotxas de bacalao al pil-pil', p: '€29' },
+    { d: 'Setas salteadas con foie', p: '€27' },
+  ],
+  porrue: [
+    { d: 'Chuleta de ganado mayor (aged beef chop)' },
+    { d: 'Kokotxas a la brasa con polvo de txipi' },
+    { d: 'Pulpo asado sobre patata morada (roasted octopus)' },
+    { d: 'Bogavante con caviar de mostaza (lobster)' },
+    { d: 'Percebes a la brasa (grilled goose barnacles)' },
+  ],
+  losFueros: [
+    { d: 'Gamba blanca de Huelva a la plancha' },
+    { d: 'Bacalao Club Ranero (cod, choricero pepper sauce)' },
+    { d: 'Merluza frita albardada (battered fried hake)' },
+    { d: 'Buñuelos de bacalao (cod fritters)' },
+    { d: 'Grillo (Bilbao’s oldest pintxo)' },
+  ],
+  tamarisesIzarra: [
+    { d: 'Kokotxas de bacalao al pil-pil', p: '€26' },
+    { d: 'Merluza en salsa verde con almejas', p: '€28' },
+    { d: 'Tronco de rodaballo con patata panadera (turbot)', p: '€32' },
+    { d: 'Tronco de pulpo a la brasa con alioli de miel', p: '€28' },
+    { d: 'Chuletón 30 días de maduración', p: '€60/kg' },
+  ],
+  bistroSalitre: [
+    { d: 'Croqueta fluida de jamón (fluid ham croquette)' },
+    { d: 'Tataki de solomillo, mayonesa de mostaza y pimientos asados' },
+    { d: 'Merluza en tempura con caldo de cigala' },
+    { d: 'Ensalada con mayonesa de marisco' },
+  ],
+};
+
 export const LOCAL_LIST = [
+  {
+    title: 'Focus dishes — hunt these down',
+    area: 'Bilbao & coast',
+    sub: 'The signature bites to build the Basque leg around — order these wherever you land, from the shared shortlist.',
+    qs: ['tarta de queso Basque cheesecake', 'txangurro spider crab', 'txakoli Basque white wine pour'],
+    spots: [
+      s('Tarta de queso', { flag: 'fav', note: 'Basque burnt cheesecake — the headline dessert of the whole trip' }),
+      s('Pintxo de foie con setas', { note: 'seared foie gras with wild mushrooms on toast' }),
+      s('Txakoli', { note: 'the young, faintly fizzy Basque white — poured tall; the coast’s house drink' }),
+      s('Rabas', { flag: 'top', area: 'Bermeo', note: 'fried squid strips on the Bermeo harbour — lands on the Fri 15 Oct coast run' }),
+      s('Pintxo de txangurro', { area: 'Bilbao', note: 'spider-crab pintxo — a Bilbao classic' }),
+      s('Bistro Salitre', { flag: 'top', area: 'Abando Bilbao', note: 'the Bilbao steak pick — txuleta on Henao Kalea 28', url: 'https://maps.app.goo.gl/1R8m26oBESrBkcch8', menu: M.bistroSalitre }),
+    ],
+  },
   {
     title: 'Pintxos · Bilbao',
     area: 'Bilbao',
@@ -151,15 +254,15 @@ export const LOCAL_LIST = [
     sub: 'The dressed-up Basque tables — stars marked.',
     qs: ['Basque haute cuisine plating', 'Azurmendi restaurant', 'Bilbao fine dining'],
     spots: [
-      s('Porrue', { url: 'https://www.porrue.com' }),
-      s('Los Fueros', { flag: 'fav', url: 'https://www.losfueros.com' }),
+      s('Porrue', { url: 'https://www.porrue.com', menu: M.porrue }),
+      s('Los Fueros', { flag: 'fav', url: 'https://www.losfueros.com', menu: M.losFueros }),
       s('Martxo'), s('Basuki'), s('Zapirain'),
-      s('Zarate', { flag: 'star', url: 'https://zaratejatetxea.com' }),
-      s('Atelier Etxanobe', { url: 'https://www.etxanobe.com' }), s('La Despensa del Etxanobe'),
-      s('Mina', { flag: 'star', url: 'https://www.restaurantemina.es' }), s('Islares'), s('Aitor Rauleaga'),
+      s('Zarate', { flag: 'star', url: 'https://zaratejatetxea.com', menu: M.zarate }),
+      s('Atelier Etxanobe', { url: 'https://www.etxanobe.com', menu: M.atelierEtxanobe }), s('La Despensa del Etxanobe'),
+      s('Mina', { flag: 'star', url: 'https://www.restaurantemina.es', menu: M.mina }), s('Islares'), s('Aitor Rauleaga'),
       s('Txanda', { area: 'Bilbao La Vieja', note: 'new' }),
       s('Azurmendi', { flag: 'star', area: 'Larrabetzu', note: '★★★', url: 'https://azurmendi.restaurant' }),
-      s('Eneko', { flag: 'star', area: 'Larrabetzu', url: 'https://eneko.restaurant' }),
+      s('Eneko', { flag: 'star', area: 'Larrabetzu', url: 'https://eneko.restaurant', menu: M.eneko }),
       s('Bakea', { flag: 'star', area: 'Mungia' }), s('La Revelia', { flag: 'star', area: 'Amorebieta' }),
     ],
   },
@@ -173,11 +276,11 @@ export const LOCAL_LIST = [
       s('Restaurante Trueba'), s('Grand Prix', { flag: 'top', note: 'value' }),
       s('Bikandi', { note: 'the classics' }), s('Río Oja', { note: 'traditional Basque' }),
       s('Asador Indusi'), s('Petit Komite', { flag: 'top', area: 'Galdakao' }),
-      s('Boroa', { flag: 'star', area: 'Amorebieta', note: '❤ local favourite', url: 'https://www.boroa.com' }),
+      s('Boroa', { flag: 'star', area: 'Amorebieta', note: '❤ local favourite', url: 'https://www.boroa.com', menu: M.boroa }),
       s('Asador Portuondo', { area: 'Mundaka', note: 'on the Mundaka stop!' }),
       s('Remenetxe', { area: 'Gernika' }), s('1000 Colorau', { area: 'Gernika' }),
       s('Baserri Maitea', { area: 'Gernika', note: '❤ local favourite' }),
-      s('Andra Mari', { flag: 'star', area: 'Galdakao', url: 'https://www.andra-mari.com' }), s('Aretxondo', { area: 'Galdakao' }),
+      s('Andra Mari', { flag: 'star', area: 'Galdakao', url: 'https://www.andra-mari.com', menu: M.andraMari }), s('Aretxondo', { area: 'Galdakao' }),
       s('Sikera', { flag: 'top', area: 'Barakaldo' }),
     ],
   },
@@ -187,7 +290,7 @@ export const LOCAL_LIST = [
     sub: '',
     qs: ['Tamarises Getxo', 'Getxo restaurant terrace', 'grilled fish Basque'],
     spots: [
-      s('Tamarises Izarra', { url: 'https://www.tamarisesizarra.com' }), s('Gure Etxea Jatetxea'),
+      s('Tamarises Izarra', { url: 'https://www.tamarisesizarra.com', menu: M.tamarisesIzarra }), s('Gure Etxea Jatetxea'),
       s('Basalbo', { note: 'best-value menú del día' }), s('Itsasgane'), s('Asador Borda'),
       s('Itxas Bide', { area: 'Puerto Viejo Getxo' }), s('Regi Jatetxea', { area: 'Urduliz' }),
       s('Beheko Sue', { flag: 'top', area: 'Mungia', note: 'street food, burgers & pizzas, top prices' }),
@@ -199,8 +302,8 @@ export const LOCAL_LIST = [
     sub: 'Where the steak money goes.',
     qs: ['txuleta steak grill', 'chuleton de buey', 'asador coals'],
     spots: [
-      s('Kantal'), s('Casa Rufo', { url: 'https://www.casarufo.com' }), s('Sukalde'),
-      s('Porrue', { url: 'https://www.porrue.com' }), s('Asador Kerren'),
+      s('Kantal'), s('Casa Rufo', { url: 'https://www.casarufo.com', menu: M.casaRufo }), s('Sukalde'),
+      s('Porrue', { url: 'https://www.porrue.com', menu: M.porrue }), s('Asador Kerren'),
       s('Asador Etxebarri', { flag: 'top', area: 'Atxondo', note: 'expensive — already the Sun 17 target', url: 'https://www.asadoretxebarri.com' }),
       s('Gure Etxea', { area: 'Getxo' }), s('El Bar de Rafa', { area: 'Getxo' }),
       s('Asador Borda', { area: 'Getxo' }), s('Basanta', { flag: 'top', area: 'Getxo', note: 'value' }),
@@ -213,8 +316,8 @@ export const LOCAL_LIST = [
     sub: '',
     qs: ['fusion cuisine plating', 'Nerua Bilbao', 'modern restaurant Bilbao'],
     spots: [
-      s('Nerua', { flag: 'top', url: 'https://www.neruaguggenheimbilbao.com' }), s('Lasai', { flag: 'top' }),
-      s('Mina', { url: 'https://www.restaurantemina.es' }),
+      s('Nerua', { flag: 'top', url: 'https://www.neruaguggenheimbilbao.com', menu: M.nerua }), s('Lasai', { flag: 'top' }),
+      s('Mina', { url: 'https://www.restaurantemina.es', menu: M.mina }),
       s('Kimtxu', { flag: 'fav' }), s('Monocromo', { flag: 'top' }),
       s('Solo Gastrotaska', { flag: 'top', note: 'Monocromo’s tapas version' }),
       s('Bodeguita del 12'), s('Kokken'), s('Al Margen', { flag: 'top', area: 'Casco Viejo Bilbao' }),

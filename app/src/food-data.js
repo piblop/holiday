@@ -1,6 +1,7 @@
 // COB FOOD TOUR — every meal worth planning around, in route order.
 // Mix of Annette's picks, Stuart's picks, and the Michelin heavy-hitters along the way.
 // stars: Michelin stars (0 = none needed), q: image search query for the thumbnail.
+// menu: signature plates (verified from official sites / reputable sources); p = approx price where published.
 
 const maps = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 
@@ -15,6 +16,13 @@ export const COURSES = [
     note: 'The baseline plate. Huge, fresh, flavour-loaded — eaten at the producer’s shack on the channel.',
     cost: 'dozen €12–20',
     badge: 'Annette pick',
+    menu: [
+      { d: 'Huîtres Marennes-Oléron' },
+      { d: 'Fine de claire (lean, terroir oyster)' },
+      { d: 'Spéciale de claire IGP (plumper, intense)' },
+      { d: 'Assiette d’huîtres au vin blanc' },
+      { d: 'Pineau des Charentes (local aperitif)' },
+    ],
   },
   {
     name: 'La Tupina',
@@ -26,6 +34,14 @@ export const COURSES = [
     note: 'The old-guard institution of southwest France: duck fat, open fire, shirt-straining portions. The Bordeaux big lunch.',
     cost: '€50–80 pp',
     badge: 'classic',
+    menu: [
+      { d: 'Magret de canard grillé à la cheminée', p: '€29' },
+      { d: 'Frites à la graisse de canard' },
+      { d: 'Poulet rôti fermier', p: '€31' },
+      { d: 'Chateaubriand à la bordelaise', p: '€37' },
+      { d: 'Cassoulet chalossais', p: '€37' },
+      { d: 'Macaronade (foie gras & cep)', p: '€30' },
+    ],
   },
   {
     name: 'Port de Capbreton seafood shacks',
@@ -37,6 +53,13 @@ export const COURSES = [
     note: 'Oysters between surf heats — and mussels the size of your head.',
     cost: '€20–35 pp',
     badge: 'Annette pick',
+    menu: [
+      { d: 'Parillada (mixed grilled fish)' },
+      { d: 'Sardines grillées' },
+      { d: 'Chipirons à la plancha' },
+      { d: 'Gambas à la plancha' },
+      { d: 'Moules' },
+    ],
   },
   {
     name: 'Hétéroclito',
@@ -59,6 +82,14 @@ export const COURSES = [
     note: 'Graze the market in the morning, then txuleta at Bar Jean next door — pricey but good, like fancy.',
     cost: 'txuleta €50–70 pp',
     badge: 'Annette pick',
+    menu: [
+      { d: 'Chipirons à l’encre (squid in ink)' },
+      { d: 'Croquettes de jambon' },
+      { d: 'Gambas à la plancha' },
+      { d: 'Jambon ibérique' },
+      { d: 'Foie gras aux pruneaux' },
+      { d: 'Axoa de veau (Basque veal stew)' },
+    ],
   },
   {
     name: 'Grillerie du Port',
@@ -70,6 +101,12 @@ export const COURSES = [
     note: 'Whole sardines and tuna over coals, on the quay of the prettiest port in France. Macarons from Maison Adam after.',
     cost: '€20–35 pp',
     badge: 'last lunch in France',
+    menu: [
+      { d: 'Sardines grillées' },
+      { d: 'Thon à la plancha (griddled tuna)' },
+      { d: 'Moules' },
+      { d: 'Piperade' },
+    ],
   },
   {
     name: 'Old-town pintxos crawl (Bar Néstor → La Cuchara → Gandarias)',
@@ -81,6 +118,12 @@ export const COURSES = [
     note: 'Bar Néstor for the tomato salad and tortilla (put your name down early — this is the tomato-salad commandment fulfilled), then work outward one pintxo and one txakoli per bar.',
     cost: '€30–50 pp per crawl',
     badge: 'tomato salads',
+    menu: [
+      { d: 'Tortilla de patatas' },
+      { d: 'Txuleta (aged beef steak)' },
+      { d: 'Ensalada de tomate' },
+      { d: 'Pimientos de Gernika' },
+    ],
   },
   {
     name: 'The clam stop — txirlak a la marinera',
@@ -92,6 +135,13 @@ export const COURSES = [
     note: 'Basque clams come in salsa verde — white wine, garlic, parsley, clam juice — and Gandarias in the old town is the name for them (it’s already on the pintxos crawl; sit down and order the ración). Alternates: Bare Bare for clams and razor clams, or La Rampa on the port with a terrace over the fishing boats. Bread for the sauce is not optional.',
     cost: 'ración €15–25',
     badge: 'clam mission',
+    menu: [
+      { d: 'Almejas a la marinera (clams marinière)' },
+      { d: 'Solomillo (sirloin pintxo)' },
+      { d: 'Carrillera (braised cheek)' },
+      { d: 'Foie a la plancha' },
+      { d: 'Croquetas de jamón' },
+    ],
   },
   {
     name: 'La Viña — burnt Basque cheesecake',
@@ -103,6 +153,9 @@ export const COURSES = [
     note: 'Where the burnt cheesecake was invented. Best cheesecake on the planet, per Annette. Non-negotiable.',
     cost: 'slice ~€6',
     badge: 'Annette pick',
+    menu: [
+      { d: 'Tarta de queso (Basque burnt cheesecake)', p: '€5 ración / €45 whole' },
+    ],
   },
   {
     name: 'Arzak',
@@ -114,6 +167,12 @@ export const COURSES = [
     note: 'Father-and-daughter three-star that started New Basque Cuisine. The splash-out option if Etxebarri doesn’t come through.',
     cost: 'tasting ~€310 pp',
     badge: '★★★ option',
+    menu: [
+      { d: 'Huevo cristalizado (the Arzak egg)' },
+      { d: 'Kokotxas de merluza' },
+      { d: 'Gamba con krill (scarlet prawn)' },
+      { d: 'Pichón asado (roast pigeon)' },
+    ],
   },
   {
     name: 'Mountain sagardotegi (cider house)',
@@ -125,6 +184,13 @@ export const COURSES = [
     note: 'Cod omelette, txuleta, cheese with quince, catch-your-own cider from the barrel. Ask locals, drive to the most remote one. Confirm October opening — classic season is Jan–Apr.',
     cost: 'set feast €40–50 pp',
     badge: 'Annette pick · call ahead',
+    menu: [
+      { d: 'Tortilla de bacalao (salt-cod omelette)' },
+      { d: 'Bacalao con pimientos' },
+      { d: 'Txuleta (charcoal-grilled beef rib)' },
+      { d: 'Queso con membrillo y nueces' },
+      { d: 'Sagardoa (Basque cider, txotx)' },
+    ],
   },
   {
     name: 'Bodegón Asador Joxe Mari',
@@ -136,6 +202,13 @@ export const COURSES = [
     note: 'Stuart’s call: whole wild fish over coals on the riverfront. Sold by weight — confirm the price when ordering.',
     cost: '€50–80 pp with wine',
     badge: 'Stuart pick',
+    menu: [
+      { d: 'Besugo a la parrilla (grilled sea bream)' },
+      { d: 'Txuleta (grilled T-bone steak)' },
+      { d: 'Pimientos caramelizados' },
+      { d: 'Chipirones de anzuelo (hook-caught squid)' },
+      { d: 'Sopa de pescado' },
+    ],
   },
   {
     name: 'Elkano',
@@ -147,6 +220,13 @@ export const COURSES = [
     note: 'The most famous grilled turbot on earth — one star, whole fish over coals, same tradition as Joxe Mari dialled to eleven. Pick one of the two.',
     cost: 'turbot ~€150–200 pp',
     badge: '★ option',
+    menu: [
+      { d: 'Rodaballo a la parrilla (grilled turbot)' },
+      { d: 'Kokotxas a la brasa' },
+      { d: 'Kokotxas rebozadas' },
+      { d: 'Kokotxas en salsa' },
+      { d: 'Lenguado a la parrilla (grilled sole)' },
+    ],
   },
   {
     name: 'Asador Etxebarri',
@@ -158,6 +238,14 @@ export const COURSES = [
     note: 'Everything — even the ice cream — touched by wood fire. Perennial world top-5. Reservations open the 1st of the month and vanish in minutes: set the alarm.',
     cost: 'tasting ~€290 pp + wine',
     badge: '★ · Stuart pick · alarm required',
+    menu: [
+      { d: 'Chuleta de vaca (grilled beef chop)' },
+      { d: 'Gambas de Palamós (grilled red prawns)' },
+      { d: 'Anchoa al salazón (house-cured anchovy)' },
+      { d: 'Mantequilla ahumada de cabra (smoked goat butter)' },
+      { d: 'Chorizo casero' },
+      { d: 'Kokotxas de merluza' },
+    ],
   },
   {
     name: 'Azurmendi',
@@ -169,6 +257,13 @@ export const COURSES = [
     note: 'Eneko Atxa’s three-star eco-temple in the txakoli vines. The backup splash-out if the Etxebarri alarm fails.',
     cost: 'tasting ~€250 pp',
     badge: '★★★ option',
+    menu: [
+      { d: 'Huevo trufado (truffled egg yolk)' },
+      { d: 'Menú Adarrak (tasting menu)', p: '€315' },
+      { d: 'Pícnic de bienvenida (welcome picnic)' },
+      { d: 'Brioche de bacalao (salt-cod brioche)' },
+      { d: 'La Mesa de la Trufa (truffle table)' },
+    ],
   },
   {
     name: 'Puerto Viejo txakoli bars',
@@ -180,6 +275,13 @@ export const COURSES = [
     note: 'Annette’s Bilbao order: the stacked white fishing quarter, anchovies and txakoli poured from height.',
     cost: '€15–30 pp',
     badge: 'Annette pick',
+    menu: [
+      { d: 'Anchoas (Cantabrian anchovies)' },
+      { d: 'Gilda (pepper, olive & anchovy pintxo)' },
+      { d: 'Txakoli (local white wine)' },
+      { d: 'Talo con chistorra (corn flatbread with sausage)' },
+      { d: 'Marmitako (tuna & potato stew)' },
+    ],
   },
   {
     name: 'La Vieja Bodega',
@@ -191,6 +293,14 @@ export const COURSES = [
     note: 'Traditional Spanish cooking in a 16th-century cellar — so good people literally fly in to eat here. The food flips: lamb, chorizo, lentils, chickpeas.',
     cost: '€45–65 pp',
     badge: 'Annette pick · book',
+    menu: [
+      { d: 'Cochinillo al horno de leña (wood-oven suckling pig)' },
+      { d: 'Cordero lechal asado (roast suckling lamb)' },
+      { d: 'Pochas estofadas (stewed white beans)' },
+      { d: 'Caparrones (Riojan red beans)' },
+      { d: 'Pisto riojano con bacalao' },
+      { d: 'Carrillera braseada (braised beef cheek)' },
+    ],
   },
   {
     name: 'Lamb chops al sarmiento',
@@ -202,6 +312,14 @@ export const COURSES = [
     note: 'Baby lamb chops flash-grilled over burning vine cuttings — Rioja’s signature smoke. Any asador in town.',
     cost: '€25–40 pp',
     badge: 'regional rite',
+    menu: [
+      { d: 'Chuletillas al sarmiento (lamb chops over vine cuttings)' },
+      { d: 'Patatas a la riojana (potatoes with chorizo)' },
+      { d: 'Pimientos rellenos (stuffed peppers)' },
+      { d: 'Bacalao a la riojana' },
+      { d: 'Cordero lechal asado' },
+      { d: 'Menestra de verduras (vegetable stew)' },
+    ],
   },
   {
     name: 'Echaurren — El Portal',
@@ -213,6 +331,14 @@ export const COURSES = [
     note: 'The hectic-but-humble family two-star. The 4–5 hour lunch. The most excellent croquettes on the planet live in the casual Tradición room. Walk the river after, go home, pass out.',
     cost: 'tasting €150–200 · Tradición €60–80',
     badge: '★★ · Annette pick · book 2–4 wks',
+    menu: [
+      { d: 'Croquetas de Marisa' },
+      { d: 'Merluza a la romana (battered hake)' },
+      { d: 'Callos con morro a la riojana' },
+      { d: 'Cordero en salsa' },
+      { d: 'Pimientos de cristal' },
+      { d: 'Manitas de cordero (lamb trotters)' },
+    ],
   },
   {
     name: 'Hotel Casa Masip',
@@ -224,6 +350,14 @@ export const COURSES = [
     note: 'The follow-up meal: more traditional, more reasonable, exactly what the body wants after El Portal — a light dinner before Tuesday’s flight to Germany.',
     cost: 'menu €35–50 pp',
     badge: 'Annette pick',
+    menu: [
+      { d: 'Pimientos rellenos de carne' },
+      { d: 'Croquetas de jamón', p: '€12' },
+      { d: 'Morcilla de Ezcaray con pimientos', p: '€10' },
+      { d: 'Merluza al horno (baked hake)', p: '€24' },
+      { d: 'Paletilla de cordero de leche asada', p: '€24' },
+      { d: 'Buñuelos de trufa (truffle fritters)', p: '€11' },
+    ],
   },
   {
     name: 'Schlenkerla — Rauchbier tavern',
@@ -235,6 +369,14 @@ export const COURSES = [
     note: 'The smoked-beer mothership, pouring since 1405: Aecht Schlenkerla Märzen straight from the gravity barrel, with the Bamberger Zwiebel (beer-braised stuffed onion) or a pork shoulder to anchor it. The trip’s closing act.',
     cost: 'beer ~€3.50 · meal €20–30 pp',
     badge: 'Claude pick · the finale',
+    menu: [
+      { d: 'Aecht Schlenkerla Rauchbier Märzen (smoked lager)' },
+      { d: 'Schäuferla (roast pork shoulder)' },
+      { d: 'Bamberger Zwiebel (stuffed onion)' },
+      { d: 'Schlenkerla Haxe (pork knuckle)' },
+      { d: 'Schlenkerla Bratwürste' },
+      { d: 'Schlenkerla Käse (smoked cheese spread)' },
+    ],
   },
   {
     name: 'Brauerei Spezial & Fässla',
@@ -246,6 +388,14 @@ export const COURSES = [
     note: 'Face-to-face across Obere Königstraße: Spezial pours the gentler, all-locals smoked beer; Fässla answers with its Zwergla dunkel. Do both — it’s one street crossing. Schnitzel and dumplings, no menu theatrics.',
     cost: 'beer ~€3.50 · plates €10–18',
     badge: 'Claude pick',
+    menu: [
+      { d: 'Spezial Rauchbier (smoked lager)' },
+      { d: 'Fässla Zwergla (dark lager)' },
+      { d: 'Fässla Gold-Pils' },
+      { d: 'Schäuferla mit Klößen (pork shoulder & dumplings)' },
+      { d: 'Fränkische Bratwurst' },
+      { d: 'Fränkische Brotzeit (cold platter)' },
+    ],
   },
   {
     name: 'Mahrs Bräu — the "aU"',
@@ -257,5 +407,12 @@ export const COURSES = [
     note: 'Ask for "aU" (ungespundet kellerbier) — unfiltered, barely carbonated, routinely named among the best beers in the world. Fifteen minutes’ walk from the old town in the Wunderburg quarter; Keesmann’s Herren Pils is directly opposite.',
     cost: 'beer ~€3.50 · Brotzeit €8–15',
     badge: 'Claude pick',
+    menu: [
+      { d: 'Mahrs aU Ungespundetes Kellerbier' },
+      { d: 'Mahrs Helles Vollbier' },
+      { d: 'Biertreberschnitzel (beer-dreg schnitzel)' },
+      { d: 'Schweineschäuferla (crispy pork roast)' },
+      { d: 'Fränkische Bauernbratwürste' },
+    ],
   },
 ];

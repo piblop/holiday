@@ -6,6 +6,14 @@ initFx();
 
 const stars = (n) => (n ? `<span class="ft-stars">${'★'.repeat(n)}</span>` : '');
 
+// A venue's signature plates, rendered as a compact labelled list.
+const menuList = (menu) =>
+  menu?.length
+    ? `<div class="ft-menu"><span class="ft-menu-h">Signature plates</span><ul>${menu
+        .map((m) => `<li>${esc(m.d)}${m.p ? ` <span class="ft-menu-p">${esc(m.p)}</span>` : ''}</li>`)
+        .join('')}</ul></div>`
+    : '';
+
 const list = document.getElementById('courses');
 list.innerHTML = COURSES.map(
   (c, i) => `<li class="ft-course">
@@ -22,6 +30,7 @@ list.innerHTML = COURSES.map(
       <p class="ft-meta"><span class="stop-dates">${esc(c.date)}</span> <b>${esc(c.town)}</b> · <span class="ft-badge">${esc(c.badge)}</span></p>
       <p class="ft-note">${esc(c.note)}</p>
       <p class="ft-cost">${esc(c.cost)}</p>
+      ${menuList(c.menu)}
     </div>
   </li>`
 ).join('');
@@ -59,7 +68,9 @@ localEl.innerHTML = LOCAL_LIST.map(
           const main = sp.url ?? mapsUrl;
           return `<li data-vname="${esc(sp.name)}" data-varea="${esc(area)}" data-vcat="${esc(cat.title)}"${
             sp.note ? ` data-vnote="${esc(sp.note)}"` : ''
-          }${sp.flag ? ` data-vflag="${sp.flag}"` : ''}><a href="${esc(main)}" target="_blank" rel="noopener">${esc(sp.name)}</a>${FLAG[sp.flag] ?? ''}${
+          }${sp.flag ? ` data-vflag="${sp.flag}"` : ''}${
+            sp.menu?.length ? ` data-vmenu="${esc(JSON.stringify(sp.menu))}"` : ''
+          }><a href="${esc(main)}" target="_blank" rel="noopener">${esc(sp.name)}</a>${FLAG[sp.flag] ?? ''}${
             sp.url ? `<a class="ll-maps" href="${esc(mapsUrl)}" target="_blank" rel="noopener" title="find on Google Maps">📍</a>` : ''
           }${sp.note ? `<span class="ll-note">${esc(sp.note)}</span>` : ''}</li>`;
         })
@@ -75,13 +86,14 @@ const FLAG_TEXT = { fav: 'Local favourite ❤', top: 'Top pick', star: 'Michelin
 const vc = document.createElement('div');
 vc.id = 'venueCard';
 vc.innerHTML = `<figure class="vc-photo"><img alt="" hidden><div class="vc-fallback"></div></figure>
-  <div class="vc-text"><h4></h4><p class="vc-meta"></p><p class="vc-desc"></p></div>`;
+  <div class="vc-text"><h4></h4><p class="vc-meta"></p><p class="vc-desc"></p><div class="vc-menu"></div></div>`;
 document.body.appendChild(vc);
 const vcImg = vc.querySelector('img');
 const vcFall = vc.querySelector('.vc-fallback');
 const vcName = vc.querySelector('h4');
 const vcMeta = vc.querySelector('.vc-meta');
 const vcDesc = vc.querySelector('.vc-desc');
+const vcMenu = vc.querySelector('.vc-menu');
 
 const photoCache = new Map(); // venue query → thumb url | null
 let hoverToken = 0;
@@ -111,7 +123,7 @@ function moveCard(e) {
 
 async function showCard(li, e) {
   const token = ++hoverToken;
-  const { vname, varea, vcat, vnote, vflag } = li.dataset;
+  const { vname, varea, vcat, vnote, vflag, vmenu } = li.dataset;
   vcName.textContent = vname;
   vcMeta.textContent = `${vcat.replace(/ · .*$/, '')} · ${varea}`;
   const bits = [];
@@ -119,6 +131,14 @@ async function showCard(li, e) {
   if (vnote) bits.push(vnote.charAt(0).toUpperCase() + vnote.slice(1));
   bits.push('From the Bilbao insider list — click to open.');
   vcDesc.textContent = bits.join(' · ');
+  // signature plates, if we have them for this venue
+  let dishes = [];
+  try { dishes = vmenu ? JSON.parse(vmenu) : []; } catch { dishes = []; }
+  vcMenu.innerHTML = dishes.length
+    ? `<span class="vc-menu-h">Signature plates</span><ul>${dishes
+        .map((m) => `<li>${esc(m.d)}${m.p ? ` <span class="vc-menu-p">${esc(m.p)}</span>` : ''}</li>`)
+        .join('')}</ul>`
+    : '';
   vcImg.hidden = true;
   vcFall.textContent = vname.slice(0, 14);
   vcFall.hidden = false;
