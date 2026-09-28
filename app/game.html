@@ -1,0 +1,1911 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7ecd4">
+<script src="src/gate.js"></script>
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Cobs on Tour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Caveat:wght@500;700&family=Nunito:wght@400;600;800&display=swap">
+<style>
+:root{
+  --sea:#3f7f9c; --sea-2:#7fb6c4; --sea-3:#c4e1e2;
+  --sand:#efd9a7; --sand-2:#e2c07f; --gold:#d9a23a;
+  --terra:#c45f38; --rioja:#8a1d34; --olive:#667535; --olive-2:#a3ad63;
+  --ink:#2e2a33; --ink-2:#5b5360; --paper:#f7ecd4; --cream:#fdf7e8;
+  --shadow:0 3px 0 rgba(46,42,51,.9);
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.4 Nunito,system-ui,sans-serif;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit}
+.display{font-family:Fredoka,"Baloo 2",system-ui,sans-serif}
+.hand{font-family:Caveat,"Comic Sans MS",cursive}
+
+#app{position:fixed;inset:0;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);overflow:hidden;background:var(--paper)}
+#stage{position:absolute;inset:0}
+.tex{position:absolute;inset:0;pointer-events:none;z-index:50;mix-blend-mode:multiply;opacity:.9}
+.tex svg{width:100%;height:100%;display:block}
+
+/* ---------- screens ---------- */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column}
+.center{align-items:center;justify-content:center;text-align:center;padding:24px 20px}
+
+/* chunky buttons */
+.btn{appearance:none;border:3px solid var(--ink);background:var(--terra);color:var(--cream);font-family:Fredoka,system-ui,sans-serif;font-weight:600;font-size:20px;letter-spacing:.01em;padding:14px 26px;border-radius:22px 18px 24px 16px;box-shadow:var(--shadow);cursor:pointer;min-height:56px;touch-action:manipulation;transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 rgba(0,0,0,0)}
+.btn:focus-visible{outline:3px dashed var(--sea);outline-offset:4px}
+.btn.sea{background:var(--sea)}
+.btn.olive{background:var(--olive)}
+.btn.gold{background:var(--gold);color:var(--ink)}
+.btn.ghost{background:var(--cream);color:var(--ink)}
+.btn.small{font-size:16px;padding:9px 16px;min-height:44px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+
+/* ---------- title ---------- */
+#title{background:linear-gradient(180deg,#f9d9a4 0%,#f4c38d 36%,#efd9a7 64%,#e9cf98 100%)}
+#title .sun{position:absolute;left:50%;top:14%;width:180px;height:180px;margin-left:-90px;border-radius:50%;background:radial-gradient(circle,#fff1c4 0 40%,#f7c65f 41% 66%,rgba(247,198,95,0) 67%);filter:url(#wc-soft)}
+#titleArt{position:absolute;left:0;right:0;top:0;height:64%;pointer-events:none}
+.logo{position:relative;z-index:2;margin-top:6vh}
+.logo h1{margin:0;font-family:Fredoka,system-ui,sans-serif;font-weight:700;font-size:clamp(54px,17vw,92px);line-height:.86;color:var(--cream);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 var(--ink);letter-spacing:.01em;text-wrap:balance}
+.logo h1 .on{display:block;font-size:.5em;color:var(--gold);transform:rotate(-4deg);margin:.08em 0}
+.logo .dates{font-family:Caveat,cursive;font-size:clamp(19px,5.6vw,26px);white-space:nowrap;font-weight:700;color:var(--ink);margin-top:10px;transform:rotate(-2deg)}
+.title-actions{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:12px;z-index:3;padding:0 20px}
+.title-actions .btn{width:min(320px,100%)}
+.fine{font-family:Caveat,cursive;font-size:20px;color:var(--ink)}
+
+/* ---------- crew ---------- */
+#crew{background:var(--paper);padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));overflow-y:auto}
+#crew h2,.sheet h2{font-family:Fredoka,system-ui,sans-serif;font-weight:700;font-size:30px;margin:4px 0 4px;text-wrap:balance;line-height:1.05}
+#crew .lede{font-family:Caveat,cursive;font-size:22px;margin:0 0 14px;color:var(--ink-2)}
+.crew-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative}
+.cob{position:relative;background:var(--cream);border:3px solid var(--ink);border-radius:20px 16px 22px 14px;padding:10px 10px 12px;box-shadow:var(--shadow);text-align:center}
+.cob:nth-child(odd){transform:rotate(-1.2deg)}
+.cob:nth-child(even){transform:rotate(1.4deg)}
+.cob svg.av{width:88px;height:88px;display:block;margin:0 auto 2px}
+.cob .nm{font-family:Fredoka,sans-serif;font-weight:700;font-size:22px;line-height:1}
+.cob .role{font-family:Caveat,cursive;font-size:19px;color:var(--terra);line-height:1.05;margin:2px 0 6px}
+.cob .ab{font-size:13px;line-height:1.3;background:var(--sand);border-radius:10px;padding:6px 7px;text-align:left}
+.cob .ab b{display:block;font-family:Fredoka,sans-serif;font-weight:600;font-size:14px}
+.couple-tag{grid-column:1/-1;display:flex;justify-content:space-around;font-family:Caveat,cursive;font-size:20px;color:var(--rioja);margin-top:-4px}
+.crew-go{display:flex;justify-content:center;margin-top:18px}
+
+/* ---------- map ---------- */
+#map{background:var(--sea-3)}
+#sky{position:relative;z-index:6;height:128px;flex:0 0 auto;border-bottom:3px solid var(--ink);overflow:hidden;background:#9fd0e0}
+#skyGrad{position:absolute;inset:0}
+#sunMoon{position:absolute;width:26px;height:26px;border-radius:50%;left:20px;top:96px;background:#ffe39a;border:2.5px solid var(--ink);box-shadow:0 0 0 5px rgba(255,227,154,.35)}
+#hud{position:absolute;left:10px;right:62px;top:8px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:40px;gap:6px;z-index:2}
+.m{display:flex;align-items:center;gap:6px;background:rgba(253,247,232,.93);border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;padding:3px 7px;min-width:0}
+.m svg{width:24px;height:24px;flex:0 0 auto}
+.m .lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);line-height:1}
+.m .val{font-family:Fredoka,sans-serif;font-weight:600;font-size:17px;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
+.m .bar{height:6px;border-radius:4px;background:#e6d6b3;overflow:hidden;margin-top:3px;border:1px solid var(--ink)}
+.m .bar i{display:block;height:100%;background:var(--terra);width:50%}
+.m.energy .bar i{background:var(--olive)}
+.m .col{min-width:0;flex:1}
+#mute{position:absolute;right:10px;top:10px;z-index:30}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:3px solid var(--ink);background:var(--cream);display:grid;place-items:center;box-shadow:0 2px 0 var(--ink);cursor:pointer;padding:0}
+.icon-btn svg{width:24px;height:24px}
+
+#mapViewport{position:relative;flex:1;overflow:hidden;background:var(--sea-2)}
+#mapWrap{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+#mapSvg{display:block;width:400px;height:680px;overflow:visible}
+#dusk{position:absolute;inset:0;pointer-events:none;background:#3b2a5a;mix-blend-mode:multiply;opacity:0;z-index:3}
+#clouds{position:absolute;inset:-20%;pointer-events:none;z-index:4}
+#clouds svg{position:absolute;opacity:.62}
+#rain{position:absolute;inset:0;pointer-events:none;z-index:40;opacity:0}
+
+/* Cobba dock */
+#cobba{position:absolute;left:8px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:flex-end;gap:4px;pointer-events:none;max-width:calc(100% - 16px)}
+#cobba svg{width:84px;height:78px;flex:0 0 auto;filter:drop-shadow(0 3px 0 rgba(46,42,51,.5))}
+#bubble{position:relative;z-index:22;background:var(--cream);border:3px solid var(--ink);border-radius:18px 16px 18px 6px;padding:8px 12px 9px;font-family:Caveat,cursive;font-size:21px;line-height:1.08;max-width:240px;margin-bottom:74px;box-shadow:var(--shadow);transform-origin:0 100%}
+#bubble[hidden]{display:none!important}
+#bubble .who{display:block;font-family:Fredoka,sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--terra);margin-bottom:1px}
+#mapAction{position:absolute;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:21}
+
+/* ---------- sheets / modals ---------- */
+.veil{position:absolute;inset:0;z-index:60;background:rgba(46,42,51,.42);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))}
+.veil.mid{align-items:center}
+.sheet{position:relative;width:min(460px,100%);max-height:100%;overflow-y:auto;background:var(--cream);border:3px solid var(--ink);border-radius:26px 22px 28px 20px;padding:18px 16px 16px;box-shadow:0 6px 0 var(--ink)}
+.sheet .eyebrow{font-family:Fredoka,sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--terra)}
+.sheet p{margin:6px 0 12px}
+.sheet .note{font-family:Caveat,cursive;font-size:21px;line-height:1.1;color:var(--ink-2)}
+.choices{display:grid;gap:10px}
+.choice{display:grid;grid-template-columns:54px 1fr;gap:10px;align-items:center;text-align:left;background:var(--paper);border:3px solid var(--ink);border-radius:18px 14px 20px 13px;padding:10px 12px;cursor:pointer;box-shadow:0 3px 0 var(--ink);min-height:64px;width:100%;position:relative}
+.choice:active{transform:translateY(3px);box-shadow:none}
+.choice svg{width:54px;height:54px}
+.choice b{font-family:Fredoka,sans-serif;font-weight:600;font-size:18px;display:block;line-height:1.1}
+.choice small{display:block;font-size:13.5px;line-height:1.3;color:var(--ink-2);margin-top:2px}
+.choice .tagline{display:inline-block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;background:var(--sand);border:1.5px solid var(--ink);padding:1px 6px;border-radius:8px;margin-top:5px;margin-right:4px}
+.choice .tagline.good{background:#d8e6b0}
+.choice .tagline.bad{background:#f3c8b8}
+.choice .tagline.cheap{background:#ffe28a}
+.choice.locked{opacity:.55;cursor:default;box-shadow:none;border-style:dashed}
+.ability{display:flex;align-items:center;gap:10px;background:var(--sand);border:2.5px dashed var(--ink);border-radius:14px;padding:8px 10px;margin:4px 0 12px;width:100%;text-align:left;cursor:pointer}
+.ability svg{width:40px;height:40px;flex:0 0 auto}
+.ability b{font-family:Fredoka,sans-serif;font-weight:600}
+.ability small{display:block;font-size:13px;color:var(--ink-2);line-height:1.25}
+.ability.used{opacity:.55;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+
+/* ---------- explore ---------- */
+#explore{background:var(--sea-2)}
+#exView{position:relative;flex:1;overflow:hidden;touch-action:none}
+#exWrap{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+#exSvg{display:block;overflow:visible}
+#exBar{position:absolute;left:10px;right:64px;top:10px;z-index:5;pointer-events:none}
+.exPlate{display:inline-block;background:var(--cream);border:3px solid var(--ink);border-radius:16px 13px 17px 12px;padding:5px 12px 6px;box-shadow:0 3px 0 var(--ink);transform:rotate(-1.5deg)}
+.exPlate b{display:block;font-family:Fredoka,sans-serif;font-weight:700;font-size:19px;line-height:1.05}
+.exPlate small{display:block;font-family:Caveat,cursive;font-size:17px;color:var(--terra);line-height:1}
+#exToast{position:absolute;left:50%;top:74px;transform:translateX(-50%);z-index:6;pointer-events:none;font-family:Fredoka,sans-serif;font-weight:700;font-size:17px;background:var(--gold);border:3px solid var(--ink);border-radius:14px;padding:4px 12px;box-shadow:0 3px 0 var(--ink);opacity:0;white-space:nowrap}
+#exPrompt{position:absolute;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:21;transform-origin:100% 100%}
+
+/* ---------- mini-game ---------- */
+#mini{background:radial-gradient(ellipse at 50% 60%,#d6ecea 0,#a7d0d4 55%,#7fb6c4 100%)}
+.mini-top{display:flex;align-items:center;gap:10px;padding:12px 66px 6px 14px;position:relative;z-index:3}
+.mini-top svg.av{width:52px;height:52px;flex:0 0 auto}
+.mini-top .who{font-family:Fredoka,sans-serif;font-weight:700;font-size:22px;line-height:1}
+.mini-top .sub{font-family:Caveat,cursive;font-size:19px;color:var(--ink-2);line-height:1}
+.mini-top .count{margin-left:auto;display:flex;align-items:center;gap:8px}
+.score-pill{font-family:Fredoka,sans-serif;font-weight:700;font-size:22px;background:var(--cream);border:3px solid var(--ink);border-radius:16px;padding:2px 12px;box-shadow:0 2px 0 var(--ink);font-variant-numeric:tabular-nums}
+#timerRing{width:50px;height:50px}
+#oysterStage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
+#oysterSvg{width:min(96vw,460px);height:100%;max-height:520px;overflow:visible}
+.mini-bottom{padding:8px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;position:relative;z-index:3}
+#twist{width:min(340px,100%);font-size:26px;min-height:74px;border-radius:30px 26px 32px 24px}
+.pop{position:absolute;pointer-events:none;font-family:Fredoka,sans-serif;font-weight:700;font-size:30px;color:var(--cream);-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;z-index:8;white-space:nowrap}
+#countdown{position:absolute;inset:0;display:grid;place-items:center;z-index:9;pointer-events:none;font-family:Fredoka,sans-serif;font-weight:700;font-size:120px;color:var(--cream);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill}
+
+/* handoff */
+#handoff{background:var(--sand)}
+#handoff svg.av{width:170px;height:170px}
+#handoff h2{font-family:Fredoka,sans-serif;font-weight:700;font-size:34px;margin:10px 0 2px;line-height:1.05;text-wrap:balance}
+#handoff .hand{font-size:24px;color:var(--ink-2);margin:0 0 20px;max-width:320px}
+
+/* results + rewards */
+#results,#reward,#postcardScreen,#fin{background:var(--paper);overflow-y:auto}
+.res-list{display:grid;gap:8px;width:min(420px,100%);margin:12px auto}
+.res{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:10px;background:var(--cream);border:3px solid var(--ink);border-radius:16px 13px 17px 12px;padding:6px 12px;box-shadow:0 2px 0 var(--ink);text-align:left}
+.res svg{width:48px;height:48px}
+.res .n{font-family:Fredoka,sans-serif;font-weight:600;font-size:19px;line-height:1}
+.res .t{font-family:Caveat,cursive;font-size:18px;color:var(--terra);line-height:1}
+.res .s{font-family:Fredoka,sans-serif;font-weight:700;font-size:26px;font-variant-numeric:tabular-nums}
+.bonus{width:min(420px,100%);margin:6px auto;background:#f6d2d6;border:3px dashed var(--rioja);border-radius:16px;padding:8px 12px;font-family:Caveat,cursive;font-size:22px;line-height:1.1;color:var(--rioja);text-align:center}
+.stars{font-size:44px;letter-spacing:6px;line-height:1;margin:6px 0}
+.stars span{display:inline-block;color:#d8c9a6;-webkit-text-stroke:2px var(--ink)}
+.stars span.on{color:var(--gold)}
+.big-h{font-family:Fredoka,sans-serif;font-weight:700;font-size:34px;line-height:1.02;margin:6px 0 0;text-wrap:balance}
+
+.reward-row{display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;margin:14px 0 4px}
+.stamp{width:132px;height:132px}
+.polaroid{width:190px;background:#fffdf7;padding:10px 10px 38px;box-shadow:0 4px 0 rgba(46,42,51,.8),0 0 0 2px var(--ink);transform:rotate(3deg);position:relative}
+.polaroid .ph{width:100%;aspect-ratio:1;overflow:hidden;background:#222;border:1px solid #bbb}
+.polaroid .ph svg{width:100%;height:100%;display:block}
+.polaroid .cap{position:absolute;left:10px;right:10px;bottom:7px;font-family:Caveat,cursive;font-size:19px;white-space:nowrap;text-align:center;line-height:1.05}
+.deltas{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:min(420px,100%);margin:10px auto}
+.delta{background:var(--cream);border:2.5px solid var(--ink);border-radius:12px;padding:5px 6px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+.delta b{display:block;font-family:Fredoka,sans-serif;font-size:19px;letter-spacing:0;color:var(--ink);text-transform:none}
+.delta b.up{color:var(--olive)} .delta b.down{color:var(--terra)}
+
+/* postcard */
+.pc-wrap{perspective:1200px;width:min(400px,100%);aspect-ratio:3/2;margin:18px auto 8px;cursor:pointer}
+.pc{position:relative;width:100%;height:100%;transform-style:preserve-3d}
+.pc-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:3px solid var(--ink);border-radius:10px;overflow:hidden;box-shadow:0 5px 0 var(--ink)}
+.pc-front svg{width:100%;height:100%;display:block}
+.pc-back{transform:rotateY(180deg);background:#fdf6e6;display:grid;grid-template-columns:1.25fr 1fr;padding:12px}
+.pc-back .msg{font-family:Caveat,cursive;font-size:clamp(18px,5vw,23px);line-height:1.08;padding-right:10px;border-right:2px solid #c9b894;text-align:left;overflow:hidden}
+.pc-back .addr{padding-left:10px;position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;font-family:Caveat,cursive;font-size:clamp(15px,4vw,19px);text-align:left}
+.pc-back .addr div{border-bottom:1.5px solid #c9b894;padding-bottom:1px}
+.pc-back .pstamp{position:absolute;right:0;top:0;width:54px;height:64px}
+.tapflip{font-family:Caveat,cursive;font-size:20px;color:var(--ink-2)}
+.preview-flag{display:inline-block;font-family:Fredoka,sans-serif;font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;background:var(--ink);color:var(--cream);padding:3px 10px;border-radius:10px;margin-bottom:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- shared SVG filters: paper grain, watercolour bleed, ink wobble -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="wc" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".03" numOctaves="4" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="2" seed="9" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.1 1.35" result="ga"/>
+      <feComposite in="d" in2="ga" operator="in" result="gran"/>
+      <feMorphology in="d" operator="erode" radius="1.6" result="er"/>
+      <feComposite in="d" in2="er" operator="out" result="edge"/>
+      <feColorMatrix in="edge" type="matrix" values=".62 0 0 0 0  0 .62 0 0 0  0 0 .62 0 0  0 0 0 .75 0" result="edgeD"/>
+      <feMerge><feMergeNode in="gran"/><feMergeNode in="edgeD"/></feMerge>
+    </filter>
+    <filter id="wc-soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="3" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="wobble" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="2" seed="2" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 .42  0 0 0 0 .33  0 0 0 0 .2  0 0 0 .11 0"/>
+    </filter>
+    <filter id="stains" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".011" numOctaves="3" seed="4"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 .78  0 0 0 0 .58  0 0 0 0 .32  1.5 0 0 0 -.62"/>
+    </filter>
+  </defs>
+</svg>
+
+<div id="app">
+ <div id="stage">
+
+  <!-- TITLE -->
+  <section id="title" class="screen center">
+    <div class="sun"></div>
+    <svg id="titleArt" viewBox="0 0 400 520" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
+    <div class="logo">
+      <h1>Cobs<span class="on">on</span>Tour</h1>
+      <div class="dates">1 – 22 October 2027 · Paris to Bamberg</div>
+    </div>
+    <div class="title-actions">
+      <button class="btn" id="btnStart">Start the road trip</button>
+      <button class="btn ghost small" id="btnContinue" hidden>Continue where we left off</button>
+      <div class="fine">Advice transcribed faithfully from Annette</div>
+    </div>
+  </section>
+
+  <!-- CREW -->
+  <section id="crew" class="screen" hidden>
+    <span class="preview-flag">Preview · Royan stop</span>
+    <h2>Meet the Cobs</h2>
+    <p class="lede">Four players, one phone, one small hatchback.</p>
+    <div class="crew-grid" id="crewGrid"></div>
+    <div class="crew-go"><button class="btn" id="btnPileIn">Pile into the car</button></div>
+  </section>
+
+  <!-- MAP -->
+  <section id="map" class="screen" hidden>
+    <div id="sky">
+      <div id="skyGrad"></div>
+      <div id="sunMoon"></div>
+      <div id="hud"></div>
+    </div>
+    <div id="mapViewport">
+      <div id="mapWrap"><svg id="mapSvg" viewBox="0 0 400 680" aria-label="Illustrated route map"></svg></div>
+      <div id="clouds"></div>
+      <div id="dusk"></div>
+      <canvas id="rain"></canvas>
+      <div id="mapAction"></div>
+    </div>
+  </section>
+
+  <!-- EXPLORE (top-down stop) -->
+  <section id="explore" class="screen" hidden>
+    <div id="exView">
+      <div id="exWrap"><svg id="exSvg" aria-label="Top-down view of the stop"></svg></div>
+      <div id="exBar"><span class="exPlate"><b>South of Royan</b><small>La Cayenne port · Marennes</small></span></div>
+      <div id="exToast"></div>
+      <div id="exPrompt"></div>
+    </div>
+  </section>
+
+  <!-- MINI GAME -->
+  <section id="mini" class="screen" hidden>
+    <div class="mini-top">
+      <div id="miniAv"></div>
+      <div><div class="who" id="miniWho">Paulo</div><div class="sub" id="miniSub">Shuck-Off at the cabanes</div></div>
+      <div class="count"><span class="score-pill" id="miniScore">0</span><svg id="timerRing" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="#fdf7e8" stroke="#2e2a33" stroke-width="3"/><circle id="timerArc" cx="25" cy="25" r="15" fill="none" stroke="#c45f38" stroke-width="10" stroke-dasharray="94.25" stroke-dashoffset="0" transform="rotate(-90 25 25)"/></svg></div>
+    </div>
+    <div id="oysterStage"><svg id="oysterSvg" viewBox="0 0 400 440"></svg><div id="countdown" hidden></div></div>
+    <div class="mini-bottom"><button class="btn" id="twist">TWIST!</button></div>
+  </section>
+
+  <!-- HANDOFF -->
+  <section id="handoff" class="screen center" hidden>
+    <div id="handAv"></div>
+    <h2 id="handTitle">Pass the phone to Annette</h2>
+    <p class="hand" id="handNote"></p>
+    <button class="btn" id="handGo">I'm ready</button>
+  </section>
+
+  <section id="results" class="screen center" hidden></section>
+  <section id="reward" class="screen center" hidden></section>
+  <section id="postcardScreen" class="screen center" hidden></section>
+  <section id="fin" class="screen center" hidden></section>
+
+  <!-- Cobba narrator (floats over every screen) -->
+  <div id="cobba" hidden>
+    <svg id="cobbaSvg" viewBox="0 0 120 110" aria-hidden="true"></svg>
+    <div id="bubble" hidden><span class="who">Cobba the Clam</span><span id="bubbleText"></span></div>
+  </div>
+  <button class="icon-btn" id="mute" aria-label="Mute music"></button>
+
+  <div id="veilHost"></div>
+ </div>
+ <div class="tex"><svg preserveAspectRatio="none"><rect width="100%" height="100%" filter="url(#stains)" opacity=".5"/><rect width="100%" height="100%" filter="url(#grain)"/></svg></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/MotionPathPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
+<script>
+(() => {
+'use strict';
+if (window.MotionPathPlugin) gsap.registerPlugin(MotionPathPlugin);
+const $ = (s, r = document) => r.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+const INK = '#2e2a33';
+const C = { sea:'#3f7f9c', sea2:'#7fb6c4', sea3:'#c4e1e2', sand:'#efd9a7', sand2:'#e2c07f', gold:'#d9a23a', terra:'#c45f38', rioja:'#8a1d34', olive:'#667535', olive2:'#a3ad63', paper:'#f7ecd4', cream:'#fdf7e8' };
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+/* ================= STATE + SAVE ================= */
+const SAVE_KEY = 'cobs-on-tour-v1';
+const fresh = () => ({
+  v: 1, phase: 'start', route: null,
+  meters: { hunger: 45, energy: 80, budget: 6000, tomato: 0, fridge: 0, boot: 0 },
+  stars: 0, stamps: [], polaroids: [],
+  players: { paulo:{best:0,stat:{}}, annette:{best:0,stat:{}}, huw:{best:0,stat:{}}, romy:{best:0,stat:{}} },
+  used: { annette: false, huw: false, romy: false },
+  done: {}, trip: { hunger: 0, energy: 0, budget: 0 }, exPos: null
+});
+let S = fresh();
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+function load() { try { const r = localStorage.getItem(SAVE_KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+function pref(k, v) { try { if (v === undefined) return localStorage.getItem('cobs-pref-' + k); localStorage.setItem('cobs-pref-' + k, v); } catch (e) { return null; } }
+
+/* ================= PLAYERS ================= */
+const CREW = {
+  paulo:   { name:'Paulo',   role:'The Chiller',         partner:'annette', ability:'Cool Head',        abilityText:'The needle swings slower on his turn. Nothing rattles him.',
+             look:{ skin:'#b98158', hair:'#1f1814', shirt:C.sea } },
+  annette: { name:'Annette', role:'The Planner',         partner:'paulo',   ability:'Local Knowledge',  abilityText:'Rerolls one bad road event per leg.',
+             look:{ skin:'#f3cfae', hair:'#e8c46a', shirt:C.terra } },
+  huw:     { name:'Huw',     role:'The Food Aficionado', partner:'romy',    ability:'Menu Whisperer',   abilityText:'Reveals the cheapest good option at each stop.',
+             look:{ skin:'#eab893', hair:'#6a4a32', shirt:C.olive } },
+  romy:    { name:'Romy',    role:'The Positive One',    partner:'huw',     ability:'Silver Lining',    abilityText:'Turns one bad result per leg into a small win.',
+             look:{ skin:'#f4d0b0', hair:'#efcf7a', shirt:C.gold } },
+};
+const ORDER = ['paulo','annette','huw','romy'];
+
+function avatar(id, cls = 'av', mood = 'happy') {
+  const L = CREW[id].look;
+  let hairBack = '', hairFront = '', acc = '';
+  if (id === 'paulo') {
+    // short dark hair, sunnies pushed up: the chiller
+    hairFront = `<path d="M21 46 q0 -26 29 -27 q30 1 29 27 q-6 -9 -14 -10 q-8 -6 -16 -2 q-10 -4 -18 2 q-7 2 -10 10Z" fill="${L.hair}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    acc = `<g transform="translate(0 -1)"><path d="M25 30 q25 -5 50 0" fill="none" stroke="${INK}" stroke-width="2.5"/><ellipse cx="38" cy="30" rx="9" ry="6" fill="${INK}"/><ellipse cx="62" cy="30" rx="9" ry="6" fill="${INK}"/><path d="M34 28 l4 -2 M58 28 l4 -2" stroke="#7fb6c4" stroke-width="1.8" stroke-linecap="round"/></g>`;
+  } else if (id === 'annette') {
+    // long blonde hair, pencil behind the ear: the planner
+    hairBack = `<path d="M19 46 q-8 32 8 46 q6 -20 5 -34Z M81 46 q8 32 -8 46 q-6 -20 -5 -34Z" fill="${L.hair}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    hairFront = `<path d="M21 50 q-2 -30 29 -30 q31 0 29 30 q-8 -14 -22 -16 q-4 8 -16 10 q-10 0 -20 6Z" fill="${L.hair}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M40 24 q-4 8 -12 12" fill="none" stroke="#c9a24a" stroke-width="2" stroke-linecap="round"/>`;
+    acc = `<g transform="rotate(-30 82 38)"><rect x="70" y="34" width="24" height="5" rx="1.5" fill="${C.gold}" stroke="${INK}" stroke-width="2"/><path d="M94 34 l5 2.5 -5 2.5Z" fill="${C.sand}" stroke="${INK}" stroke-width="2"/></g>`;
+  } else if (id === 'huw') {
+    // tousled brown hair, napkin tucked in: the food aficionado
+    hairFront = `<path d="M22 48 q-4 -24 16 -28 q6 -8 16 -4 q10 -6 18 4 q10 6 6 28 q-4 -10 -12 -12 q-6 4 -12 0 q-8 4 -14 0 q-8 2 -18 12Z" fill="${L.hair}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    acc = `<path d="M36 76 l14 16 14 -16 q-14 5 -28 0Z" fill="#fdf7e8" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/><path d="M42 80 h16 M46 85 h8" stroke="${C.rioja}" stroke-width="1.8"/>`;
+  } else if (id === 'romy') {
+    // blonde bob and round glasses: the positive one
+    hairBack = `<path d="M19 46 q-5 24 5 32 l12 -2 q-6 -14 -4 -28Z M81 46 q5 24 -5 32 l-12 -2 q6 -14 4 -28Z" fill="${L.hair}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    hairFront = `<path d="M21 50 q0 -28 29 -28 q29 0 29 28 q-4 -8 -10 -10 q-10 4 -20 -4 q-10 8 -20 4 q-6 2 -8 10Z" fill="${L.hair}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>`;
+    acc = `<g fill="none" stroke="${INK}" stroke-width="3"><circle cx="39" cy="51" r="10" fill="rgba(255,255,255,.22)"/><circle cx="61" cy="51" r="10" fill="rgba(255,255,255,.22)"/><path d="M49 50 q1 -2 2 0"/></g>`;
+  }
+  const mouth = mood === 'sad'
+    ? `<path d="M41 69 q9 -7 18 0" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`
+    : mood === 'wow'
+    ? `<ellipse cx="50" cy="68" rx="6" ry="7" fill="#7a2f2f" stroke="${INK}" stroke-width="3"/>`
+    : `<path d="M39 63 q11 12 22 0 q-11 4 -22 0Z" fill="#7a2f2f" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M44 66 q6 4 12 0" fill="#f08a8a"/>`;
+  const shirtTrim = false ? `<path d="M34 76 q16 10 32 0 l-4 10 q-12 6 -24 0Z" fill="${C.rioja}" stroke="${INK}" stroke-width="2.5"/>` : '';
+  return `<svg class="${cls}" viewBox="0 0 100 100" aria-label="${CREW[id].name}">
+    <path d="M12 102 q2 -26 38 -28 q36 2 38 28Z" fill="${L.shirt}" stroke="${INK}" stroke-width="3"/>${shirtTrim}
+    ${hairBack}
+    <ellipse cx="50" cy="50" rx="29" ry="28" fill="${L.skin}" stroke="${INK}" stroke-width="3.2"/>
+    <ellipse cx="21" cy="53" rx="4" ry="6" fill="${L.skin}" stroke="${INK}" stroke-width="2.6"/><ellipse cx="79" cy="53" rx="4" ry="6" fill="${L.skin}" stroke="${INK}" stroke-width="2.6"/>
+    ${hairFront}
+    <ellipse cx="39" cy="51" rx="6" ry="7" fill="#fff" stroke="${INK}" stroke-width="2"/><ellipse cx="61" cy="51" rx="6" ry="7" fill="#fff" stroke="${INK}" stroke-width="2"/>
+    <circle cx="40" cy="52" r="3.6" fill="${INK}"/><circle cx="62" cy="52" r="3.6" fill="${INK}"/><circle cx="41.3" cy="50.5" r="1.3" fill="#fff"/><circle cx="63.3" cy="50.5" r="1.3" fill="#fff"/>
+    <path d="M32 41 q6 -4 12 -1 M56 40 q6 -3 12 1" fill="none" stroke="${INK}" stroke-width="2.6" stroke-linecap="round"/>
+    <ellipse cx="30" cy="62" rx="5" ry="3" fill="#e8816b" opacity=".45"/><ellipse cx="70" cy="62" rx="5" ry="3" fill="#e8816b" opacity=".45"/>
+    <path d="M49 55 q-2 5 2 6" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+    ${mouth}${acc}
+  </svg>`;
+}
+
+/* ================= COBBA ================= */
+function cobbaSVG() {
+  const ridges = [...Array(9)].map((_, i) => {
+    const a = (-70 + i * 17.5) * Math.PI / 180;
+    return `<path d="M60 64 L${60 + Math.sin(a) * 50} ${64 - Math.cos(a) * 52}" stroke="#c9924a" stroke-width="2.5" stroke-linecap="round"/>`;
+  }).join('');
+  return `<g id="cobbaAll">
+    <ellipse cx="60" cy="102" rx="40" ry="6" fill="rgba(46,42,51,.18)"/>
+    <path d="M12 64 q48 50 96 0 q-48 14 -96 0Z" fill="#e0b070" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M26 76 q34 24 68 0" fill="none" stroke="#c9924a" stroke-width="2.5"/>
+    <path id="cobbaMouth" d="M18 64 q42 10 84 0 q-42 20 -84 0Z" fill="#7a3b3b" stroke="${INK}" stroke-width="3"/>
+    <path d="M44 70 q16 6 32 0 q-16 10 -32 0Z" fill="#e57373"/>
+    <g id="cobbaLid">
+      <path d="M10 64 q-4 -56 50 -58 q54 2 50 58 q-50 12 -100 0Z" fill="#f0c886" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+      <clipPath id="lidClip"><path d="M10 64 q-4 -56 50 -58 q54 2 50 58 q-50 12 -100 0Z"/></clipPath>
+      <g clip-path="url(#lidClip)" opacity=".75">${ridges}</g>
+      <ellipse cx="44" cy="38" rx="11" ry="12" fill="#fff" stroke="${INK}" stroke-width="3"/><ellipse cx="76" cy="38" rx="11" ry="12" fill="#fff" stroke="${INK}" stroke-width="3"/>
+      <g id="cobbaPupils"><circle cx="46" cy="40" r="5" fill="${INK}"/><circle cx="78" cy="40" r="5" fill="${INK}"/><circle cx="47.8" cy="37.8" r="1.7" fill="#fff"/><circle cx="79.8" cy="37.8" r="1.7" fill="#fff"/></g>
+      <path d="M33 24 q9 -6 18 -1 M69 23 q9 -5 18 1" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="32" cy="54" rx="6" ry="3.5" fill="#e8816b" opacity=".55"/><ellipse cx="88" cy="54" rx="6" ry="3.5" fill="#e8816b" opacity=".55"/>
+      <path d="M32 14 q28 -26 56 0 q-28 -8 -56 0Z" fill="#8c7a5c" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M30 14 q30 -10 60 0 q2 5 -3 6 q-27 -8 -54 0 q-5 -1 -3 -6Z" fill="#7a6a4f" stroke="${INK}" stroke-width="2.5"/>
+    </g>
+  </g>`;
+}
+const cobbaEl = $('#cobba'), bubble = $('#bubble'), bubbleText = $('#bubbleText');
+$('#cobbaSvg').innerHTML = cobbaSVG();
+let cobbaIdle, talkTl, sayTimer;
+function cobbaStart() {
+  if (cobbaIdle) return;
+  cobbaIdle = gsap.timeline({ repeat: -1, yoyo: true })
+    .to('#cobbaAll', { y: -4, rotation: 2, svgOrigin: '60 100', duration: 1.1, ease: 'sine.inOut' })
+    .to('#cobbaAll', { rotation: -2, duration: 1.1, ease: 'sine.inOut' });
+  gsap.to('#cobbaPupils', { x: 2, duration: 1.6, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+}
+function say(text, ms = 4200) {
+  cobbaEl.hidden = false; cobbaStart();
+  clearTimeout(sayTimer);
+  bubble.hidden = false;
+  bubbleText.textContent = '';
+  gsap.fromTo(bubble, { scale: .4, rotation: -6, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: .45, ease: 'back.out(2.2)' });
+  gsap.fromTo('#cobbaAll', { scaleY: .82, scaleX: 1.12 }, { scaleY: 1, scaleX: 1, svgOrigin: '60 100', duration: .5, ease: 'elastic.out(1,.4)' });
+  talkTl?.kill();
+  talkTl = gsap.timeline({ repeat: Math.min(12, Math.ceil(text.length / 7)) })
+    .to('#cobbaLid', { rotation: -9, svgOrigin: '12 64', duration: .09 })
+    .to('#cobbaLid', { rotation: 0, duration: .09 });
+  let i = 0;
+  const type = () => { if (i <= text.length) { bubbleText.textContent = text.slice(0, i++); setTimeout(type, 18); } };
+  type();
+  Snd.blip();
+  if (ms) sayTimer = setTimeout(hush, ms + text.length * 18);
+}
+function hush() { gsap.to(bubble, { scale: .6, opacity: 0, duration: .2, onComplete: () => { bubble.hidden = true; } }); }
+
+/* ================= SOUND (Tone.js) ================= */
+const Snd = (() => {
+  let ready = false, muted = pref('mute') === '1', syn = {}, music = null, region = null;
+  const ok = () => ready && !muted && window.Tone;
+  async function init() {
+    if (ready || !window.Tone) return;
+    try { await Tone.start(); } catch (e) { return; }
+    const out = new Tone.Gain(0.9).toDestination();
+    syn.blip = new Tone.Synth({ oscillator:{type:'triangle'}, envelope:{attack:.002,decay:.06,sustain:0,release:.05}, volume:-16 }).connect(out);
+    syn.pop = new Tone.Synth({ oscillator:{type:'sine'}, envelope:{attack:.001,decay:.12,sustain:0,release:.05}, volume:-8 }).connect(out);
+    syn.crack = new Tone.NoiseSynth({ noise:{type:'brown'}, envelope:{attack:.001,decay:.07,sustain:0}, volume:-10 }).connect(out);
+    syn.thunk = new Tone.MembraneSynth({ pitchDecay:.05, octaves:5, envelope:{attack:.001,decay:.3,sustain:0}, volume:-6 }).connect(out);
+    syn.fan = new Tone.PolySynth(Tone.Synth, { oscillator:{type:'fatsawtooth',count:3,spread:16}, envelope:{attack:.02,decay:.2,sustain:.4,release:.4}, volume:-16 }).connect(out);
+    ready = true;
+    if (!muted) playRegion('france');
+  }
+  function buildFrance() {
+    // Musette waltz: two detuned reeds through a tremolo, oom-pah-pah underneath
+    const bus = new Tone.Gain(muted ? 0 : 0.55).toDestination();
+    const trem = new Tone.Tremolo(5.5, 0.35).start().connect(bus);
+    const filt = new Tone.Filter(2400, 'lowpass').connect(trem);
+    const reed = new Tone.PolySynth(Tone.Synth, { oscillator:{type:'fatsawtooth',count:2,spread:22}, envelope:{attack:.03,decay:.15,sustain:.55,release:.18}, volume:-20 }).connect(filt);
+    const chord = new Tone.PolySynth(Tone.Synth, { oscillator:{type:'fatsquare',count:2,spread:12}, envelope:{attack:.01,decay:.12,sustain:.1,release:.1}, volume:-27 }).connect(filt);
+    const bass = new Tone.Synth({ oscillator:{type:'triangle'}, envelope:{attack:.005,decay:.25,sustain:.2,release:.1}, volume:-12 }).connect(bus);
+    const roots = ['A2','E2','A2','D2','G2','C3','E2','A2'];
+    const chords = [['A3','C4','E4'],['G#3','D4','E4'],['A3','C4','E4'],['A3','D4','F4'],['G3','B3','F4'],['G3','C4','E4'],['G#3','B3','D4'],['A3','C4','E4']];
+    const mel = [['E5',null,'A5','G#5','A5','C6'],['B5',null,'G#5','E5','D5','E5'],['C5','E5','A5',null,'C6','B5'],['A5',null,'F5','D5','F5','A5'],
+                 ['G5',null,'D5','F5','B4','D5'],['E5',null,'C5','E5','G5','C6'],['B5','A5','G#5','F5','E5','D5'],['C5',null,'A4',null,null,null]];
+    const ev = [];
+    for (let b = 0; b < 8; b++) {
+      ev.push([`${b}:0:0`, { k:'b', n: roots[b] }]);
+      ev.push([`${b}:1:0`, { k:'c', n: chords[b] }]);
+      ev.push([`${b}:2:0`, { k:'c', n: chords[b] }]);
+      mel[b].forEach((n, i) => { if (n) ev.push([`${b}:${Math.floor(i / 2)}:${(i % 2) * 2}`, { k:'m', n }]); });
+    }
+    const part = new Tone.Part((t, e) => {
+      if (e.k === 'b') bass.triggerAttackRelease(e.n, '8n', t);
+      else if (e.k === 'c') chord.triggerAttackRelease(e.n, '16n', t);
+      else reed.triggerAttackRelease(e.n, '8n', t);
+    }, ev);
+    part.loop = true; part.loopEnd = '8m';
+    return { part, bus, bpm: 150 };
+  }
+  function playRegion(r) {
+    if (!ready || !window.Tone) return;
+    region = r;
+    if (!music) {
+      Tone.Transport.timeSignature = 3;
+      music = buildFrance();
+      Tone.Transport.bpm.value = music.bpm;
+      music.part.start(0);
+    }
+    if (!muted) Tone.Transport.start();
+  }
+  function setMuted(m) {
+    muted = m; pref('mute', m ? '1' : '0');
+    if (!ready) return;
+    if (music) music.bus.gain.rampTo(m ? 0 : 0.55, .3);
+    if (!m) { Tone.Transport.start(); if (!music) playRegion('france'); }
+  }
+  const safe = fn => (...a) => { if (ok()) try { fn(...a); } catch (e) {} };
+  return {
+    init, playRegion, setMuted, get muted() { return muted; },
+    blip: safe(() => syn.blip.triggerAttackRelease(pick(['C6','E6','G6','A6']), '32n')),
+    pop:  safe((n = 'C5') => { syn.pop.triggerAttackRelease(n, '16n'); syn.pop.frequency.rampTo(Tone.Frequency(n).toFrequency() * 2, .08); }),
+    crack: safe(() => syn.crack.triggerAttackRelease('32n')),
+    thunk: safe((n = 'C2') => syn.thunk.triggerAttackRelease(n, '8n')),
+    fanfare: safe(() => { const t = Tone.now(); [['C5','E5','G5'],['D5','F5','A5'],['E5','G5','C6']].forEach((c, i) => syn.fan.triggerAttackRelease(c, i === 2 ? '4n' : '16n', t + i * .13)); }),
+    sad: safe(() => { const t = Tone.now(); ['E4','D#4','D4'].forEach((n, i) => syn.fan.triggerAttackRelease(n, '8n', t + i * .18)); })
+  };
+})();
+const muteBtn = $('#mute');
+const muteIcon = m => m
+  ? `<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="${C.sand}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path d="M16 9l5 6M21 9l-5 6" stroke="${C.terra}" stroke-width="2.5" stroke-linecap="round"/></svg>`
+  : `<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="${C.sand}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path d="M16 8.5q3 3.5 0 7M18.5 6q5 6 0 12" fill="none" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+function drawMute() { muteBtn.innerHTML = muteIcon(Snd.muted); muteBtn.setAttribute('aria-label', Snd.muted ? 'Unmute music' : 'Mute music'); }
+drawMute();
+muteBtn.style.cssText = 'position:absolute;right:10px;top:calc(10px + env(safe-area-inset-top,0px));z-index:80';
+muteBtn.addEventListener('click', () => { Snd.init(); Snd.setMuted(!Snd.muted); drawMute(); squash(muteBtn); });
+
+/* ================= JUICE ================= */
+function squash(el) { gsap.fromTo(el, { scaleX: 1.15, scaleY: .85 }, { scaleX: 1, scaleY: 1, duration: .5, ease: 'elastic.out(1.1,.35)' }); }
+function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+function shake(amt = 10) { if (REDUCED) return; gsap.fromTo('#stage', { x: -amt, y: amt * .4 }, { x: 0, y: 0, duration: .55, ease: 'elastic.out(1.2,.2)' }); }
+function party(big) {
+  if (!window.confetti || REDUCED) return;
+  const colors = [C.terra, C.gold, C.sea, C.rioja, C.olive2, C.cream];
+  confetti({ particleCount: big ? 170 : 90, spread: big ? 110 : 70, origin: { y: .55 }, colors, scalar: 1.1, ticks: 220 });
+  if (big) setTimeout(() => confetti({ particleCount: 80, angle: 60, spread: 60, origin: { x: 0, y: .7 }, colors }), 200),
+           setTimeout(() => confetti({ particleCount: 80, angle: 120, spread: 60, origin: { x: 1, y: .7 }, colors }), 350);
+}
+document.addEventListener('pointerdown', e => { const b = e.target.closest('.btn,.choice,.ability'); if (b && !b.disabled) squash(b); }, true);
+
+/* ================= SCREENS ================= */
+const SCREENS = ['title','crew','map','explore','mini','handoff','results','reward','postcardScreen','fin'];
+function show(id) {
+  SCREENS.forEach(s => { $('#' + s).hidden = s !== id; });
+  const el = $('#' + id);
+  gsap.fromTo(el, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: .45, ease: 'power2.out', clearProps: 'transform' });
+  if (id !== 'map' && id !== 'explore') { cobbaEl.hidden = true; hush(); }
+}
+function modal(html, { mid = false } = {}) {
+  const host = $('#veilHost');
+  host.innerHTML = `<div class="veil ${mid ? 'mid' : ''}"><div class="sheet">${html}</div></div>`;
+  const veil = host.firstElementChild, sheet = veil.firstElementChild;
+  gsap.fromTo(veil, { opacity: 0 }, { opacity: 1, duration: .25 });
+  gsap.fromTo(sheet, { y: 80, rotation: -2, scale: .92 }, { y: 0, rotation: 0, scale: 1, duration: .55, ease: 'back.out(1.6)' });
+  return sheet;
+}
+function closeModal() {
+  const veil = $('#veilHost .veil'); if (!veil) return Promise.resolve();
+  return new Promise(r => gsap.to(veil, { opacity: 0, duration: .2, onComplete: () => { $('#veilHost').innerHTML = ''; r(); } }));
+}
+
+/* ================= ICONS ================= */
+const ICON = {
+  hunger: `<svg viewBox="0 0 24 24"><path d="M7 2v8q0 3 2 3v9M5 2v6M9 2v6" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round"/><path d="M16 2q-3 3 -3 8t3 3v9" fill="${C.sand}" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  energy: `<svg viewBox="0 0 24 24"><path d="M13 2L5 14h6l-2 8 9-12h-6z" fill="${C.gold}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  budget: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="${C.gold}" stroke="${INK}" stroke-width="2"/><path d="M15.5 8.5q-1.5 -1.5 -3.5 -1.5q-4 0 -4 5t4 5q2 0 3.5 -1.5M6.5 10.5h6M6.5 13.5h6" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  tomato: `<svg viewBox="0 0 24 24"><circle cx="12" cy="14" r="8" fill="#d8452f" stroke="${INK}" stroke-width="2"/><path d="M12 6l-3 -2M12 6l3 -2M12 6l0 -3M12 6l-4 1M12 6l4 1" stroke="${C.olive}" stroke-width="2" stroke-linecap="round"/><ellipse cx="9" cy="12" rx="2" ry="1.2" fill="#fff" opacity=".5"/></svg>`,
+  fridge: `<svg viewBox="0 0 24 24"><path d="M3 15l9 -9 9 9v4H3z" fill="#f4d67a" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path d="M3 15h18" stroke="${INK}" stroke-width="2"/><circle cx="10" cy="12" r="1.2" fill="#d9a23a"/><circle cx="14" cy="10" r="1" fill="#d9a23a"/><circle cx="15" cy="17" r="1.2" fill="#d9a23a"/></svg>`,
+  boot: `<svg viewBox="0 0 24 24"><path d="M10 2h4v4q3 2 3 6v9q0 1 -1 1H8q-1 0 -1 -1v-9q0 -4 3 -6z" fill="${C.rioja}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><rect x="8.5" y="12" width="7" height="5" rx="1" fill="${C.cream}" stroke="${INK}" stroke-width="1.5"/></svg>`,
+  oyster: `<svg viewBox="0 0 64 64"><path d="M8 34 q-2 -18 22 -22 q26 -4 28 16 q2 18 -24 22 q-24 2 -26 -16Z" fill="#b9c4b4" stroke="${INK}" stroke-width="3"/><path d="M16 32 q14 -12 34 -4 M14 38 q18 -6 38 0" fill="none" stroke="#7d8a7a" stroke-width="2.5"/><path d="M22 36 q10 -8 22 0 q-10 8 -22 0Z" fill="#f4ecd8" stroke="${INK}" stroke-width="2"/></svg>`,
+  castle: `<svg viewBox="0 0 64 64"><path d="M8 54V26h8v6h8v-6h8v6h8v-6h8v6h8v-6h0v28Z" fill="${C.sand}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M28 54v-10q4 -5 8 0v10" fill="${C.terra}" stroke="${INK}" stroke-width="2.5"/><path d="M14 12l6 -4v10" fill="${C.rioja}" stroke="${INK}" stroke-width="2"/></svg>`,
+  bag: `<svg viewBox="0 0 64 64"><path d="M12 22h40l-4 32H16Z" fill="${C.gold}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M24 22q0 -12 8 -12t8 12" fill="none" stroke="${INK}" stroke-width="3"/></svg>`,
+  coast: `<svg viewBox="0 0 64 64"><path d="M4 44q10 -8 20 0t20 0t20 0v16H4Z" fill="${C.sea2}" stroke="${INK}" stroke-width="3"/><path d="M40 40V14l6 -4 6 4v26" fill="${C.cream}" stroke="${INK}" stroke-width="3"/><path d="M40 22h12M40 30h12" stroke="${C.terra}" stroke-width="4"/><circle cx="46" cy="12" r="3" fill="${C.gold}"/></svg>`,
+  highway: `<svg viewBox="0 0 64 64"><path d="M22 60L28 6h8l6 54Z" fill="#8b8579" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M32 12v8M32 28v8M32 44v8" stroke="${C.cream}" stroke-width="3"/></svg>`,
+  spread: `<svg viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="32" rx="4" fill="${C.cream}" stroke="${INK}" stroke-width="3"/><path d="M6 18h36M6 28h36M18 8v32M30 8v32" stroke="${INK}" stroke-width="2"/><rect x="30" y="28" width="12" height="12" fill="${C.gold}" stroke="${INK}" stroke-width="2"/></svg>`,
+  crystal: `<svg viewBox="0 0 48 48"><circle cx="24" cy="20" r="14" fill="${C.sea3}" stroke="${INK}" stroke-width="3"/><path d="M16 16q4 -6 10 -6" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M12 42l4 -8h16l4 8Z" fill="${C.terra}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></svg>`,
+};
+
+/* ================= HUD ================= */
+const METERS = [
+  { k:'hunger', lbl:'Hunger', bar:true },
+  { k:'energy', lbl:'Energy', bar:true },
+  { k:'budget', lbl:'Kitty', fmt: v => '€' + Math.round(v).toLocaleString('en-AU') },
+  { k:'tomato', lbl:'Tomato', fmt: v => S.meters.tomato ? v : '???' },
+  { k:'fridge', lbl:'Fridge', fmt: v => v + ' agour' },
+  { k:'boot',   lbl:'Boot',   fmt: v => v + ' rioja' },
+];
+function buildHud() {
+  $('#hud').innerHTML = METERS.map(m => `<div class="m ${m.k}" id="m-${m.k}">${ICON[m.k]}<div class="col"><div class="lbl">${m.lbl}</div>${m.bar ? `<div class="bar"><i></i></div>` : `<div class="val"></div>`}</div></div>`).join('');
+  renderHud(true);
+}
+const shown = {};
+function renderHud(instant) {
+  METERS.forEach(m => {
+    const el = $('#m-' + m.k); if (!el) return;
+    const v = S.meters[m.k];
+    if (m.bar) gsap.to(el.querySelector('.bar i'), { width: Math.max(0, Math.min(100, v)) + '%', duration: instant ? 0 : .8, ease: 'power2.out' });
+    else {
+      const o = { v: shown[m.k] ?? v };
+      gsap.to(o, { v, duration: instant ? 0 : 1, ease: 'power2.out', onUpdate: () => { el.querySelector('.val').textContent = m.fmt(Math.round(o.v)); } });
+      if (!instant && shown[m.k] !== undefined && shown[m.k] !== v) squash(el);
+    }
+    shown[m.k] = v;
+  });
+}
+function bump(d) {
+  Object.entries(d).forEach(([k, v]) => { S.meters[k] = Math.max(k === 'budget' ? -99999 : 0, Math.min(k === 'hunger' || k === 'energy' ? 100 : 99999, S.meters[k] + v)); });
+  renderHud(); save();
+}
+
+/* ================= MAP ================= */
+const W = 400, H = 680;
+const P = (lat, lon) => [ (lon + 3.4) / 3.6 * W, (46.5 - lat) / 4.4 * H ];
+const sm = (lls, closed) => smooth(lls.map(q => P(q[0], q[1])), closed);
+function smooth(pts, closed = false) {
+  // Catmull-Rom through points → cubic Béziers, for hand-drawn curves
+  const p = pts;
+  let d = `M${p[0][0].toFixed(1)} ${p[0][1].toFixed(1)}`;
+  const n = p.length;
+  for (let i = 0; i < (closed ? n : n - 1); i++) {
+    const p0 = p[(i - 1 + n) % n], p1 = p[i], p2 = p[(i + 1) % n], p3 = p[(i + 2) % n];
+    const a = closed || i > 0 ? p0 : p1, b = closed || i < n - 2 ? p3 : p2;
+    const c1 = [p1[0] + (p2[0] - a[0]) / 6, p1[1] + (p2[1] - a[1]) / 6];
+    const c2 = [p2[0] - (b[0] - p1[0]) / 6, p2[1] - (b[1] - p1[1]) / 6];
+    d += ` C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return closed ? d + 'Z' : d;
+}
+const COAST = [[46.62,-1.98],[46.47,-1.80],[46.36,-1.48],[46.30,-1.30],[46.22,-1.19],[46.14,-1.17],[46.04,-1.10],[45.95,-1.09],[45.86,-1.12],[45.79,-1.17],[45.71,-1.24],[45.65,-1.14],[45.62,-1.04],[45.57,-1.07],
+  [45.30,-1.15],[45.00,-1.20],[44.73,-1.25],[44.66,-1.22],[44.55,-1.26],[44.20,-1.31],[43.90,-1.39],[43.65,-1.46],[43.52,-1.53],[43.47,-1.57],[43.41,-1.64],[43.38,-1.68],[43.37,-1.79],[43.33,-1.90],
+  [43.32,-2.00],[43.29,-2.13],[43.30,-2.25],[43.32,-2.38],[43.37,-2.50],[43.38,-2.60],[43.41,-2.69],[43.44,-2.73],[43.47,-2.79],[43.43,-2.90],[43.41,-2.96],[43.36,-3.03],[43.39,-3.22],[43.46,-3.50]];
+const LAND = [...COAST, [42.0,-3.55],[42.0,0.35],[46.7,0.35]];
+const STOPS = {
+  paris:{ ll:null, xy:[364,30], name:'Paris', lab:[0,-14] },
+  larochelle:{ ll:[46.16,-1.15], name:'La Rochelle', lab:[10,-6,'start'] },
+  iledere:{ ll:[46.20,-1.42], name:'Île de Ré', lab:[-7,4,'end'], optional:true },
+  royan:{ ll:[45.62,-1.03], name:'Royan', lab:[10,4,'start'] },
+  bordeaux:{ ll:[44.84,-0.58], name:'Bordeaux', lab:[9,4,'start'] },
+  capbreton:{ ll:[43.655,-1.427], name:'Hossegor', lab:[10,3,'start'] },
+  bayonne:{ ll:[43.49,-1.47], name:'Bayonne', lab:[9,3,'start'] },
+  biarritz:{ ll:[43.48,-1.56], name:'Biarritz', lab:[-8,-4,'end'] },
+  sjdl:{ ll:[43.39,-1.66], name:'St-Jean-de-Luz', lab:[-6,-8,'end'] },
+  sanseb:{ ll:[43.32,-1.98], name:'San Sebastián', lab:[-4,14,'middle'] },
+  orio:{ ll:[43.28,-2.13], name:'Orio', lab:[-2,14,'middle'] },
+  mundaka:{ ll:[43.40,-2.70], name:'Mundaka', lab:[4,-9,'start'] },
+  bermeo:{ ll:[43.44,-2.78], name:'Bermeo', lab:[-6,-9,'end'] },
+  plentzia:{ ll:[43.405,-2.955], name:'Plentzia', lab:[-7,-2,'end'] },
+  bilbao:{ ll:[43.263,-2.935], name:'Bilbao', lab:[8,10,'start'] },
+  haro:{ ll:[42.576,-2.846], name:'Haro', lab:[9,4,'start'] },
+  ezcaray:{ ll:[42.325,-3.009], name:'Ezcaray', lab:[9,5,'start'] },
+  bamberg:{ ll:null, xy:[352,640], name:'Bamberg', lab:[0,24] },
+};
+Object.values(STOPS).forEach(s => { if (s.ll) s.xy = P(...s.ll); });
+const LEG0 = {
+  coast:   [[46.16,-1.15],[46.05,-1.07],[45.94,-1.06],[45.86,-1.06],[45.80,-1.11],[45.72,-1.18],[45.66,-1.10],[45.62,-1.03]],
+  highway: [[46.16,-1.15],[46.04,-0.98],[45.93,-0.94],[45.80,-0.78],[45.72,-0.80],[45.66,-0.92],[45.62,-1.03]],
+};
+
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function g(parent, html, attrs = {}) { const e = el('g', attrs, parent); e.innerHTML = html; return e; }
+
+/* little landmark glyphs, drawn at a point */
+const LM = {
+  lighthouse: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-3 0 L-2 -14 h4 L3 0Z" fill="${C.cream}" stroke="${INK}" stroke-width="1.2" stroke-linejoin="round"/><path d="M-2.6 -5h5.2M-2.3 -10h4.6" stroke="${C.terra}" stroke-width="2"/><rect x="-2.5" y="-18" width="5" height="4" fill="${C.gold}" stroke="${INK}" stroke-width="1"/><path d="M-3 -18 q3 -4 6 0" fill="${C.terra}" stroke="${INK}" stroke-width="1"/><path d="M3 -16 l8 -3 v6Z" fill="#ffe8a0" opacity=".7"/></g>`,
+  oyster: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-7 0 q-1 -7 7 -8 q8 0 8 6 q0 6 -8 6 q-7 0 -7 -4Z" fill="#b9c4b4" stroke="${INK}" stroke-width="1.2"/><path d="M-4 -1 q4 -4 9 -1" fill="none" stroke="#7d8a7a" stroke-width="1"/><circle cx="1" cy="0" r="1.6" fill="#fff" stroke="${INK}" stroke-width=".6"/></g>`,
+  dune: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-14 0 q8 -14 16 -12 q6 2 12 12Z" fill="${C.sand2}" stroke="${INK}" stroke-width="1.2" stroke-linejoin="round"/><path d="M-6 -4 q4 -3 8 -2M0 -1 q4 -2 7 0" fill="none" stroke="#b48a4a" stroke-width="1"/></g>`,
+  castle: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-8 0 v-9 h3 v2 h2 v-2 h3 v2 h2 v-2 h3 v-3 h3 v12Z" fill="${C.sand}" stroke="${INK}" stroke-width="1.2" stroke-linejoin="round"/><path d="M-1 0 v-3 q1 -2 2 0 v3" fill="${INK}"/><path d="M5 -12 v-5 l4 1.5 -4 1.5" fill="${C.rioja}" stroke="${INK}" stroke-width=".9"/></g>`,
+  vines: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-14 2 q14 -12 28 0Z" fill="${C.olive2}" stroke="${INK}" stroke-width="1.1"/>${[-8,-3,2,7].map(v => `<path d="M${v} 0 l2 -5" stroke="${C.olive}" stroke-width="1.6" stroke-linecap="round"/><circle cx="${v + 2.5}" cy="-5" r="1.4" fill="${C.rioja}"/>`).join('')}</g>`,
+  surf: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-12 0 q2 -12 12 -12 q8 0 8 6 q-4 -3 -7 0 q-4 4 0 6Z" fill="${C.sea}" stroke="${INK}" stroke-width="1.2" stroke-linejoin="round"/><path d="M-10 -2 q3 -7 9 -8" fill="none" stroke="#fff" stroke-width="1.2"/><ellipse cx="11" cy="-4" rx="2.4" ry="7" fill="${C.gold}" stroke="${INK}" stroke-width="1" transform="rotate(18 11 -4)"/></g>`,
+  cheese: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-8 0 v-5 l8 -5 8 5 v5Z" fill="#f4d67a" stroke="${INK}" stroke-width="1.2" stroke-linejoin="round"/><path d="M-8 -5 h16" stroke="${INK}" stroke-width="1"/><circle cx="-3" cy="-2.5" r="1" fill="${C.gold}"/><circle cx="3" cy="-2" r="1.2" fill="${C.gold}"/></g>`,
+  church: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-8 0 v-7 l4 -3 4 3 v7Z M0 0 v-7 h8 v7Z" fill="${C.cream}" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round"/><path d="M-4 -10 v-6 M-6 -14 h4" stroke="${INK}" stroke-width="1.1"/><path d="M0 -7 l4 -3 4 3" fill="${C.terra}" stroke="${INK}" stroke-width="1"/></g>`,
+  hermitage: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-14 2 q6 -4 10 -4 q4 -6 10 -6 q6 0 8 10Z" fill="#9a8f78" stroke="${INK}" stroke-width="1.1"/><path d="M-14 1 q7 -1 14 -6" fill="none" stroke="${C.sand}" stroke-width="1.6" stroke-dasharray="1.5 1"/><path d="M1 -8 v-5 l3 -2 3 2 v5Z" fill="${C.cream}" stroke="${INK}" stroke-width="1"/><path d="M1 -13 l3 -2 3 2" fill="${C.terra}" stroke="${INK}" stroke-width=".9"/></g>`,
+  wheel: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-10 2 q10 -10 20 0Z" fill="${C.olive2}" stroke="${INK}" stroke-width="1"/><circle cx="0" cy="-8" r="6" fill="none" stroke="${INK}" stroke-width="1.1"/>${[0,45,90,135].map(a => `<path d="M0 -8 l${(6 * Math.cos(a * Math.PI / 180)).toFixed(1)} ${(6 * Math.sin(a * Math.PI / 180)).toFixed(1)} M0 -8 l${(-6 * Math.cos(a * Math.PI / 180)).toFixed(1)} ${(-6 * Math.sin(a * Math.PI / 180)).toFixed(1)}" stroke="${C.terra}" stroke-width=".8"/>`).join('')}<path d="M0 -8 v8" stroke="${INK}" stroke-width="1.1"/></g>`,
+  pine: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 -9 l4 6 h-2 l3 4 h-10 l3 -4 h-2Z" fill="${C.olive}" stroke="${INK}" stroke-width=".9" stroke-linejoin="round"/></g>`,
+  mount: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-10 0 L-1 -14 L9 0Z" fill="#b8a98c" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round"/><path d="M-4 -9 L-1 -14 L2 -9 L0 -10 Z" fill="${C.cream}"/></g>`,
+  stein: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-6" y="-12" width="10" height="13" rx="1.5" fill="${C.gold}" stroke="${INK}" stroke-width="1.2"/><path d="M4 -9 q5 0 5 4 t-5 4" fill="none" stroke="${INK}" stroke-width="1.2"/><path d="M-7 -12 q2 -4 6 -2 q3 -3 6 1 q-2 3 -12 1Z" fill="#fff" stroke="${INK}" stroke-width="1"/></g>`,
+  whale: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-12 0 q2 -9 12 -9 q10 0 12 6 l5 -4 -1 6 1 6 -5 -4 q-6 4 -12 4 q-11 0 -12 -5Z" fill="#5d7f94" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round"/><circle cx="-6" cy="-3" r="1" fill="${INK}"/><path d="M-2 -9 q-2 -5 -5 -6 M-2 -9 q2 -5 5 -6" fill="none" stroke="${C.sea2}" stroke-width="1.2" stroke-linecap="round"/></g>`,
+  ship: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-10 0 h20 l-3 4 h-14Z" fill="${C.terra}" stroke="${INK}" stroke-width="1.1"/><path d="M0 0 v-14 M0 -14 l8 12 h-8 M0 -12 l-7 10 h7" fill="${C.cream}" stroke="${INK}" stroke-width="1"/></g>`,
+  plane: (x, y, s = 1, r = 0) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><path d="M-8 0 h14 q3 0 3 1.5 t-3 1.5 h-14 l-2 -3Z M-2 1 l-4 7 h3 l6 -7 M-2 1 l-4 -7 h3 l6 7 M-8 0 l-2 -4 h2 l3 4" fill="${C.cream}" stroke="${INK}" stroke-width="1" stroke-linejoin="round"/></g>`,
+};
+
+let rc = null;
+function roughPath(parent, d, opts) {
+  if (rc) { const n = rc.path(d, Object.assign({ roughness: 1.3, bowing: 1.2, stroke: INK, strokeWidth: 1.4 }, opts)); parent.appendChild(n); return n; }
+  return el('path', { d, fill: opts.fill && opts.fillStyle === 'solid' ? opts.fill : 'none', stroke: opts.stroke || INK, 'stroke-width': opts.strokeWidth || 1.4 }, parent);
+}
+
+function carSVG() {
+  return `<g id="carBob">
+    <ellipse cx="0" cy="11" rx="15" ry="2.6" fill="rgba(46,42,51,.25)"/>
+    <g id="carBody">
+      <rect x="-9" y="-17" width="7" height="5" rx="1" fill="${C.olive}" stroke="${INK}" stroke-width="1.1"/>
+      <rect x="-2" y="-18.5" width="9" height="6.5" rx="1.2" fill="${C.gold}" stroke="${INK}" stroke-width="1.1"/>
+      <path d="M-3 -18.5 v6.5" stroke="${INK}" stroke-width=".8"/>
+      <path d="M-11 -12 h20" stroke="${INK}" stroke-width="1.3" stroke-linecap="round"/>
+      <path d="M-15 6 q-1 -8 3 -10 l4 -7 q1 -1.5 3 -1.5 h11 q3 0 5 3 l3 5 q5 1 5 6 v4 Z" fill="${C.terra}" stroke="${INK}" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M-7 -4.5 l3 -5.5 h5 v5.5Z" fill="${C.sea3}" stroke="${INK}" stroke-width="1"/>
+      <path d="M3 -4.5 v-5.5 h5 q2 0 3 2 l2 3.5Z" fill="${C.sea3}" stroke="${INK}" stroke-width="1"/>
+      <circle cx="-2" cy="-5.5" r="1.8" fill="#b98158" stroke="${INK}" stroke-width=".7"/><circle cx="7" cy="-5.8" r="1.8" fill="#f3cfae" stroke="${INK}" stroke-width=".7"/><path d="M5.2 -6.6 q1.8 -2 3.6 0" fill="#e8c46a" stroke="${INK}" stroke-width=".5"/>
+      <path d="M-15 1 h36" stroke="${C.cream}" stroke-width="1.4" opacity=".8"/>
+      <circle cx="20.5" cy="1" r="1.5" fill="#ffe28a" stroke="${INK}" stroke-width=".8"/>
+    </g>
+    <g class="wheel" transform="translate(-8 7)"><circle r="4.2" fill="${INK}"/><circle r="1.9" fill="${C.cream}"/><path d="M-1.6 0 h3.2" stroke="${INK}" stroke-width=".8"/></g>
+    <g class="wheel" transform="translate(13 7)"><circle r="4.2" fill="${INK}"/><circle r="1.9" fill="${C.cream}"/><path d="M-1.6 0 h3.2" stroke="${INK}" stroke-width=".8"/></g>
+  </g>`;
+}
+
+function drawMap() {
+  const svg = $('#mapSvg');
+  svg.innerHTML = '';
+  if (window.rough) rc = rough.svg(svg);
+  // sea + wash
+  el('rect', { x: -200, y: -200, width: W + 400, height: H + 400, fill: C.sea2 }, svg);
+  const seaWash = el('g', { filter: 'url(#wc)' }, svg);
+  el('ellipse', { cx: 120, cy: 220, rx: 180, ry: 260, fill: '#a9d3d8', opacity: .75 }, seaWash);
+  el('ellipse', { cx: 60, cy: 420, rx: 120, ry: 70, fill: '#6aa5b8', opacity: .55 }, seaWash);
+  // land
+  const landD = sm(LAND, true);
+  const landEl = el('path', { d: landD, fill: C.sand, filter: 'url(#wc)' }, svg);
+  const waves = el('g', { stroke: '#e9f4f2', 'stroke-width': 1.3, fill: 'none', 'stroke-linecap': 'round', opacity: .85 }, svg);
+  let placed = 0;
+  for (let i = 0; i < 400 && placed < 44; i++) {
+    const x = rand(-10, 250), y = rand(-10, 480);
+    let inLand = false; try { inLand = landEl.isPointInFill(new DOMPoint(x, y)) || landEl.isPointInFill(new DOMPoint(x + 14, y)); } catch (e) { inLand = x > 200; }
+    if (inLand || (x < 175 && y < 72)) continue;
+    el('path', { d: `M${x.toFixed(1)} ${y.toFixed(1)} q3 -3 6 0 t6 0`, class: 'wv' }, waves); placed++;
+  }
+  const tint = el('g', { filter: 'url(#wc)', opacity: .8 }, svg);
+  el('ellipse', { cx: P(44.9,-0.4)[0], cy: P(44.9,-0.4)[1], rx: 60, ry: 42, fill: '#cfd08e' }, tint);          // Bordeaux vines
+  el('ellipse', { cx: P(44.2,-1.0)[0], cy: P(44.2,-1.0)[1], rx: 40, ry: 90, fill: '#bfc98a' }, tint);          // Landes pines
+  el('ellipse', { cx: P(43.15,-2.2)[0], cy: P(43.15,-2.2)[1], rx: 120, ry: 34, fill: '#b9cc8e' }, tint);       // green Basque hills
+  el('ellipse', { cx: P(42.5,-2.7)[0], cy: P(42.5,-2.7)[1], rx: 90, ry: 44, fill: '#e3b77e' }, tint);         // dry Rioja
+  el('ellipse', { cx: P(43.0,-0.6)[0], cy: P(43.0,-0.6)[1], rx: 110, ry: 30, fill: '#d6c7a0' }, tint);        // Pyrenees
+  // islands
+  el('path', { d: smooth([P(46.24,-1.56), P(46.21,-1.44), P(46.19,-1.30), P(46.16,-1.27), P(46.17,-1.40), P(46.20,-1.52)], true), fill: C.sand, filter: 'url(#wc)' }, svg);
+  el('path', { d: smooth([P(46.04,-1.42), P(45.98,-1.33), P(45.86,-1.24), P(45.82,-1.21), P(45.90,-1.31), P(46.01,-1.41)], true), fill: C.sand, filter: 'url(#wc)' }, svg);
+  // Gironde estuary + rivers
+  const [gx0, gy0] = P(45.585,-1.06), [gx1, gy1] = P(45.05,-0.66);
+  el('path', { d: `M${gx0 - 5} ${gy0 - 2} Q${gx0 + 20} ${gy0 + 20} ${gx1} ${gy1} L${gx1 + 3} ${gy1 - 1} Q${gx0 + 28} ${gy0 + 8} ${gx0 + 6} ${gy0 - 6}Z`, fill: C.sea2, filter: 'url(#wc-soft)' }, svg);
+  const rivers = el('g', { fill: 'none', stroke: C.sea, 'stroke-width': 1.6, 'stroke-linecap': 'round', filter: 'url(#wobble)' }, svg);
+  el('path', { d: sm([[45.05,-0.66],[44.95,-0.6],[44.84,-0.56],[44.7,-0.35],[44.5,0.1]]) }, rivers);
+  el('path', { d: sm([[43.495,-1.52],[43.5,-1.4],[43.55,-1.1],[43.7,-0.8]]) }, rivers);
+  el('path', { d: sm([[42.65,-2.9],[42.52,-2.5],[42.4,-2.0]]) }, rivers);
+  // arcachon basin
+  el('ellipse', { cx: P(44.68,-1.15)[0], cy: P(44.68,-1.15)[1], rx: 9, ry: 7, fill: C.sea2, filter: 'url(#wc-soft)' }, svg);
+  // coastline ink
+  const ink = el('g', {}, svg);
+  roughPath(ink, sm(COAST), { strokeWidth: 1.6, roughness: 1.1 });
+  roughPath(ink, sm(COAST.map(([a, b]) => [a + .012, b - .03])), { strokeWidth: .6, stroke: '#5a7f8c', roughness: 1.6 });
+  // landmarks
+  const lm = el('g', { class: 'landmarks' }, svg);
+  const put = (k, ll, s = 1) => { const [x, y] = P(...ll); lm.insertAdjacentHTML('beforeend', LM[k](x, y, s)); };
+  [[44.4,-1.12],[44.25,-1.18],[44.1,-1.1],[44.3,-0.98],[43.98,-1.25],[44.05,-0.95],[44.45,-0.98],[43.85,-1.1]].forEach(ll => put('pine', ll, .9));
+  [[43.0,-1.0],[42.95,-0.6],[43.02,-0.2],[42.9,0.1],[43.12,-1.3],[43.08,-2.3],[43.05,-2.8],[43.12,-1.9]].forEach(ll => put('mount', ll, 1.1));
+  put('lighthouse', [46.245,-1.56], .9);          // Phare des Baleines
+  put('oyster', [45.80,-1.00], .8);              // Marennes cabanes
+  put('church', [45.53,-0.90], .9);               // Talmont
+  put('vines', [44.95,-0.75], 1);                 // Médoc
+  put('castle', [44.9,-0.2], 1);                  // Saint-Émilion
+  put('dune', [44.59,-1.19], 1.1);                // Dune du Pilat
+  put('surf', [43.75,-1.52], 1);                  // Hossegor
+  put('cheese', [43.28,-1.25], 1.1);              // Cheese hills
+  put('wheel', [43.30,-2.06], .9);                // Monte Igueldo funfair
+  put('hermitage', [43.465,-2.80], 1);            // Gaztelugatxe
+  put('vines', [42.62,-2.6], 1.1);                // Rioja Alavesa
+  put('church', [42.33,-2.78], .9);               // San Millán monasteries
+  put('whale', [43.62,-2.75], 1.1);               // off Matxitxako
+  put('ship', [45.2,-2.2], 1.1);
+  put('lighthouse', [43.49,-1.585], .8);          // Biarritz lighthouse
+  // compass rose
+  const cx = 70, cy = 300;
+  const comp = el('g', { transform: `translate(${cx} ${cy})` }, svg);
+  roughPath(comp, 'M -26 0 A 26 26 0 1 0 26 0 A 26 26 0 1 0 -26 0', { strokeWidth: 1.1, roughness: .8, fill: 'rgba(253,247,232,.55)', fillStyle: 'solid' });
+  comp.insertAdjacentHTML('beforeend', `<path d="M0 -34 L6 0 L0 34 L-6 0Z" fill="${C.cream}" stroke="${INK}" stroke-width="1.2"/><path d="M0 -34 L6 0 L-6 0Z" fill="${C.terra}" stroke="${INK}" stroke-width="1.2"/><path d="M-30 0 L0 5 L30 0 L0 -5Z" fill="${C.sand2}" stroke="${INK}" stroke-width="1.1"/><text y="-37" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="11" fill="${INK}">N</text>`);
+  // cartouche
+  svg.insertAdjacentHTML('beforeend', `<g transform="translate(18 32) rotate(-3)"><path d="M0 0 h150 q8 18 0 36 h-150 q8 -18 0 -36Z" fill="${C.cream}" stroke="${INK}" stroke-width="1.5" filter="url(#wobble)"/><text x="75" y="17" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="15" fill="${C.rioja}">Cobs on Tour</text><text x="75" y="30" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="12" fill="${INK}">the Bay of Biscay, Oct 2027</text></g>`);
+  svg.insertAdjacentHTML('beforeend', `<text x="90" y="170" font-family="Caveat" font-weight="700" font-size="19" fill="#2f6378" opacity=".8" transform="rotate(-14 90 170)">Bay of Biscay</text>
+    <text x="330" y="150" font-family="Caveat" font-weight="700" font-size="16" fill="#8a6a3a" opacity=".85">FRANCE</text>
+    <text x="150" y="600" font-family="Caveat" font-weight="700" font-size="16" fill="#8a6a3a" opacity=".85">ESPAÑA</text>`);
+  // insets for flights (Paris top-right, Bamberg bottom-right)
+  svg.insertAdjacentHTML('beforeend', `
+    <g transform="translate(334 8)"><rect width="60" height="40" rx="6" fill="${C.cream}" stroke="${INK}" stroke-width="1.4" filter="url(#wobble)"/><path d="M30 8 l-6 22 h12Z M26 20 h8" fill="none" stroke="${INK}" stroke-width="1.3" stroke-linejoin="round"/><text x="30" y="37" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="11" fill="${INK}">Paris</text></g>
+    <g transform="translate(318 612)"><rect width="72" height="54" rx="6" fill="${C.cream}" stroke="${INK}" stroke-width="1.4" filter="url(#wobble)"/>${LM.stein(30, 30, 1.3)}${LM.castle(52, 32, .9)}<text x="36" y="47" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="12" fill="${INK}">Bamberg · finale</text></g>`);
+  // route: whole trip, dotted and ghosted
+  const route = el('g', { fill: 'none', 'stroke-linecap': 'round' }, svg);
+  const seq = ['royan','bordeaux','capbreton','bayonne','biarritz','sjdl','sanseb','orio','mundaka','bermeo','plentzia','bilbao','haro','ezcaray'];
+  el('path', { d: smooth([...seq.map(k => STOPS[k].xy)]), stroke: INK, 'stroke-width': 1.6, 'stroke-dasharray': '1 5', opacity: .55, filter: 'url(#wobble)' }, route);
+  el('path', { d: `M364 48 Q330 20 ${STOPS.larochelle.xy[0]} ${STOPS.larochelle.xy[1]}`, stroke: INK, 'stroke-width': 1.3, 'stroke-dasharray': '4 4', opacity: .5 }, route);
+  el('path', { d: `M${STOPS.ezcaray.xy[0]} ${STOPS.ezcaray.xy[1]} Q200 700 318 640`, stroke: INK, 'stroke-width': 1.3, 'stroke-dasharray': '4 4', opacity: .5 }, route);
+  svg.insertAdjacentHTML('beforeend', LM.plane(300, 26, .9, 190) + LM.plane(240, 662, .9, -8));
+  // leg 0 options
+  el('path', { id: 'leg-coast', d: sm(LEG0.coast), fill: 'none', stroke: C.sea, 'stroke-width': 2.4, 'stroke-dasharray': '1 4.5', 'stroke-linecap': 'round' }, svg);
+  el('path', { id: 'leg-highway', d: sm(LEG0.highway), fill: 'none', stroke: '#8b8579', 'stroke-width': 2.4, 'stroke-dasharray': '6 4', 'stroke-linecap': 'round' }, svg);
+  el('path', { id: 'leg-ink', d: '', fill: 'none', stroke: C.rioja, 'stroke-width': 3, 'stroke-linecap': 'round' }, svg);
+  // stops
+  const pins = el('g', { class: 'pins' }, svg);
+  Object.entries(STOPS).forEach(([k, s]) => {
+    if (k === 'paris' || k === 'bamberg') return;
+    const [x, y] = s.xy;
+    const gp = el('g', { id: 'pin-' + k, class: 'pin' }, pins);
+    if (s.optional) el('path', { d: `M${x} ${y + 3} c-4 -3 -6 -6 -3 -8 q2 -1 3 1 q1 -2 3 -1 c3 2 1 5 -3 8Z`, fill: '#e98f9e', stroke: INK, 'stroke-width': 1 }, gp);
+    else {
+      el('circle', { cx: x, cy: y, r: 3.8, fill: C.cream, stroke: INK, 'stroke-width': 1.4, class: 'dot' }, gp);
+    }
+    const [dx, dy, anc = 'middle'] = s.lab;
+    const t = el('text', { x: x + dx, y: y + dy, 'text-anchor': anc, 'font-family': 'Caveat', 'font-weight': 700, 'font-size': 10.5, fill: INK, stroke: C.paper, 'stroke-width': 2.6, 'paint-order': 'stroke' }, gp);
+    t.textContent = s.name;
+  });
+  // car
+  const car = el('g', { id: 'car' }, svg);
+  car.innerHTML = `<g id="carPop"><g transform="translate(0 -7)"><g id="carFlip" transform="scale(.8)">${carSVG()}</g></g></g>`;
+  gsap.set(car, { x: STOPS.larochelle.xy[0], y: STOPS.larochelle.xy[1] });
+  gsap.to('#carBob', { y: -1.5, duration: .35, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+  gsap.to(svg.querySelectorAll('.wv'), { x: '+=3', duration: 2.2, repeat: -1, yoyo: true, ease: 'sine.inOut', stagger: { each: .05, from: 'random' } });
+}
+
+function buildClouds() {
+  const host = $('#clouds'); host.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const w = rand(70, 120);
+    host.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 120 50" style="width:${w}px;left:${rand(0, 90)}%;top:${rand(0, 90)}%" data-f="${rand(1.15, 1.45).toFixed(2)}"><path d="M14 40 q-12 0 -10 -10 q2 -9 13 -7 q2 -14 18 -13 q10 -10 24 -2 q14 -6 22 6 q14 -1 16 12 q10 4 4 14Z" fill="#fffaf0" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round" filter="url(#wobble)" opacity=".92"/></svg>`);
+  }
+  host.querySelectorAll('svg').forEach(c => gsap.to(c, { x: '+=' + rand(20, 50), duration: rand(8, 14), repeat: -1, yoyo: true, ease: 'sine.inOut' }));
+}
+
+/* camera: pan/zoom the map; clouds parallax a little faster */
+const cam = { x: 0, y: 0, s: 1 };
+function applyCam() {
+  gsap.set('#mapWrap', { x: cam.x, y: cam.y, scale: cam.s });
+  if (!REDUCED) $('#clouds').style.transform = `translate(${(cam.x * .25).toFixed(1)}px, ${(cam.y * .25).toFixed(1)}px)`;
+}
+function camTarget(ux, uy, s) {
+  const vp = $('#mapViewport'); const vw = vp.clientWidth, vh = vp.clientHeight;
+  return { x: vw / 2 - ux * s, y: vh * .46 - uy * s, s };
+}
+function camTo(ux, uy, s, dur = 1.4) {
+  const t = camTarget(ux, uy, s);
+  return gsap.to(cam, { ...t, duration: dur, ease: 'power2.inOut', onUpdate: applyCam });
+}
+function fitScale() { const vp = $('#mapViewport'); return Math.min(vp.clientWidth / W, vp.clientHeight / H) * .98; }
+function legScale() { const vp = $('#mapViewport'); return Math.max(vp.clientWidth / W * 2.3, 1.8); }
+
+/* sky: day → dusk, driven by a 0..1 time of day */
+const SKY = [
+  { t: 0,   top: '#9fd0e0', bot: '#e9f3e6', sun: '#ffe39a', dusk: 0 },
+  { t: .55, top: '#8fc6dd', bot: '#fbe6b8', sun: '#ffd36b', dusk: 0 },
+  { t: .8,  top: '#e59a6b', bot: '#fbd08a', sun: '#ff9f55', dusk: .12 },
+  { t: 1,   top: '#4b3f78', bot: '#d9876d', sun: '#f6ecd4', dusk: .32 },
+];
+const skyState = { t: 0 };
+function mix(a, b, f) { const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16); const r = (x, s) => (x >> s) & 255; const c = s => Math.round(r(pa, s) + (r(pb, s) - r(pa, s)) * f); return `rgb(${c(16)},${c(8)},${c(0)})`; }
+function renderSky() {
+  const t = skyState.t; let i = 0; while (i < SKY.length - 2 && t > SKY[i + 1].t) i++;
+  const a = SKY[i], b = SKY[i + 1], f = Math.min(1, Math.max(0, (t - a.t) / (b.t - a.t)));
+  $('#skyGrad').style.background = `linear-gradient(180deg, ${mix(a.top, b.top, f)}, ${mix(a.bot, b.bot, f)})`;
+  const smEl = $('#sunMoon'); smEl.style.background = mix(a.sun, b.sun, f);
+  const w = $('#sky').clientWidth;
+  smEl.style.left = (14 + t * (w - 50)) + 'px';
+  smEl.style.top = (104 - Math.sin(Math.PI * (0.12 + t * .76)) * 10) + 'px';
+  $('#dusk').style.opacity = a.dusk + (b.dusk - a.dusk) * f;
+}
+function skyTo(t, dur) { return gsap.to(skyState, { t, duration: dur, ease: 'none', onUpdate: renderSky }); }
+
+/* rain overlay */
+let rainOn = false, rainRAF;
+function rain(on) {
+  const cv = $('#rain');
+  if (on && !rainOn) {
+    rainOn = true;
+    const ctx = cv.getContext('2d');
+    const fit = () => { cv.width = cv.clientWidth * devicePixelRatio; cv.height = cv.clientHeight * devicePixelRatio; };
+    fit();
+    const drops = [...Array(140)].map(() => ({ x: Math.random(), y: Math.random(), v: rand(.9, 1.6), l: rand(10, 22) }));
+    const tick = () => {
+      if (!rainOn) return;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.strokeStyle = 'rgba(46,70,90,.45)'; ctx.lineWidth = 1.6 * devicePixelRatio; ctx.lineCap = 'round';
+      ctx.beginPath();
+      drops.forEach(d => { d.y += .012 * d.v; d.x -= .002 * d.v; if (d.y > 1.05) { d.y = -.05; d.x = Math.random() * 1.1; } const X = d.x * cv.width, Y = d.y * cv.height; ctx.moveTo(X, Y); ctx.lineTo(X - 3 * devicePixelRatio, Y + d.l * devicePixelRatio); });
+      ctx.stroke();
+      rainRAF = requestAnimationFrame(tick);
+    };
+    tick();
+    gsap.to(cv, { opacity: 1, duration: .8 });
+    gsap.to('#dusk', { opacity: '+=.12', duration: .8 });
+  } else if (!on && rainOn) {
+    gsap.to(cv, { opacity: 0, duration: 1, onComplete: () => { rainOn = false; cancelAnimationFrame(rainRAF); } });
+    gsap.to('#dusk', { opacity: '-=.12', duration: 1 });
+  }
+}
+
+/* ================= FLOW ================= */
+function mapAction(label, fn, cls = '') {
+  const h = $('#mapAction');
+  h.innerHTML = label ? `<button class="btn ${cls}">${label}</button>` : '';
+  if (label) { const b = h.firstElementChild; b.onclick = () => { Snd.pop('G5'); fn(); }; gsap.from(b, { scale: 0, duration: .5, ease: 'back.out(2)' }); }
+}
+
+async function enterMap() {
+  show('map');
+  skyState.t = 0; buildHud(); drawMap(); buildClouds(); renderSky();
+  await wait(30);
+  // cinematic: whole route, then swoop to La Rochelle
+  Object.assign(cam, camTarget(W / 2, H / 2, fitScale())); applyCam();
+  say('G’day Cobs. Cobba the Clam, your guide. Technically a clam, spiritually a tour bus.', 3600);
+  await wait(2600);
+  const [lx, ly] = STOPS.larochelle.xy;
+  camTo(lx + 8, ly + 50, legScale(), 2.2);
+  await wait(2300);
+  gsap.fromTo('#carPop', { scale: 0 }, { scale: 1, svgOrigin: '0 0', duration: .6, ease: 'back.out(3)' });
+  Snd.pop('E5');
+  say('Car collected at La Rochelle. Big enough for everyone and their bags. No bigger. Annette’s rule.', 4200);
+  S.phase = 'leg0'; save();
+  mapAction('Choose the road', chooseRoute);
+}
+
+function chooseRoute() {
+  mapAction('');
+  const sh = modal(`
+    <div class="eyebrow">Leg 1 · La Rochelle to Royan · Sun 3 Oct</div>
+    <h2>Coast road or highway?</h2>
+    <p class="note">House rule: coast road, not the highway. It’s slower, the views are better, and the stars are bigger.</p>
+    <div class="choices">
+      <button class="choice" data-r="coast">${ICON.coast}<span><b>The coast road</b><small>Through Brouage citadel and the Marennes oyster channels. Arrive at golden hour.</small><span class="tagline good">+2 stars</span><span class="tagline">scenery postcard</span><span class="tagline bad">−12 energy</span></span></button>
+      <button class="choice" data-r="highway">${ICON.highway}<span><b>The highway</b><small>Inland past Rochefort and Saintes. Quicker, flatter, sadder.</small><span class="tagline">+0 stars</span><span class="tagline bad">−5 energy</span></span></button>
+    </div>`);
+  sh.querySelectorAll('.choice').forEach(b => b.onclick = async () => {
+    S.route = b.dataset.r; save();
+    await closeModal();
+    drive();
+  });
+  gsap.fromTo('#leg-coast', { strokeWidth: 2.4 }, { strokeWidth: 4, repeat: 5, yoyo: true, duration: .4 });
+}
+
+async function drive() {
+  const coast = S.route === 'coast';
+  const pathId = coast ? '#leg-coast' : '#leg-highway';
+  gsap.to(coast ? '#leg-highway' : '#leg-coast', { opacity: .15, duration: .6 });
+  $('#leg-ink').setAttribute('d', $(pathId).getAttribute('d'));
+  const ink = $('#leg-ink'), len = ink.getTotalLength();
+  gsap.set(ink, { strokeDasharray: len, strokeDashoffset: len });
+  say(coast ? 'Coast road. Correct answer. I wrote the rules down in sand, so they’re legally binding.' : 'The highway. Bold. Annette will hear about this.', 3200);
+  const dur = coast ? 9 : 5.5;
+  const S0 = STOPS.larochelle.xy;
+  let lastX = S0[0];
+  const tl = gsap.timeline({ onUpdate: () => {
+    const x = gsap.getProperty('#car', 'x'), y = gsap.getProperty('#car', 'y');
+    const t = camTarget(x, y + 20, cam.s); cam.x += (t.x - cam.x) * .12; cam.y += (t.y - cam.y) * .12; applyCam();
+    if (Math.abs(x - lastX) > .3) { $('#carFlip').setAttribute('transform', `scale(${x < lastX ? -.8 : .8} .8)`); lastX = x; }
+  } });
+  const road = $(pathId), roadLen = road.getTotalLength(), prog = { p: 0 };
+  tl.to(prog, { p: 1, duration: dur, ease: 'power1.inOut', onUpdate: () => { const pt = road.getPointAtLength(prog.p * roadLen); gsap.set('#car', { x: pt.x, y: pt.y }); } }, 0)
+    .to(ink, { strokeDashoffset: 0, duration: dur, ease: 'power1.inOut' }, 0)
+    .to('.wheel', { rotation: 360 * 14, duration: dur, ease: 'power1.inOut', transformOrigin: '50% 50%' }, 0)
+    .add(skyTo(coast ? .82 : .5, dur), 0)
+    .addPause(dur * .45, () => roadEvent(tl));
+  bump({ energy: coast ? -12 : -5, hunger: coast ? 18 : 10 });
+  await new Promise(r => tl.eventCallback('onComplete', r));
+  arriveRoyan();
+}
+
+function roadEvent(tl) {
+  rain(true); buzz([40, 60, 40]);
+  say('Annette said pack gumboots and a raincoat. Did anyone listen? One of us did. It was me. I don’t have feet.', 0);
+  const canReroll = !S.used.annette;
+  const sh = modal(`
+    <div class="eyebrow">Road event · near Brouage</div>
+    <h2>Atlantic squall!</h2>
+    <p>Sideways rain off the marshes. Paulo and Annette packed gumboots and raincoats. Huw and Romy packed optimism. Romy insists it’s refreshing.</p>
+    <p class="note">Without the right gear: −6 energy each for the unprepared.</p>
+    <button class="ability ${canReroll ? '' : 'used'}" id="reroll">${ICON.crystal}<span><b>Annette · Local Knowledge</b><small>${canReroll ? 'Reroll this event. Once per leg.' : 'Already used this leg.'}</small></span></button>
+    <button class="ability ${S.used.romy ? 'used' : ''}" id="silver">${ICON.energy.replace('<svg ', '<svg width="40" height="40" ')}<span><b>Romy · Silver Lining</b><small>${S.used.romy ? 'Already used this leg.' : 'Turn the squall into a puddle-jumping contest. No energy lost, +1 star.'}</small></span></button>
+    <div class="row"><button class="btn ghost small" id="tough">Tough it out</button></div>`, { mid: true });
+  const resume = async (text) => { await closeModal(); if (text) say(text, 3400); tl.play(); };
+  sh.querySelector('#tough').onclick = () => { rain(true); bump({ energy: -12 }); setTimeout(() => rain(false), 2600); resume('Soggy but spiritually intact. Onwards.'); };
+  sh.querySelector('#silver').onclick = () => { if (S.used.romy) return; S.used.romy = true; S.stars += 1; save(); party(false); Snd.fanfare(); setTimeout(() => rain(false), 3000); resume('Romy won the puddle jumping. Nobody else knew it was a contest.'); };
+  sh.querySelector('#reroll').onclick = async () => {
+    if (!canReroll) return;
+    S.used.annette = true; save();
+    rain(false);
+    const panel = sh;
+    gsap.to(panel, { rotationY: 90, duration: .25, ease: 'power2.in', onComplete: () => {
+      panel.innerHTML = `
+        <div class="eyebrow">Rerolled by Annette</div>
+        <h2>Rainbow over Brouage</h2>
+        <p>The squall blows out to sea and a double rainbow lands on the star-shaped citadel. Everyone takes the same photo.</p>
+        <p class="note">+1 star · +5 energy</p>
+        <div class="row"><button class="btn olive" id="go">Keep driving</button></div>`;
+      gsap.to(panel, { rotationY: 0, duration: .35, ease: 'back.out(1.6)' });
+      party(false); Snd.fanfare();
+      panel.querySelector('#go').onclick = () => { S.stars += 1; bump({ energy: 5 }); resume('Annette: one. Weather: nil.'); };
+    } });
+  };
+}
+
+async function arriveRoyan() {
+  rain(false);
+  const [x, y] = STOPS.royan.xy;
+  camTo(x, y + 30, cam.s * 1.08, 1.2);
+  const pin = $('#pin-royan .dot');
+  gsap.to(pin, { attr: { r: 6 }, fill: C.rioja, duration: .5, ease: 'back.out(3)' });
+  const ring = el('circle', { cx: x, cy: y, r: 5, fill: 'none', stroke: C.rioja, 'stroke-width': 1.5 }, $('#mapSvg'));
+  gsap.to(ring, { attr: { r: 16 }, opacity: 0, duration: 1.4, repeat: -1, ease: 'power1.out' });
+  if (S.route === 'coast') { S.stars += 2; save(); }
+  party(false); Snd.fanfare(); buzz(30);
+  say('Royan! Huge, fresh, flavourful oysters. Annette’s words, not mine. I’m legally obliged to stay neutral on oysters.', 4600);
+  S.phase = 'royan'; save();
+  mapAction('Explore Royan', enterExplore);
+}
+
+/* ================= EXPLORE: top-down walkable stop ================= */
+// The four Cobs walk a hand-drawn top-down scene of the stop. Tap the ground to walk,
+// tap a place to walk there and interact. Royan = La Cayenne oyster port (Marennes) + detours.
+const XW = 600, XH = 920;
+const WATER = [[0,0],[150,0],[166,120],[152,260],[170,420],[158,560],[150,660],[232,738],[300,790],[372,850],[392,920],[0,920]];
+const BOARDWALK = { x: 146, y: 96, w: 50, h: 560 };
+const PIERS = [150, 260, 370, 480].map(y => ({ x: 100, y: y + 22, w: 50, h: 14 }));
+const POIS = [
+  { id:'green',    x:178, y:182, r:34, verb:'Green cabane: the history' },
+  { id:'cabane',   x:178, y:292, r:38, verb:'Taste the oysters' },
+  { id:'blue',     x:178, y:402, r:34, verb:'Blue cabane: grade oysters' },
+  { id:'red',      x:178, y:512, r:34, verb:'Red cabane: the channel' },
+  { id:'board',    x:262, y:340, r:36, verb:'Read the price board' },
+  { id:'gull',     x:300, y:220, r:40, verb:'Shoo the seagull' },
+  { id:'cobba',    x:312, y:566, r:40, verb:'Chat with Cobba' },
+  { id:'scope',    x:212, y:664, r:40, verb:'Look out to Cordouan' },
+  { id:'carrelet', x:300, y:812, r:44, verb:'Lower the carrelet net' },
+  { id:'talmont',  x:410, y:760, r:54, verb:'Visit Sainte-Radegonde' },
+  { id:'brouage',  x:470, y:320, r:44, verb:'Brouage signpost' },
+  { id:'car',      x:432, y:116, r:50, verb:'Hit the road' },
+];
+const CARRELET_PIER = { x: 268, y: 806, w: 80, h: 12 };
+let EX = null;
+function exWorldSVG() {
+  const edge = smooth(WATER.slice(0, 11));
+  const waterD = edge + ' L0 920 L0 0Z';
+  const tufts = [];
+  for (let i = 0; i < 80; i++) {
+    const x = rand(210, 590), y = rand(20, 900);
+    if ((x > 490 && x < 565) || (x > 365 && x < 505 && y > 50 && y < 180) || (x > 340 && y > 690)) continue;
+    tufts.push(`<path d="M${x.toFixed(0)} ${y.toFixed(0)} l-3 -7 M${x.toFixed(0)} ${y.toFixed(0)} l0 -9 M${x.toFixed(0)} ${y.toFixed(0)} l3 -7" stroke="${C.olive}" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>`);
+  }
+  const parks = [];
+  for (let r = 0; r < 9; r++) for (let c = 0; c < 2; c++) parks.push(`<rect x="${6 + c * 16}" y="${130 + r * 52}" width="12" height="30" rx="3" fill="#4d6b64" opacity=".5"/>`);
+  const huts = [150, 260, 370, 480].map((y, i) => {
+    const col = ['#7fae5a', C.gold, '#5b9cc4', '#c8533a'][i];
+    return `<g transform="translate(36 ${y})"><rect x="5" y="7" width="64" height="58" rx="4" fill="rgba(46,42,51,.22)"/>
+      <path d="M0 0 L32 -3 L64 0 L64 58 L32 61 L0 58Z" fill="${col}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/><path d="M32 -3 V61" stroke="${INK}" stroke-width="2"/>
+      ${[10, 22, 34, 46].map(yy => `<path d="M3 ${yy} H29 M35 ${yy} H61" stroke="rgba(46,42,51,.3)" stroke-width="1.5"/>`).join('')}
+      <g transform="translate(58 -2)"><path d="M0 0 v-16" stroke="${INK}" stroke-width="1.6"/><path class="flagCloth" d="M0 -16 q6 2 12 0 q-6 4 0 7 q-6 -2 -12 0Z" fill="${col}" stroke="${INK}" stroke-width="1.2"/></g></g>`;
+  }).join('');
+  const piers = PIERS.map(p => `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" fill="#c89a62" stroke="${INK}" stroke-width="2"/>`).join('');
+  const planks = [];
+  for (let y = BOARDWALK.y + 8; y < BOARDWALK.y + BOARDWALK.h; y += 10) planks.push(`<path d="M${BOARDWALK.x} ${y} h${BOARDWALK.w}" stroke="#a87a45" stroke-width="1.2"/>`);
+  return `
+  <rect x="-400" y="-400" width="${XW + 800}" height="${XH + 800}" fill="${C.sea2}"/>
+  <rect x="0" y="0" width="${XW}" height="${XH}" fill="${C.sand}" filter="url(#wc)"/>
+  ${tufts.join('')}
+  <path id="exWater" d="${waterD}" fill="${C.sea2}" filter="url(#wc)"/>
+  <path d="${edge}" fill="none" stroke="${INK}" stroke-width="2.6" filter="url(#wobble)"/>
+  <path d="${smooth(WATER.slice(0, 11).map(([x, y]) => [x - 9, y + 5]))}" fill="none" stroke="#e9f4f2" stroke-width="2" stroke-dasharray="10 8" class="exFoam"/>
+  ${parks.join('')}
+  <g class="exWaves" stroke="#e9f4f2" stroke-width="1.8" fill="none" stroke-linecap="round">${[[40,60],[100,40],[60,650],[120,740],[40,800],[200,860],[280,890],[30,700],[110,610]].map(([x, y]) => `<path d="M${x} ${y} q4 -4 8 0 t8 0"/>`).join('')}</g>
+  <g class="exBoat"><g transform="translate(90 70)"><path d="M-18 0 q18 11 36 0 l-5 -9 h-26Z" fill="${C.terra}" stroke="${INK}" stroke-width="2"/><rect x="-6" y="-15" width="12" height="8" fill="${C.cream}" stroke="${INK}" stroke-width="1.6"/></g></g>
+  <!-- road + car park -->
+  <rect x="500" y="-10" width="60" height="${XH + 20}" fill="#9a948a" stroke="${INK}" stroke-width="2.5"/>
+  <path d="M530 0 V${XH}" stroke="${C.cream}" stroke-width="3" stroke-dasharray="16 14"/>
+  <rect x="370" y="60" width="130" height="112" rx="6" fill="#b8b1a3" stroke="${INK}" stroke-width="2.5"/>
+  ${[0, 1, 2, 3].map(i => `<path d="M${384 + i * 30} 68 v36 M${384 + i * 30} 128 v36" stroke="${C.cream}" stroke-width="2.4"/>`).join('')}
+  <!-- boardwalk, piers, cabanes on stilts -->
+  ${piers}
+  <rect x="${BOARDWALK.x}" y="${BOARDWALK.y}" width="${BOARDWALK.w}" height="${BOARDWALK.h}" fill="#c89a62" stroke="${INK}" stroke-width="2.5"/>${planks.join('')}
+  ${huts}
+  <!-- tasting terrace outside the gold cabane -->
+  <g transform="translate(178 292)"><circle r="17" fill="${C.cream}" stroke="${INK}" stroke-width="2.4"/>${[0, 1, 2, 3, 4, 5].map(i => { const a = i * 60 * Math.PI / 180; return LM.oyster(Math.cos(a) * 9, Math.sin(a) * 9 + 2, .7); }).join('')}
+    <path d="M-22 -18 a30 30 0 0 1 44 0 l-22 5Z" fill="${C.terra}" stroke="${INK}" stroke-width="2" opacity=".9"/></g>
+  <!-- price board -->
+  <g transform="translate(262 372)"><rect x="-22" y="-16" width="44" height="30" rx="3" fill="#2f3a33" stroke="${INK}" stroke-width="2.6"/><path d="M-14 -6 h18 M-14 1 h24 M-14 8 h14" stroke="${C.cream}" stroke-width="2" stroke-linecap="round"/><text x="12" y="10" font-family="Caveat" font-weight="700" font-size="10" fill="${C.gold}">€</text></g>
+  <!-- crates, buoys, bike -->
+  <g transform="translate(224 440)"><rect x="-14" y="-10" width="28" height="20" fill="#b98a55" stroke="${INK}" stroke-width="2"/><path d="M-14 -2 h28 M-14 4 h28" stroke="#8d6538" stroke-width="1.5"/>${LM.oyster(-4, -3, .8)}${LM.oyster(6, 2, .8)}</g>
+  <g transform="translate(236 150)"><circle r="8" fill="${C.terra}" stroke="${INK}" stroke-width="2"/><circle cx="14" cy="6" r="7" fill="${C.gold}" stroke="${INK}" stroke-width="2"/><circle cx="4" cy="16" r="6" fill="${C.cream}" stroke="${INK}" stroke-width="2"/></g>
+  <g transform="translate(252 500) rotate(-20)"><circle cx="-10" r="7" fill="none" stroke="${INK}" stroke-width="2.2"/><circle cx="10" r="7" fill="none" stroke="${INK}" stroke-width="2.2"/><path d="M-10 0 l8 -9 h10 l2 9 M-2 -9 l-2 -4" fill="none" stroke="${C.sea}" stroke-width="2.4" stroke-linejoin="round"/></g>
+  <!-- Cobba's rock + tide pool -->
+  <ellipse cx="348" cy="594" rx="30" ry="14" fill="${C.sea2}" stroke="${INK}" stroke-width="2" filter="url(#wc-soft)"/>
+  <path d="M292 584 q-4 -18 18 -22 q22 -2 24 16 q2 12 -20 12 q-18 0 -22 -6Z" fill="#a39a88" stroke="${INK}" stroke-width="2.4"/>
+  <g id="exCobbaHold"><g transform="translate(292 530) scale(.34)">${cobbaSVG().replace(/id="/g, 'data-e="')}</g></g>
+  <!-- Talmont church on its clifftop -->
+  <g transform="translate(410 760)">
+    <path d="M-62 44 q-12 -44 20 -64 q42 -24 82 -2 q30 22 16 66Z" fill="#d9c69a" stroke="${INK}" stroke-width="2.4" filter="url(#wobble)"/>
+    <rect x="-24" y="-22" width="48" height="30" fill="${C.cream}" stroke="${INK}" stroke-width="2.4"/>
+    <path d="M-28 -22 L0 -40 L28 -22Z" fill="${C.terra}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>
+    <rect x="-8" y="-58" width="16" height="22" fill="${C.cream}" stroke="${INK}" stroke-width="2.2"/><path d="M-10 -58 L0 -68 L10 -58Z" fill="${C.terra}" stroke="${INK}" stroke-width="2"/>
+    <path d="M0 -4 v12" stroke="${INK}" stroke-width="3"/>
+    ${[-42, -32, 32, 42].map(x => `<path d="M${x} 24 v-10" stroke="${C.olive}" stroke-width="2"/><circle cx="${x}" cy="13" r="3.5" fill="#e98f9e" stroke="${INK}" stroke-width="1.2"/>`).join('')}
+  </g>
+  <!-- marine cemetery with a sea view, next to the church -->
+  <g transform="translate(470 850)">${[0, 1, 2, 3, 4].map(i => `<rect x="${i * 16 - 36}" y="${(i % 2) * 8 - 6}" width="9" height="13" rx="4" fill="${C.cream}" stroke="${INK}" stroke-width="1.6"/>`).join('')}</g>
+  <!-- carrelet: fishing hut on stilts with its big square net -->
+  <rect x="${CARRELET_PIER.x}" y="${CARRELET_PIER.y}" width="${CARRELET_PIER.w}" height="${CARRELET_PIER.h}" fill="#c89a62" stroke="${INK}" stroke-width="2"/>
+  <g transform="translate(262 812)">
+    <rect x="-20" y="-18" width="32" height="30" rx="3" fill="${C.cream}" stroke="${INK}" stroke-width="2.4"/><path d="M-22 -18 L-4 -30 L14 -18Z" fill="${C.sea}" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M-20 -8 L-66 -34" stroke="#8d6538" stroke-width="3" stroke-linecap="round"/>
+    <g id="exNet" transform="translate(-72 -28)"><path d="M-22 -22 L22 22 M22 -22 L-22 22" stroke="${INK}" stroke-width="1.4"/><rect x="-22" y="-22" width="44" height="44" fill="rgba(253,247,232,.25)" stroke="${INK}" stroke-width="2" stroke-dasharray="4 3"/><path d="M-22 0 H22 M0 -22 V22" stroke="${INK}" stroke-width="1" opacity=".6"/></g>
+  </g>
+  <!-- telescope on the point, looking out to the Cordouan lighthouse -->
+  <g transform="translate(212 664)"><path d="M-6 12 L0 0 L6 12 M0 0 V12" stroke="${INK}" stroke-width="2.2" fill="none"/><rect x="-4" y="-12" width="22" height="9" rx="3" fill="${C.gold}" stroke="${INK}" stroke-width="2.2" transform="rotate(-150 0 -8)"/></g>
+  <g transform="translate(60 868)"><ellipse cx="0" cy="4" rx="16" ry="6" fill="#a39a88" stroke="${INK}" stroke-width="1.8"/>
+    <g id="exBeam"><path d="M0 -14 L60 -26 L60 -2Z" fill="#fff4b0" opacity=".55"/></g>
+    <path d="M-6 4 L-4 -12 h8 L6 4Z" fill="${C.cream}" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/><rect x="-4" y="-18" width="8" height="6" fill="${C.gold}" stroke="${INK}" stroke-width="1.4"/><path d="M-5 -18 q5 -6 10 0" fill="${C.terra}" stroke="${INK}" stroke-width="1.4"/></g>
+  <!-- flat-bottomed oyster barge doing laps of the estuary -->
+  <g id="exBarge"><path d="M-18 -6 h30 l6 6 -6 6 h-30Z" fill="#6e8a7a" stroke="${INK}" stroke-width="2"/><rect x="-10" y="-4" width="12" height="8" fill="#b98a55" stroke="${INK}" stroke-width="1.4"/><circle cx="8" cy="0" r="3" fill="#f0c39c" stroke="${INK}" stroke-width="1.2"/></g>
+  <!-- Brouage / Talmont signpost -->
+  <g transform="translate(470 320)"><path d="M0 22 V-26" stroke="#8d6538" stroke-width="5" stroke-linecap="round"/>
+    <path d="M-2 -28 h42 l8 7 -8 7 h-42Z" fill="${C.cream}" stroke="${INK}" stroke-width="2.2"/><text x="19" y="-17.5" text-anchor="middle" font-family="Fredoka" font-weight="600" font-size="8" fill="${INK}">Brouage</text>
+    <path d="M2 -10 h-42 l-8 7 8 7 h42Z" fill="${C.cream}" stroke="${INK}" stroke-width="2.2"/><text x="-19" y="0.5" text-anchor="middle" font-family="Fredoka" font-weight="600" font-size="8" fill="${INK}">Talmont</text></g>
+  <!-- pines by the road -->
+  ${[[586,60],[584,260],[590,420],[585,610],[588,840],[470,880],[430,860]].map(([x, y]) => LM.pine(x, y, 2.4)).join('')}
+  <!-- the hatchback, parked, from above -->
+  <g transform="translate(432 116) rotate(-90)">
+    <rect x="-23" y="-12" width="52" height="30" rx="10" fill="rgba(46,42,51,.25)"/>
+    <rect x="-26" y="-15" width="52" height="30" rx="10" fill="${C.terra}" stroke="${INK}" stroke-width="2.6"/>
+    <path d="M8 -12 q8 12 0 24 h-6 q4 -12 0 -24Z" fill="${C.sea3}" stroke="${INK}" stroke-width="1.8"/>
+    <path d="M-20 -11 q-4 11 0 22 h4 q-3 -11 0 -22Z" fill="${C.sea3}" stroke="${INK}" stroke-width="1.6"/>
+    <rect x="-12" y="-10" width="11" height="9" rx="1.5" fill="${C.gold}" stroke="${INK}" stroke-width="1.6"/><rect x="-12" y="1" width="11" height="9" rx="1.5" fill="${C.olive}" stroke="${INK}" stroke-width="1.6"/>
+    <circle cx="24" cy="-10" r="2.4" fill="#ffe28a" stroke="${INK}" stroke-width="1"/><circle cx="24" cy="10" r="2.4" fill="#ffe28a" stroke="${INK}" stroke-width="1"/>
+  </g>
+  <!-- seagull -->
+  <g id="exGull"><g>
+    <ellipse cx="0" cy="6" rx="9" ry="3" fill="rgba(46,42,51,.2)"/>
+    <path id="exWingL" d="M0 0 q-12 -10 -20 -2 q10 0 20 6Z" fill="#c9cfd2" stroke="${INK}" stroke-width="1.6"/>
+    <path id="exWingR" d="M0 0 q12 -10 20 -2 q-10 0 -20 6Z" fill="#c9cfd2" stroke="${INK}" stroke-width="1.6"/>
+    <ellipse cx="0" cy="0" rx="5" ry="9" fill="#fff" stroke="${INK}" stroke-width="1.6"/><circle cx="0" cy="-8" r="4" fill="#fff" stroke="${INK}" stroke-width="1.4"/>
+    <path d="M0 -12 l-1.5 -4 3 0Z" fill="${C.gold}" stroke="${INK}" stroke-width=".8"/></g></g>
+  <g id="exShadows" opacity=".13">${[[100,200,90,40],[380,520,110,46],[260,820,80,34]].map(([x, y, rx, ry]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${INK}" filter="url(#wc-soft)"/>`).join('')}</g>
+  <g id="exMarks"></g>
+  <g id="exParty"></g>`;
+}
+function exWalkable(x, y) {
+  if (x < 4 || y < 4 || x > XW - 4 || y > XH - 4) return false;
+  const inRect = r => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+  if (inRect(BOARDWALK) || PIERS.some(inRect) || inRect(CARRELET_PIER)) return true;
+  try { return !$('#exWater').isPointInFill(new DOMPoint(x, y)); } catch (e) { return x > 175; }
+}
+function enterExplore() {
+  mapAction('');
+  S.phase = 'explore'; save();
+  show('explore');
+  const svg = $('#exSvg');
+  svg.setAttribute('viewBox', `0 0 ${XW} ${XH}`);
+  svg.style.width = XW + 'px'; svg.style.height = XH + 'px';
+  svg.innerHTML = exWorldSVG();
+  const start = S.exPos || { x: 420, y: 210 };
+  EX = { lead: { ...start }, trail: [], tokens: [], near: null, busy: false, cam: { x: 0, y: 0, s: 1 }, t: 0 };
+  for (let i = 0; i < 60; i++) EX.trail.push({ x: start.x, y: start.y + i * 2.4 });
+  // four chunky Cob tokens; Annette leads because she has the itinerary
+  const partyG = $('#exParty');
+  ['romy', 'huw', 'paulo', 'annette'].forEach(id => {
+    const g = el('g', { class: 'tok' }, partyG);
+    g.innerHTML = `<ellipse cx="0" cy="15" rx="15" ry="5" fill="rgba(46,42,51,.28)"/><g class="tokInner"><svg x="-21" y="-26" width="42" height="42" viewBox="0 0 100 100">${avatar(id).replace(/^<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '')}</svg></g>`;
+    EX.tokens.unshift({ g, inner: g.querySelector('.tokInner'), id });
+  });
+  drawMarks();
+  gsap.to('.exBoat', { y: 4, duration: 1.8, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+  gsap.to('.exFoam', { strokeDashoffset: -36, duration: 3, repeat: -1, ease: 'none' });
+  gsap.to('.exWaves path', { x: 4, duration: 1.6, yoyo: true, repeat: -1, ease: 'sine.inOut', stagger: .2 });
+  gsap.to('#exCobbaHold', { y: -4, duration: 1, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+  gullWander();
+  gsap.to('#exBeam', { rotation: 360, svgOrigin: '0 -14', duration: 2.6, repeat: -1, ease: 'none' });
+  gsap.to('.flagCloth', { scaleY: .6, skewX: 10, svgOrigin: '0 -16', duration: .35, yoyo: true, repeat: -1, ease: 'sine.inOut', stagger: .1 });
+  gsap.to('#exNet', { rotation: 4, svgOrigin: '0 -22', duration: 1.4, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+  gsap.to('#exShadows', { x: 120, y: 60, duration: 30, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+  gsap.timeline({ repeat: -1 })
+    .set('#exBarge', { x: 20, y: 760, rotation: 0 })
+    .to('#exBarge', { x: 180, y: 820, rotation: 20, duration: 5, ease: 'sine.inOut' })
+    .to('#exBarge', { x: 120, y: 900, rotation: 160, duration: 4, ease: 'sine.inOut' })
+    .to('#exBarge', { x: 20, y: 760, rotation: 360, duration: 5, ease: 'sine.inOut' });
+  const vp = $('#exView');
+  EX.cam.s = Math.max(1, vp.clientWidth / 330);
+  exCamSnap();
+  gsap.ticker.add(exTick);
+  vp.onpointerdown = exTap;
+  $('#exPrompt').innerHTML = '';
+  if (!S.done.walked) say('Tap anywhere to walk. Tap a place to visit it. The cabane with the umbrella is the one Annette means.', 5200);
+  S.done.walked = true; save();
+}
+function leaveExplore() { gsap.ticker.remove(exTick); $('#exView').onpointerdown = null; if (EX) { S.exPos = { x: EX.lead.x, y: EX.lead.y }; save(); } }
+function exCamTarget() {
+  const vp = $('#exView'), vw = vp.clientWidth, vh = vp.clientHeight, s = EX.cam.s;
+  let x = vw / 2 - EX.lead.x * s, y = vh * .5 - EX.lead.y * s;
+  x = Math.min(0, Math.max(vw - XW * s, x)); y = Math.min(0, Math.max(vh - XH * s, y));
+  return { x, y };
+}
+function exCamSnap() { Object.assign(EX.cam, exCamTarget()); exApplyCam(); }
+function exApplyCam() { $('#exWrap').style.transform = `translate(${EX.cam.x.toFixed(1)}px,${EX.cam.y.toFixed(1)}px) scale(${EX.cam.s})`; }
+function exTick() {
+  if (!EX) return;
+  EX.t += 1;
+  const L = EX.lead, last = EX.trail[0];
+  const moving = Math.hypot(L.x - last.x, L.y - last.y) > 0.5;
+  if (moving) { EX.trail.unshift({ x: L.x, y: L.y }); if (EX.trail.length > 120) EX.trail.pop(); }
+  EX.tokens.forEach((tk, i) => {
+    const p = i === 0 ? L : EX.trail[Math.min(EX.trail.length - 1, i * 9)];
+    tk.g.setAttribute('transform', `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`);
+    const ph = (EX.t + i * 7) * .35;
+    const wob = moving ? Math.sin(ph) * 9 : Math.sin(EX.t * .05 + i) * 2;
+    const hop = moving ? -Math.abs(Math.sin(ph)) * 5 : 0;
+    tk.inner.setAttribute('transform', `translate(0 ${hop.toFixed(1)}) rotate(${wob.toFixed(1)})`);
+  });
+  const t = exCamTarget(); EX.cam.x += (t.x - EX.cam.x) * .12; EX.cam.y += (t.y - EX.cam.y) * .12; exApplyCam();
+  let near = null, nd = 1e9;
+  POIS.forEach(p => { if (p.id === 'gull' && S.done.gull) return; const pp = poiPos(p); const d = Math.hypot(pp.x - L.x, pp.y - L.y); if (d < p.r && d < nd) { near = p; nd = d; } });
+  if (near !== EX.near && !EX.busy) { EX.near = near; showPrompt(near); }
+}
+function poiPos(p) { return p.id === 'gull' ? { x: gsap.getProperty('#exGull', 'x'), y: gsap.getProperty('#exGull', 'y') } : p; }
+function showPrompt(p) {
+  const h = $('#exPrompt');
+  if (!p) { gsap.to(h, { scale: 0, duration: .2, onComplete: () => { if (!EX.near) h.innerHTML = ''; } }); return; }
+  h.innerHTML = `<button class="btn ${p.id === 'car' ? 'sea' : ''}">${p.verb}</button>`;
+  gsap.fromTo(h, { scale: 0 }, { scale: 1, duration: .45, ease: 'back.out(2.4)' });
+  h.firstElementChild.onclick = e => { e.stopPropagation(); interact(p); };
+  Snd.blip();
+}
+function drawMarks() {
+  const g = $('#exMarks'); if (!g) return;
+  g.innerHTML = '';
+  POIS.forEach(p => {
+    if (p.id === 'gull' || p.id === 'car' || S.done[p.id]) return;
+    const deck = ['green', 'cabane', 'blue', 'red'].includes(p.id);
+    const m = el('g', { transform: `translate(${p.x + (deck ? -70 : 0)} ${p.y - (p.id === 'talmont' ? 84 : deck ? 24 : 42)})` }, g);
+    m.innerHTML = `<g class="bob"><circle r="10" fill="${C.gold}" stroke="${INK}" stroke-width="2.2"/><text y="5" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="15" fill="${INK}">!</text></g>`;
+    gsap.to(m.firstChild, { y: -6, duration: .6, yoyo: true, repeat: -1, ease: 'sine.inOut', delay: rand(0, .6) });
+  });
+}
+function exTap(e) {
+  if (!EX || EX.busy || e.target.closest('#exPrompt')) return;
+  const r = $('#exView').getBoundingClientRect();
+  const x = (e.clientX - r.left - EX.cam.x) / EX.cam.s, y = (e.clientY - r.top - EX.cam.y) / EX.cam.s;
+  const hit = POIS.find(p => { if (p.id === 'gull' && S.done.gull) return false; const pp = poiPos(p); if (['green', 'cabane', 'blue', 'red'].includes(p.id) && x > 30 && x < 110 && Math.abs(y - (p.y - 3)) < 32) return true; return Math.hypot(pp.x - x, pp.y - y) < 36; });
+  if (hit) {
+    const pp = poiPos(hit);
+    const deck = ['green', 'cabane', 'blue', 'red'].includes(hit.id);
+    const ax = deck ? pp.x : hit.id === 'carrelet' ? 330 : pp.x + (EX.lead.x > pp.x ? 24 : -24);
+    const ay = deck ? pp.y + 22 : hit.id === 'carrelet' ? 812 : pp.y + (hit.id === 'talmont' ? 40 : 22);
+    tapRing(pp.x, pp.y, C.gold);
+    walkTo(ax, ay, () => interact(hit));
+    return;
+  }
+  tapRing(x, y, exWalkable(x, y) ? C.cream : C.sea);
+  walkTo(x, y);
+}
+function tapRing(x, y, col) {
+  const c = el('circle', { cx: x, cy: y, r: 4, fill: 'none', stroke: col, 'stroke-width': 3 }, $('#exMarks'));
+  gsap.to(c, { attr: { r: 20 }, opacity: 0, duration: .6, ease: 'power2.out', onComplete: () => c.remove() });
+}
+function walkTo(x, y, then) {
+  const L = EX.lead;
+  // straight line, stopping at the water's edge
+  const d = Math.hypot(x - L.x, y - L.y), n = Math.max(1, Math.ceil(d / 6));
+  let tx = L.x, ty = L.y;
+  for (let i = 1; i <= n; i++) { const px = L.x + (x - L.x) * i / n, py = L.y + (y - L.y) * i / n; if (!exWalkable(px, py)) break; tx = px; ty = py; }
+  const dist = Math.hypot(tx - L.x, ty - L.y);
+  if (dist < 3) {
+    if (then && d < 70) then();
+    else { Snd.blip(); say(pick(['That’s the channel. We’re not swimming. It’s October.', 'Oyster beds. Strictly for oysters.', 'Water. Very wet. Try the boardwalk.']), 2400); }
+    return;
+  }
+  gsap.killTweensOf(L);
+  gsap.to(L, { x: tx, y: ty, duration: dist / 150, ease: 'power1.inOut', onComplete: () => { if (then && Math.hypot(x - tx, y - ty) < 40) then(); } });
+}
+function gullWander() {
+  if (S.done.gull) { gsap.set('#exGull', { opacity: 0, x: -999, y: -999 }); return; }
+  gsap.set('#exGull', { x: 300, y: 220 });
+  const hop = () => {
+    if (!EX || S.done.gull || $('#explore').hidden) return;
+    gsap.to('#exGull', { x: rand(230, 360), y: rand(170, 330), duration: rand(1.2, 2.2), ease: 'power1.inOut', onComplete: () => gsap.delayedCall(rand(.8, 2), hop) });
+  };
+  gsap.delayedCall(1, hop);
+  gsap.to('#exWingL', { rotation: -18, svgOrigin: '0 0', duration: .25, yoyo: true, repeat: -1 });
+  gsap.to('#exWingR', { rotation: 18, svgOrigin: '0 0', duration: .25, yoyo: true, repeat: -1 });
+}
+function award(stars, delta, msg) {
+  if (stars) S.stars += stars;
+  if (delta) { bump(delta); Object.entries(delta).forEach(([k, v]) => { S.trip[k] = (S.trip[k] || 0) + v; }); }
+  save();
+  if (msg) {
+    const h = $('#exToast'); h.textContent = msg;
+    gsap.killTweensOf(h);
+    gsap.fromTo(h, { y: 30, opacity: 0, scale: .7 }, { y: 0, opacity: 1, scale: 1, duration: .5, ease: 'back.out(2)', onComplete: () => gsap.to(h, { opacity: 0, delay: 1.8, duration: .4 }) });
+  }
+}
+const backToPort = async () => { await closeModal(); EX.busy = false; EX.near = null; };
+function interact(p) {
+  if (!EX || EX.busy) return;
+  Snd.pop('G5');
+  const done = S.done[p.id];
+  if (p.id === 'green' || p.id === 'red') {
+    EX.busy = true;
+    const green = p.id === 'green';
+    const sh = modal(`
+      <div class="eyebrow">${green ? 'The green cabane · the history' : 'The red cabane · the territory'}</div>
+      <h2>${green ? 'Salt marsh to oyster park' : 'The Chenal de la Cayenne'}</h2>
+      <p>${green ? 'The square ponds across the channel are claires: old salt marshes turned into oyster parks from the 1850s. Oysters finish in them for weeks, which is where the name “fines de claire” comes from.' : 'This channel runs about 4 km from the Marennes marina to the Seudre, the longest in the Marennes-Oléron basin. Working cabanes line one bank and claires line the other.'}</p>
+      <p class="note">${green ? 'Tap each claire to flood it on the tide.' : 'Tap the water to bring the tide and the barges in.'}</p>
+      <svg id="mini2" viewBox="0 0 300 110" style="width:100%;border:2.5px solid ${INK};border-radius:12px;background:${C.sand};touch-action:none">
+        ${green ? [0, 1, 2, 3].map(i => `<rect class="claire" x="${14 + i * 72}" y="22" width="60" height="66" rx="4" fill="#b7a27a" stroke="${INK}" stroke-width="2"/>`).join('')
+                 : `<path d="M0 60 q75 -20 150 0 t150 0 v60 h-300Z" fill="${C.sea2}" id="tide"/>${[0, 1, 2].map(i => `<g class="bg"><g transform="translate(${-30 - i * 50} 66)"><path d="M-14 -5 h24 l5 5 -5 5 h-24Z" fill="#6e8a7a" stroke="${INK}" stroke-width="1.6"/><rect x="-8" y="-3" width="8" height="6" fill="#b98a55"/></g></g>`).join('')}`}
+      </svg>
+      <div class="row"><button class="btn ghost small" id="ok">Back to the port</button></div>`, { mid: true });
+    const finish = () => { if (!S.done[p.id]) { S.done[p.id] = true; award(1, null, green ? 'Claires flooded · +1 star' : 'Barges home · +1 star'); drawMarks(); party(false); } };
+    if (green) {
+      let n = 0;
+      sh.querySelectorAll('.claire').forEach(c => c.addEventListener('pointerdown', () => {
+        if (c.dataset.f) return; c.dataset.f = 1; n++;
+        Snd.pop(['C5', 'E5', 'G5', 'C6'][n - 1]);
+        gsap.to(c, { attr: { fill: C.sea2 }, duration: .5 });
+        gsap.fromTo(c, { scale: .9, svgOrigin: `${+c.getAttribute('x') + 30} 55` }, { scale: 1, svgOrigin: `${+c.getAttribute('x') + 30} 55`, duration: .5, ease: 'elastic.out(1,.4)' });
+        if (n === 4) finish();
+      }));
+    } else {
+      sh.querySelector('#mini2').addEventListener('pointerdown', () => {
+        Snd.pop('E5');
+        gsap.to(sh.querySelector('#tide'), { y: -18, duration: 1.1, yoyo: true, repeat: 1, ease: 'sine.inOut' });
+        gsap.to(sh.querySelectorAll('.bg'), { x: i => 120 + i * 70, duration: 2.2, ease: 'power2.out', stagger: .15, onComplete: finish });
+      }, { once: true });
+    }
+    sh.querySelector('#ok').onclick = backToPort;
+  } else if (p.id === 'blue') {
+    EX.busy = true;
+    const sizes = [[0, 26], [2, 21], [3, 17], [5, 12]].sort(() => Math.random() - .5);
+    const sh = modal(`
+      <div class="eyebrow">The blue cabane · the workshop</div>
+      <h2>Grade the oysters</h2>
+      <p>Cabanes are the workshops where oysters get sorted, graded and packed. French oysters are sold by calibre: n°0 is the biggest and n°5 the smallest.</p>
+      <p class="note">Tap them from biggest to smallest.</p>
+      <div style="display:flex;justify-content:space-around;align-items:center;min-height:92px" id="grade">${sizes.map(([n, r]) => `<button class="icon-btn" data-n="${n}" style="position:relative;width:${r * 3}px;height:${r * 3}px;background:#c9d2c4"><svg viewBox="-12 -10 24 20" style="width:82%;height:82%">${LM.oyster(0, 0, 1)}</svg></button>`).join('')}</div>
+      <div class="row"><button class="btn ghost small" id="ok">Back to the port</button></div>`, { mid: true });
+    const order = [0, 2, 3, 5]; let k = 0;
+    sh.querySelectorAll('#grade button').forEach(b => b.onclick = () => {
+      if (b.dataset.done) return;
+      if (+b.dataset.n === order[k]) {
+        k++; b.dataset.done = 1; Snd.pop(['C5', 'E5', 'G5', 'C6'][k - 1]);
+        gsap.to(b, { scale: .75, opacity: .5, duration: .3 });
+        b.insertAdjacentHTML('beforeend', `<span style="position:absolute;inset:0;display:grid;place-items:center;font:700 15px Fredoka,sans-serif">n°${b.dataset.n}</span>`);
+        if (k === 4 && !S.done.blue) { S.done.blue = true; award(1, null, 'Graded like a pro · +1 star'); party(false); drawMarks(); }
+      } else { Snd.thunk('G1'); buzz(40); gsap.fromTo(b, { x: -6 }, { x: 0, duration: .4, ease: 'elastic.out(1.2,.3)' }); }
+    });
+    sh.querySelector('#ok').onclick = backToPort;
+  } else if (p.id === 'scope') {
+    EX.busy = true;
+    const sh = modal(`
+      <div class="eyebrow">Telescope · 7 km offshore</div>
+      <h2>Phare de Cordouan</h2>
+      <p>France’s oldest lighthouse, built from 1584 to 1611 at the mouth of the Gironde. It stands 68 m tall, joined the UNESCO World Heritage list in 2021, and is the last lighthouse at sea in France that still has keepers living in it.</p>
+      <svg viewBox="0 0 300 150" style="width:100%;border:2.5px solid ${INK};border-radius:16px;background:linear-gradient(#27345a,#6a5c8e)">
+        ${[...Array(14)].map(() => `<circle cx="${rand(0, 300).toFixed(0)}" cy="${rand(4, 70).toFixed(0)}" r="${rand(.6, 1.6).toFixed(1)}" fill="#fff" opacity=".8"/>`).join('')}
+        <path d="M0 112 q75 -8 150 0 t150 0 v40 h-300Z" fill="#2c4f6b"/>
+        <g transform="translate(150 110)"><g id="cBeam"><path d="M0 -64 L150 -84 L150 -44Z" fill="#fff4b0" opacity=".6"/><path d="M0 -64 L-150 -84 L-150 -44Z" fill="#fff4b0" opacity=".6"/></g>
+          <path d="M-14 0 L-9 -56 h18 L14 0Z" fill="${C.cream}" stroke="${INK}" stroke-width="2.4"/><path d="M-12 -20 h24 M-10 -38 h20" stroke="${C.terra}" stroke-width="3"/><rect x="-7" y="-70" width="14" height="14" fill="#ffe28a" stroke="${INK}" stroke-width="2"/><path d="M-9 -70 q9 -10 18 0" fill="${C.terra}" stroke="${INK}" stroke-width="2"/></g>
+      </svg>
+      <p class="note">Flash your torch back when the beam points straight at you.</p>
+      <div class="row"><button class="btn gold" id="flash">Flash back</button><button class="btn ghost small" id="ok">Back to the port</button></div>`, { mid: true });
+    const beam = { a: 0 }, bEl = sh.querySelector('#cBeam');
+    const tw = gsap.to(beam, { a: 360, duration: 3, repeat: -1, ease: 'none', onUpdate: () => bEl.setAttribute('transform', `scale(${Math.cos(beam.a * Math.PI / 180).toFixed(3)} 1)`) });
+    sh.querySelector('#flash').onclick = () => {
+      if (Math.abs(Math.cos(beam.a * Math.PI / 180)) < .3) {
+        Snd.fanfare(); buzz([20, 20, 20]);
+        gsap.fromTo(sh, { backgroundColor: '#fff6c0' }, { backgroundColor: '#fdf7e8', duration: .8 });
+        if (!S.done.scope) { S.done.scope = true; award(1, null, 'Cordouan flashed back · +1 star'); drawMarks(); }
+        say('The keepers waved back. Probably. It’s 7 km.', 2600);
+      } else { Snd.thunk('G1'); say('Not yet. Wait till the beam is face-on.', 1800); }
+    };
+    sh.querySelector('#ok').onclick = () => { tw.kill(); backToPort(); };
+  } else if (p.id === 'carrelet') {
+    EX.busy = true; showPrompt(null);
+    const got = pick(['a grey mullet', 'a bucket of shrimp', 'a small sole', 'one (1) sock', 'a very surprised crab', 'seaweed, mostly']);
+    Snd.blip();
+    gsap.timeline({ onComplete: () => {
+      EX.busy = false; EX.near = null;
+      const first = !S.done.carrelet; S.done.carrelet = true;
+      award(first ? 1 : 0, null, `Caught ${got}${first ? ' · +1 star' : ''}`);
+      say(got === 'one (1) sock' ? 'A sock. Somewhere, someone is walking lopsided.' : 'Carrelets are old Charente fishing huts. Few round here survived the 1999 storm, so go gently.', 3400);
+      drawMarks();
+    } })
+      .to('#exNet', { scale: .55, y: 10, svgOrigin: '0 -22', duration: .8, ease: 'power2.in' })
+      .to('#exNet', { opacity: .45, duration: .2 })
+      .to({}, { duration: 1.2 })
+      .to('#exNet', { scale: 1, y: 0, opacity: 1, duration: .9, ease: 'back.out(1.6)' });
+  } else if (p.id === 'cabane') {
+    if (done) { say('Already shucked. The oysters have filed a complaint.', 2600); return; }
+    EX.busy = true; showPrompt(null);
+    say('Shuck responsibly. Some of those are my cousins. Distant. Very distant.', 2600);
+    setTimeout(() => { leaveExplore(); EX.busy = false; startShuckOff(); }, 1100);
+  } else if (p.id === 'board') {
+    EX.busy = true;
+    const known = S.used.huw;
+    const sh = modal(`
+      <div class="eyebrow">La Cayenne port · today’s board</div>
+      <h2>Oysters by the dozen</h2>
+      <p>Marennes-Oléron, straight from the parks out front. Producer shacks, cold white, no menu theatrics.</p>
+      <div class="choices">
+        ${[['Cabane 3', 'spéciales n°3', 18], ['Cabane 7', 'fines de claire n°3', 12], ['Cabane 12', 'pousse en claire', 20]].map(([n, k, pr]) => `<div class="choice" data-p="${pr}" style="cursor:default">${ICON.oyster}<span><b>${n} · ${known || pr !== 12 ? '€' + pr : '€??'}/dozen</b><small>${k}</small>${known && pr === 12 ? '<span class="tagline cheap">best value</span>' : ''}</span></div>`).join('')}
+      </div>
+      <button class="ability ${known ? 'used' : ''}" id="whisper" style="margin-top:12px">${ICON.spread}<span><b>Huw · Menu Whisperer</b><small>${known ? 'Found it: Cabane 7, €12 a dozen. That’s where we’re eating.' : 'Find the best-value cabane.'}</small></span></button>
+      <div class="row"><button class="btn ghost small" id="ok">Back to the port</button></div>`, { mid: true });
+    sh.querySelector('#whisper').onclick = () => {
+      if (S.used.huw) return;
+      S.used.huw = true; S.done.board = true; save();
+      const c = sh.querySelector('[data-p="12"]');
+      c.querySelector('b').textContent = 'Cabane 7 · €12/dozen';
+      c.querySelector('span').insertAdjacentHTML('beforeend', '<span class="tagline cheap">best value</span>');
+      gsap.fromTo(c, { scale: 1.08 }, { scale: 1, duration: .8, ease: 'elastic.out(1,.4)' });
+      const w = sh.querySelector('#whisper'); w.classList.add('used'); w.querySelector('small').textContent = 'Found it: Cabane 7, €12 a dozen. That’s where we’re eating.';
+      Snd.fanfare(); award(1, null, 'Huw found the deal · +1 star'); drawMarks();
+    };
+    sh.querySelector('#ok').onclick = backToPort;
+  } else if (p.id === 'gull') {
+    S.done.gull = true; save();
+    Snd.thunk('A3'); buzz([20, 30, 20]);
+    gsap.killTweensOf('#exGull');
+    const gx = gsap.getProperty('#exGull', 'x'), gy = gsap.getProperty('#exGull', 'y');
+    gsap.to('#exWingL', { rotation: -40, svgOrigin: '0 0', duration: .1, yoyo: true, repeat: 20 });
+    gsap.to('#exWingR', { rotation: 40, svgOrigin: '0 0', duration: .1, yoyo: true, repeat: 20 });
+    gsap.to('#exGull', { x: gx - 260, y: gy - 300, scale: 1.8, duration: 1.6, ease: 'power2.in', onComplete: () => gsap.set('#exGull', { opacity: 0 }) });
+    award(1, null, 'Oysters defended · +1 star');
+    say('And STAY out. Those oysters have a booking.', 2600);
+    EX.near = null; showPrompt(null);
+  } else if (p.id === 'cobba') {
+    const lines = ['Fun fact: oysters can change sex. Keep an open mind.', 'Annette said Royan for oysters. Annette is always right. It’s in the terms and conditions.', 'Three nights max anywhere. One night here. Very disciplined.', 'Talmont church is hanging off a cliff. Bold choice, medieval people.', 'I am NOT an oyster. Clam. There’s a difference. Legally.'];
+    EX.cobbaI = ((EX.cobbaI ?? -1) + 1) % lines.length;
+    say(lines[EX.cobbaI], 3800);
+    gsap.fromTo('#exCobbaHold', { scale: .85, svgOrigin: '312 560' }, { scale: 1, svgOrigin: '312 560', duration: .6, ease: 'elastic.out(1,.35)' });
+    if (!done) { S.done.cobba = true; award(0, { energy: 4 }, 'Pep talk from Cobba · +4 energy'); drawMarks(); }
+  } else if (p.id === 'talmont') {
+    EX.busy = true;
+    const sh = modal(`
+      <div class="eyebrow">Detour · 15 min south</div>
+      <h2>Talmont-sur-Gironde</h2>
+      <p>Sainte-Radegonde is a Romanesque church from the 1100s, dedicated to a patron saint of sailors and perched on a rock over the Gironde. The walled village around it was founded in 1284 by Edward I and is full of hollyhocks. The cemetery next door has a sea view.</p>
+      <div style="display:flex;justify-content:center;margin:10px 0 4px"><div class="polaroid" id="tpola" style="width:170px;transform:rotate(-3deg)"><div class="ph">${talmontScene()}</div><div class="cap">Talmont, on the edge</div></div></div>
+      <div class="row"><button class="btn" id="snap">${done ? 'Back to the port' : 'Take the photo'}</button></div>`, { mid: true });
+    const ph = sh.querySelector('#tpola .ph svg');
+    if (!done) gsap.set(ph, { filter: 'brightness(3) contrast(.2) blur(4px)' });
+    sh.querySelector('#snap').onclick = e => {
+      if (!S.done.talmont) {
+        S.done.talmont = true; S.polaroids.push({ stop: 'royan', scene: 'talmont', cap: 'Talmont, on the edge' }); save();
+        Snd.crack(); buzz(40); squash(sh.querySelector('#tpola'));
+        gsap.to(ph, { filter: 'brightness(1) contrast(1) blur(0px)', duration: 3.5, ease: 'power1.out' });
+        award(1, { energy: -3 }, 'Snapshot saved · +1 star');
+        e.target.textContent = 'Back to the port'; drawMarks();
+        return;
+      }
+      backToPort();
+    };
+  } else if (p.id === 'brouage') {
+    EX.busy = true;
+    const sh = modal(`
+      <div class="eyebrow">Signpost · Brouage citadel</div>
+      <h2>A star fort in the marshes</h2>
+      <p>Founded in 1555 on the salt trade, walled for Richelieu in the 1620s and reinforced by Vauban. The sea silted up and left, so the old port is now inland. Samuel de Champlain, who founded Quebec, was born here.</p>
+      <p class="note">2 km of ramparts, 7 bastions. Tap each bastion to walk the walls.</p>
+      <svg viewBox="-80 -80 160 160" style="width:180px;display:block;margin:4px auto;touch-action:none">
+        <path d="${[...Array(14)].map((_, i) => { const a = i * Math.PI / 7 - Math.PI / 2, r = i % 2 ? 40 : 66; return (i ? 'L' : 'M') + (Math.cos(a) * r).toFixed(1) + ' ' + (Math.sin(a) * r).toFixed(1); }).join(' ')}Z" fill="${C.olive2}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        ${[...Array(7)].map((_, i) => { const a = i * 2 * Math.PI / 7 - Math.PI / 2; return `<circle class="bastion" cx="${(Math.cos(a) * 62).toFixed(1)}" cy="${(Math.sin(a) * 62).toFixed(1)}" r="12" fill="${C.cream}" stroke="${INK}" stroke-width="2.4"/>`; }).join('')}
+        <text y="6" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="16" fill="${INK}" id="bcount">0/7</text>
+      </svg>
+      <p class="note">${S.route === 'coast' ? 'You drove past it on the coast road. Everyone waved.' : 'The coast road goes right past it. Just saying.'}</p>
+      <div class="row"><button class="btn ghost small" id="ok">Back to the port</button></div>`, { mid: true });
+    let lit = 0;
+    sh.querySelectorAll('.bastion').forEach(b => b.addEventListener('pointerdown', () => {
+      if (b.dataset.on) return; b.dataset.on = 1; lit++;
+      Snd.pop(['C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'C6'][lit - 1]);
+      gsap.to(b, { attr: { fill: C.gold, r: 14 }, duration: .3, ease: 'back.out(3)' });
+      sh.querySelector('#bcount').textContent = lit + '/7';
+      if (lit === 7 && !S.done.brouage) { S.done.brouage = true; party(false); award(1, { energy: -4, hunger: 6 }, 'Ramparts walked · +1 star'); drawMarks(); }
+    }));
+    sh.querySelector('#ok').onclick = backToPort;
+  } else if (p.id === 'car') {
+    EX.busy = true;
+    const skipped = !S.done.cabane;
+    const sh = modal(`
+      <div class="eyebrow">Leaving Royan</div>
+      <h2>${skipped ? 'Leave without oysters?' : 'Back on the road?'}</h2>
+      <p>${skipped ? 'Annette’s one instruction for this stop was oysters. Huge, fresh and flavourful ones.' : 'One night here, then Bordeaux: castles, château tastings and the Dune du Pilat.'}</p>
+      <div class="row"><button class="btn ghost small" id="stay">${skipped ? 'Go back for oysters' : 'Stay a bit longer'}</button><button class="btn sea" id="go">${skipped ? 'Leave anyway' : 'Hit the road'}</button></div>`, { mid: true });
+    sh.querySelector('#stay').onclick = backToPort;
+    sh.querySelector('#go').onclick = async () => { await closeModal(); EX.busy = false; leaveExplore(); rewards(); };
+  }
+}
+function talmontScene() {
+  return `<svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice">
+    <rect width="200" height="200" fill="#bfe0e6"/><circle cx="150" cy="50" r="22" fill="#fff4c4" filter="url(#wc-soft)"/>
+    <path d="M0 120 h200 v80 h-200Z" fill="${C.sea}" filter="url(#wc)"/>
+    <path d="M60 200 q-10 -60 30 -84 q50 -22 110 -8 v92Z" fill="#d9c69a" stroke="${INK}" stroke-width="2.5"/>
+    <rect x="100" y="70" width="60" height="40" fill="${C.cream}" stroke="${INK}" stroke-width="2.5"/>
+    <path d="M96 70 L130 48 L164 70Z" fill="${C.terra}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="122" y="30" width="16" height="24" fill="${C.cream}" stroke="${INK}" stroke-width="2.2"/><path d="M120 30 L130 20 L140 30Z" fill="${C.terra}" stroke="${INK}" stroke-width="2"/>
+    <path d="M124 90 q6 -8 12 0 v20 h-12Z" fill="${INK}" opacity=".8"/>
+    ${[76, 86, 170, 182].map(x => `<path d="M${x} 118 v-18" stroke="${C.olive}" stroke-width="2.4"/><circle cx="${x}" cy="100" r="4" fill="#e98f9e" stroke="${INK}" stroke-width="1.2"/><circle cx="${x}" cy="108" r="3.4" fill="#e98f9e" stroke="${INK}" stroke-width="1.2"/>`).join('')}
+    ${LM.ship(40, 150, 2)}
+  </svg>`;
+}
+
+/* ================= MINI-GAME: THE SHUCK-OFF ================= */
+const TURN_SECS = 10;
+let shuck = null;
+function startShuckOff() {
+  shuck = { scores: {}, i: 0 };
+  modal(`
+    <div class="eyebrow">Mini-game · 4 players · about 50 seconds</div>
+    <h2>The Shuck-Off</h2>
+    <p>Each Cob gets ${TURN_SECS} seconds at the cabane. The needle swings. Tap <b>TWIST!</b> when it’s in the gold zone. Three good twists pop an oyster. Dead centre counts double.</p>
+    <p class="note">Miss and the knife slips. Couple bonus if both partners shuck at least two.</p>
+    <div class="row"><button class="btn" id="go">Hand the phone to Paulo</button></div>`, { mid: true })
+    .querySelector('#go').onclick = async () => { await closeModal(); nextShucker(); };
+}
+function nextShucker() {
+  if (shuck.i >= ORDER.length) return shuckResults();
+  const id = ORDER[shuck.i++];
+  show('handoff');
+  $('#handAv').innerHTML = avatar(id);
+  $('#handTitle').textContent = shuck.i === 1 ? `${CREW[id].name}, you’re up` : `Pass the phone to ${CREW[id].name}`;
+  const prev = ORDER[shuck.i - 2];
+  $('#handNote').textContent = prev ? `${CREW[prev].name} shucked ${shuck.scores[prev]}. ${pick(['Beat that.', 'No pressure.', 'The oysters are watching.', 'Steady hands now.'])}` : 'Hold the knife by the handle. Cobba insists.';
+  gsap.fromTo('#handAv svg', { scale: .3, rotation: -20 }, { scale: 1, rotation: 0, duration: .7, ease: 'elastic.out(1,.45)' });
+  $('#handGo').onclick = () => shuckTurn(id);
+}
+
+function oysterScene() {
+  return `
+  <defs>
+    <radialGradient id="flesh" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#fbf4e2"/><stop offset=".7" stop-color="#e9dcc0"/><stop offset="1" stop-color="#c9b996"/></radialGradient>
+  </defs>
+  <g id="table">
+    <path d="M-40 300 q240 -30 480 0 v200 h-480Z" fill="#b98a55" filter="url(#wc)"/>
+    <path d="M-40 300 q240 -30 480 0" fill="none" stroke="${INK}" stroke-width="3"/>
+    ${[...Array(6)].map((_, i) => `<path d="M${-20 + i * 80} 312 q30 4 60 0" stroke="#8d6538" stroke-width="2" fill="none"/>`).join('')}
+    <ellipse cx="70" cy="340" rx="44" ry="12" fill="#fdf7e8" stroke="${INK}" stroke-width="2.5"/><path d="M52 336 q18 -18 36 0Z" fill="#f6e36b" stroke="${INK}" stroke-width="2.5"/>
+    <g id="doneTray" transform="translate(330 338)"><ellipse rx="48" ry="12" fill="#c8d6d4" stroke="${INK}" stroke-width="2.5"/></g>
+  </g>
+  <g id="gauge" transform="translate(200 118)">
+    <path d="M-120 0 A120 120 0 0 1 120 0" fill="none" stroke="${INK}" stroke-width="30" stroke-linecap="round" transform="rotate(0)" opacity=".9" id="gTrackOut"/>
+    <path d="M-120 0 A120 120 0 0 1 120 0" fill="none" stroke="#fdf7e8" stroke-width="24" stroke-linecap="round" id="gTrack"/>
+    <path id="gZone" d="" fill="none" stroke="${C.gold}" stroke-width="24"/>
+    <path id="gPerfect" d="" fill="none" stroke="${C.terra}" stroke-width="24"/>
+    <g id="needle"><path d="M-5 0 L0 -132 L5 0Z" fill="${INK}"/><circle r="12" fill="${C.terra}" stroke="${INK}" stroke-width="3"/></g>
+  </g>
+  <g id="oysterWrap" transform="translate(200 262)">
+    <g id="oyster">
+      <path d="M-120 18 q-18 -40 24 -64 q60 -30 128 -10 q60 20 58 60 q-10 40 -90 50 q-100 8 -120 -36Z" fill="#8f9b8a" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-104 10 q-6 -30 36 -44 q60 -20 110 -2 q40 16 40 44 q-6 22 -80 30 q-90 2 -106 -28Z" fill="url(#flesh)" stroke="${INK}" stroke-width="3"/>
+      <path d="M-60 6 q40 -26 90 -6 q20 10 0 20 q-40 14 -80 4 q-20 -6 -10 -18Z" fill="#dfcfa8" stroke="#a79672" stroke-width="2"/>
+      <g id="lid">
+        <path d="M-122 12 q-16 -44 30 -66 q64 -28 132 -6 q58 20 52 60 q-66 26 -214 12Z" fill="#b6c0ae" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M-100 -8 q60 -30 150 -14 M-108 6 q70 -22 170 -6 M-80 -30 q50 -16 110 -8" fill="none" stroke="#7d8a7a" stroke-width="3.5" stroke-linecap="round" filter="url(#wobble)"/>
+        <path d="M-60 -40 q10 -8 24 -6 M20 -44 q14 2 20 8" fill="none" stroke="#dfe6d8" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </g>
+    <g id="knife" transform="translate(110 -4) rotate(-12)">
+      <rect x="0" y="-9" width="84" height="20" rx="9" fill="#9a6a3a" stroke="${INK}" stroke-width="3.5"/>
+      <path d="M12 -9 v20 M26 -9 v20" stroke="#6d4722" stroke-width="2"/>
+      <path d="M0 -6 L-46 -2 Q-54 1 -46 5 L0 8Z" fill="#dfe4e8" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>
+      <rect x="-6" y="-12" width="8" height="26" rx="3" fill="#6d6f73" stroke="${INK}" stroke-width="3"/>
+    </g>
+  </g>
+  <g id="cobbaMini" transform="translate(4 360) scale(.62)">${cobbaSVG().replace(/id="/g, 'data-x="')}</g>`;
+}
+function arc(r, a0, a1) {
+  const p = a => [r * Math.sin(a * Math.PI / 180), -r * Math.cos(a * Math.PI / 180)];
+  const [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+}
+
+function shuckTurn(id) {
+  show('mini');
+  const svg = $('#oysterSvg'); svg.innerHTML = oysterScene();
+  // the arc track spans -90..90 visually; we play within -70..70
+  $('#gTrack').setAttribute('d', arc(120, -80, 80)); $('#gTrackOut').setAttribute('d', arc(120, -80, 80));
+  $('#miniAv').innerHTML = avatar(id);
+  $('#miniWho').textContent = CREW[id].name;
+  $('#miniSub').textContent = id === 'paulo' ? 'Cool Head: slower needle' : 'Shuck-Off · Marennes cabanes';
+  const scoreEl = $('#miniScore'); scoreEl.textContent = '0';
+  const st = { id, count: 0, prog: 0, zone: 0, width: 30, speed: id === 'paulo' ? 1.12 : .95, stun: false, live: false, a: -70 };
+  const needle = $('#needle');
+  const setZone = () => {
+    st.zone = rand(-55, 55);
+    $('#gZone').setAttribute('d', arc(120, st.zone - st.width / 2, st.zone + st.width / 2));
+    $('#gPerfect').setAttribute('d', arc(120, st.zone - st.width * .16, st.zone + st.width * .16));
+    gsap.fromTo('#gZone,#gPerfect', { opacity: 0 }, { opacity: 1, duration: .25 });
+  };
+  setZone();
+  let sweep = gsap.to(st, { a: 70, duration: st.speed, ease: 'sine.inOut', yoyo: true, repeat: -1, paused: true, onUpdate: () => needle.setAttribute('transform', `rotate(${st.a})`) });
+  needle.setAttribute('transform', 'rotate(-70)');
+  gsap.to('#cobbaMini', { y: '-=6', duration: .8, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+  const arcEl = $('#timerArc'); gsap.set(arcEl, { strokeDashoffset: 0 });
+
+  const popText = (txt, color) => {
+    const stage = $('#oysterStage'); const d = document.createElement('div');
+    d.className = 'pop'; d.textContent = txt; d.style.color = color || C.cream;
+    d.style.left = '50%'; d.style.top = '42%'; stage.appendChild(d);
+    gsap.fromTo(d, { xPercent: -50, y: 0, scale: .4, rotation: rand(-12, 12) }, { y: -80, scale: 1.1, duration: .8, ease: 'back.out(2)', onComplete: () => gsap.to(d, { opacity: 0, duration: .25, onComplete: () => d.remove() }) });
+  };
+
+  const openOyster = () => {
+    st.count++; scoreEl.textContent = st.count; squash(scoreEl);
+    Snd.pop('C6'); buzz(25);
+    const pearl = Math.random() < .08;
+    popText(pearl ? 'PEARL! +1' : pick(['Shucked!', 'Pop!', 'Magnifique!', 'Slurp!']), pearl ? C.gold : C.cream);
+    if (pearl) { st.count++; scoreEl.textContent = st.count; party(false); }
+    gsap.timeline()
+      .to('#lid', { rotation: -60, x: -40, y: -90, opacity: 0, svgOrigin: '-120 10', duration: .45, ease: 'power2.out' })
+      .to('#oyster', { x: 140, y: 70, scale: .35, duration: .35, ease: 'power2.in' }, '+=.1')
+      .add(() => {
+        // drop a tiny opened oyster on the done tray
+        const n = $('#doneTray').children.length;
+        g($('#doneTray'), LM.oyster(-30 + (n % 5) * 14, -4 - Math.floor(n / 5) * 7, 1.1));
+        gsap.set('#oyster', { x: -260, y: 0, scale: 1 }); gsap.set('#lid', { rotation: 0, x: 0, y: 0, opacity: 1 });
+      })
+      .to('#oyster', { x: 0, duration: .35, ease: 'back.out(1.6)' });
+    st.prog = 0; st.width = Math.max(16, st.width - 2.5); st.speed = Math.max(.5, st.speed * .93);
+    sweep.duration(st.speed);
+    setZone();
+  };
+
+  const tap = () => {
+    if (!st.live || st.stun) return;
+    const diff = Math.abs(st.a - st.zone);
+    if (diff <= st.width / 2) {
+      const perfect = diff <= st.width * .16;
+      st.prog += perfect ? 2 : 1;
+      Snd.crack(); buzz(12);
+      if (perfect) popText('Perfect!', C.gold);
+      gsap.timeline()
+        .to('#knife', { rotation: -30, x: 100, duration: .08 })
+        .to('#knife', { rotation: -12, x: 110, duration: .25, ease: 'elastic.out(1,.4)' });
+      gsap.to('#lid', { rotation: -Math.min(3, st.prog) * 5, svgOrigin: '-120 10', duration: .2, ease: 'back.out(3)' });
+      gsap.fromTo('#oyster', { scaleX: 1.06, scaleY: .94 }, { scaleX: 1, scaleY: 1, duration: .35, ease: 'elastic.out(1,.3)' });
+      if (st.prog >= 3) openOyster();
+    } else {
+      st.stun = true; Snd.thunk('G1'); buzz(70); shake(6);
+      popText(pick(['Slipped!', 'Ouch!', 'Mon dieu!', 'Wrong end!']), '#f3c8b8');
+      gsap.timeline({ onComplete: () => { st.stun = false; } })
+        .to('#knife', { rotation: 30, x: 130, y: 20, duration: .12 })
+        .to('#knife', { rotation: -12, x: 110, y: -4, duration: .5, ease: 'elastic.out(1,.35)' });
+      sweep.pause(); setTimeout(() => st.live && sweep.resume(), 550);
+    }
+  };
+  const twist = $('#twist');
+  twist.onpointerdown = e => { e.preventDefault(); squash(twist); tap(); };
+  $('#oysterStage').onpointerdown = e => { e.preventDefault(); tap(); };
+
+  // 3-2-1
+  const cd = $('#countdown'); cd.hidden = false;
+  (async () => {
+    for (const n of ['3', '2', '1', 'Shuck!']) {
+      cd.textContent = n; cd.style.fontSize = n.length > 1 ? '72px' : '120px';
+      Snd.blip(); gsap.fromTo(cd, { scale: 2, opacity: 0 }, { scale: 1, opacity: 1, duration: .35, ease: 'back.out(2)' });
+      await wait(n.length > 1 ? 450 : 620);
+    }
+    cd.hidden = true;
+    st.live = true; sweep.play();
+    gsap.to(arcEl, { strokeDashoffset: 94.25, duration: TURN_SECS, ease: 'none', onComplete: endTurn });
+  })();
+
+  function endTurn() {
+    st.live = false; sweep.kill();
+    twist.onpointerdown = null; $('#oysterStage').onpointerdown = null;
+    shuck.scores[id] = st.count;
+    S.players[id].stat.oysters = (S.players[id].stat.oysters || 0) + st.count;
+    save();
+    popText(`${st.count} oyster${st.count === 1 ? '' : 's'}!`, C.cream);
+    Snd.fanfare();
+    setTimeout(nextShucker, 1300);
+  }
+}
+
+function shuckResults() {
+  const sc = shuck.scores;
+  const total = Object.values(sc).reduce((a, b) => a + b, 0);
+  const couples = [['paulo', 'annette'], ['huw', 'romy']].filter(([a, b]) => sc[a] >= 2 && sc[b] >= 2);
+  const stars = total >= 12 ? 3 : total >= 8 ? 2 : total >= 4 ? 1 : 0;
+  const best = ORDER.reduce((a, b) => sc[b] > sc[a] ? b : a);
+  const titles = { [best]: 'Oyster Overlord' };
+  ORDER.forEach(id => { if (!titles[id]) titles[id] = sc[id] >= 3 ? 'Steady Shucker' : sc[id] >= 1 ? 'Enthusiastic Amateur' : 'Moral Support'; });
+  S.stars += stars + couples.length;
+  S.players[best].stat.overlord = true;
+  save();
+  const r = $('#results');
+  r.innerHTML = `
+    <div class="eyebrow display" style="letter-spacing:.14em;text-transform:uppercase;font-size:12px;color:${C.terra}">Shuck-Off results</div>
+    <h2 class="big-h">${total} oyster${total === 1 ? '' : 's'} shucked</h2>
+    <div class="stars">${[0, 1, 2].map(i => `<span class="${i < stars ? 'on' : ''}">★</span>`).join('')}</div>
+    <div class="res-list">${ORDER.slice().sort((a, b) => sc[b] - sc[a]).map(id => `<div class="res">${avatar(id, 'av', sc[id] ? 'happy' : 'sad')}<div><div class="n">${CREW[id].name}</div><div class="t">${titles[id]}</div></div><div class="s">${sc[id]}</div></div>`).join('')}</div>
+    ${couples.map(([a, b]) => `<div class="bonus">Couple bonus: ${CREW[a].name} & ${CREW[b].name} share a dozen. +1 star, +8 energy</div>`).join('')}
+    <div class="row"><button class="btn" id="collect">Back to the port</button></div>`;
+  show('results');
+  gsap.from('.res', { x: -40, opacity: 0, stagger: .12, duration: .5, ease: 'back.out(1.8)', delay: .2 });
+  gsap.from('.stars span.on', { scale: 0, rotation: -90, stagger: .18, duration: .6, ease: 'back.out(3)', delay: .5 });
+  gsap.from('.bonus', { scale: .6, opacity: 0, duration: .6, ease: 'elastic.out(1,.4)', delay: 1 });
+  setTimeout(() => { party(total >= 10); if (total >= 10) shake(12); Snd.fanfare(); buzz([30, 40, 30]); }, 600);
+  const dozens = Math.max(1, Math.ceil(total / 12));
+  const price = S.used.huw ? 12 : 17;
+  shuck.cost = dozens * price * 2;
+  shuck.delta = { hunger: -Math.min(40, 10 + total * 2), energy: 6 + couples.length * 8, budget: -shuck.cost };
+  $('#collect').onclick = () => { S.done.cabane = true; S.polaroids.push({ stop: 'royan', scene: 'shuck', cap: 'Shuck-Off, Marennes' }); award(0, shuck.delta); enterExplore(); setTimeout(() => say(`${total} oyster${total === 1 ? '' : 's'} down. ${total >= 10 ? 'Annette would be proud.' : 'Respectable. The gull is judging, though.'}`, 3200), 700); };
+}
+
+/* ================= STAMP + POLAROID ================= */
+function stampSVG() {
+  const txt = 'ROYAN · MARENNES-OLÉRON · CHARENTE-MARITIME · ';
+  return `<svg class="stamp" viewBox="0 0 140 140"><defs><path id="stampArc" d="M70 70 m-50 0 a50 50 0 1 1 100 0 a50 50 0 1 1 -100 0"/></defs>
+    <g fill="none" stroke="${C.rioja}" stroke-width="3.5" filter="url(#wobble)" opacity=".92">
+      <circle cx="70" cy="70" r="62"/><circle cx="70" cy="70" r="40"/>
+    </g>
+    <text font-family="Fredoka" font-weight="700" font-size="12.5" letter-spacing="1.5" fill="${C.rioja}" opacity=".92"><textPath href="#stampArc" textLength="312" lengthAdjust="spacing">${txt}</textPath></text>
+    <g transform="translate(70 60)" opacity=".92">${LM.oyster(0, 2, 2.4).replace(/#b9c4b4|#fff|#7d8a7a/g, 'none').replace(/stroke="#2e2a33"/g, `stroke="${C.rioja}"`)}</g>
+    <text x="70" y="92" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="10" fill="${C.rioja}" opacity=".92">03 OCT 2027</text>
+  </svg>`;
+}
+function royanScene(w = 200, h = 200, withTitle = false) {
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="rs-sky${withTitle ? 'p' : ''}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f29f6b"/><stop offset=".6" stop-color="#fbd08a"/><stop offset="1" stop-color="#fbe6b8"/></linearGradient></defs>
+    <rect width="${w}" height="${h}" fill="url(#rs-sky${withTitle ? 'p' : ''})"/>
+    <circle cx="${w * .72}" cy="${h * .42}" r="${h * .13}" fill="#ffe39a" filter="url(#wc-soft)"/>
+    <path d="M0 ${h * .55} h${w} v${h * .45} h-${w}Z" fill="${C.sea}" filter="url(#wc)"/>
+    <path d="M0 ${h * .6} q${w * .25} -6 ${w * .5} 0 t${w * .5} 0" fill="none" stroke="#fbe6b8" stroke-width="2" opacity=".7"/>
+    ${[0, 1, 2, 3, 4].map(i => { const x = w * .06 + i * w * .19, c = [C.terra, C.sea2, C.gold, C.olive2, C.rioja][i];
+      return `<g transform="translate(${x} ${h * .36})"><path d="M0 ${h * .2} v-${h * .12} l${w * .07} -${h * .07} l${w * .07} ${h * .07} v${h * .12}Z" fill="${C.cream}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path d="M-2 ${h * .08} l${w * .09} -${h * .085} l${w * .09} ${h * .085}" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round"/><rect x="${w * .045}" y="${h * .1}" width="${w * .05}" height="${h * .1}" fill="${c}" stroke="${INK}" stroke-width="1.5"/><path d="M${w * .02} ${h * .2} v${h * .08} M${w * .12} ${h * .2} v${h * .08}" stroke="${INK}" stroke-width="2"/></g>`; }).join('')}
+    <path d="M${-w * .1} ${h * .92} q${w * .6} -${h * .22} ${w * 1.2} 0 v${h * .2} h-${w * 1.3}Z" fill="#b98a55" stroke="${INK}" stroke-width="2"/>
+    <ellipse cx="${w * .5}" cy="${h * .88}" rx="${w * .3}" ry="${h * .07}" fill="#e7eef0" stroke="${INK}" stroke-width="2"/>
+    ${[-2, -1, 0, 1, 2].map(i => LM.oyster(w * .5 + i * w * .1, h * .88 - (Math.abs(i) % 2) * 3, w / 120)).join('')}
+    <path d="M${w * .74} ${h * .86} q${w * .04} -${h * .06} ${w * .08} 0Z" fill="#f6e36b" stroke="${INK}" stroke-width="1.5"/>
+    ${withTitle ? `<text x="${w / 2}" y="${h * .27}" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="${h * .2}" fill="${C.cream}" stroke="${INK}" stroke-width="4" paint-order="stroke" letter-spacing="2">ROYAN</text><text x="${w / 2}" y="${h * .09}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${h * .08}" fill="${INK}">Greetings from</text>` : ''}
+  </svg>`;
+}
+function rewards() {
+  if (!S.stamps.includes('royan')) S.stamps.push('royan');
+  S.phase = 'postcard'; save();
+  const d = S.trip;
+  const pols = S.polaroids.filter(q => q.stop === 'royan');
+  const shots = pols.length ? pols.slice(-2) : [{ scene: 'shuck', cap: 'La Cayenne port' }];
+  const r = $('#reward');
+  r.innerHTML = `
+    <h2 class="big-h">Souvenirs from Royan</h2>
+    <div class="reward-row">
+      <div id="stampHold" style="width:132px;height:132px"></div>
+      <div style="position:relative">${shots.map((q, i) => `<div class="polaroid" id="pola${i ? i : ''}" style="${i ? 'position:absolute;left:30px;top:-16px;transform:rotate(-8deg);z-index:-1' : ''}"><div class="ph">${q.scene === 'talmont' ? talmontScene() : royanScene()}</div><div class="cap">${q.cap}</div></div>`).join('')}</div>
+    </div>
+    <p class="hand" style="font-size:20px;color:${C.ink};margin:4px 0">Polaroid developing… give it a shake.</p>
+    <div class="deltas">
+      <div class="delta">Hunger<b class="${d.hunger <= 0 ? 'up' : 'down'}">${d.hunger > 0 ? '+' : ''}${Math.round(d.hunger)}</b></div>
+      <div class="delta">Energy<b class="${d.energy >= 0 ? 'up' : 'down'}">${d.energy > 0 ? '+' : ''}${Math.round(d.energy)}</b></div>
+      <div class="delta">Kitty<b class="down">−€${Math.abs(Math.round(d.budget))}</b></div>
+    </div>
+    <div class="row"><button class="btn sea" id="toPostcard">Send a postcard</button></div>`;
+  show('reward');
+  // stamp slams down
+  setTimeout(() => {
+    $('#stampHold').innerHTML = stampSVG();
+    gsap.fromTo('#stampHold .stamp', { scale: 2.6, opacity: 0, rotation: -30 }, { scale: 1, opacity: 1, rotation: -12, duration: .32, ease: 'power4.in', onComplete: () => { shake(8); Snd.thunk('C2'); buzz(50); } });
+  }, 350);
+  // polaroid develops slowly
+  const ph = $('#pola .ph svg');
+  if (ph)
+  gsap.fromTo(ph, { filter: 'sepia(1) brightness(2.3) contrast(.35) blur(3px)' }, { filter: 'sepia(0) brightness(1) contrast(1) blur(0px)', duration: 7, ease: 'power1.inOut', delay: .8 });
+  gsap.fromTo('#pola', { y: 60, rotation: 12, opacity: 0 }, { y: 0, rotation: 3, opacity: 1, duration: .7, ease: 'back.out(1.6)', delay: .6 });
+  $('#pola').onpointerdown = () => { gsap.fromTo('#pola', { rotation: -3 }, { rotation: 3, duration: .4, ease: 'elastic.out(1.4,.25)' }); buzz(15); };
+  $('#toPostcard').onclick = postcard;
+}
+
+/* ================= POSTCARD ================= */
+function postcard() {
+  const line = S.route === 'coast'
+    ? 'Took the coast road like the rules say. Oysters the size of my ego. Huw found the best-value cabane, Annette cancelled the weather. Bordeaux next. Wish you were here. Oh wait, you are. — Cobba x'
+    : 'Took the highway. Nobody’s talking about it. Oysters still huge. Bordeaux next, and I’m told the castles are real. — Cobba x';
+  const p = $('#postcardScreen');
+  p.innerHTML = `
+    <div class="eyebrow display" style="letter-spacing:.14em;text-transform:uppercase;font-size:12px;color:${C.terra}">Next leg · Royan to Bordeaux</div>
+    <h2 class="big-h">A postcard from Cobba</h2>
+    <div class="pc-wrap" id="pcWrap"><div class="pc" id="pc">
+      <div class="pc-face pc-front">${royanScene(300, 200, true)}</div>
+      <div class="pc-face pc-back">
+        <div class="msg">${line}</div>
+        <div class="addr">
+          <svg class="pstamp" viewBox="0 0 54 64"><rect x="2" y="2" width="50" height="60" fill="${C.cream}" stroke="${INK}" stroke-width="2" stroke-dasharray="3 2"/><rect x="7" y="7" width="40" height="50" fill="${C.sea2}"/>${LM.lighthouse(27, 50, 2)}</svg>
+          <div>The Cobs</div><div>Somewhere on the D25</div><div>Côte Atlantique, FR</div>
+        </div>
+      </div>
+    </div></div>
+    <p class="tapflip">Tap the postcard to flip it</p>
+    <div class="row"><button class="btn" id="toFin">Onward</button></div>`;
+  show('postcardScreen');
+  let flipped = false;
+  const flip = () => { flipped = !flipped; gsap.to('#pc', { rotationY: flipped ? 180 : 0, duration: .8, ease: 'back.out(1.4)' }); Snd.pop(flipped ? 'E5' : 'C5'); };
+  $('#pcWrap').onclick = flip;
+  gsap.fromTo('#pcWrap', { y: -120, rotation: -14, opacity: 0 }, { y: 0, rotation: -2, opacity: 1, duration: .8, ease: 'bounce.out', delay: .1 });
+  setTimeout(() => { if (!flipped) flip(); }, 1600);
+  $('#toFin').onclick = fin;
+}
+
+function fin() {
+  S.phase = 'done'; save();
+  const f = $('#fin');
+  const m = S.meters;
+  f.innerHTML = `
+    <span class="preview-flag">End of the Royan preview</span>
+    <h2 class="big-h" style="max-width:360px">That’s one stop. Sixteen to go.</h2>
+    <p class="hand" style="font-size:22px;max-width:340px;margin:8px auto 4px">Stars ${S.stars} · Kitty €${Math.round(m.budget).toLocaleString('en-AU')} · Energy ${Math.round(m.energy)} · Hunger ${Math.round(m.hunger)}</p>
+    <div style="width:170px;margin:12px auto">${stampSVG()}</div>
+    <div class="row">
+      <button class="btn" id="again">Play Royan again</button>
+      <button class="btn ghost small" id="home">Back to the title</button>
+    </div>`;
+  show('fin');
+  party(true);
+  $('#again').onclick = () => { S = fresh(); save(); enterMap(); };
+  $('#home').onclick = () => { initTitle(); show('title'); };
+}
+
+/* ================= TITLE + CREW ================= */
+function titleArt() {
+  const svg = $('#titleArt');
+  svg.innerHTML = `
+    <path d="M-20 330 q120 -30 220 -10 t240 -20 v240 h-460Z" fill="${C.sea}" filter="url(#wc)"/>
+    <path d="M-20 360 q80 -12 150 0 q70 12 150 -4 q60 -10 140 2 v180 h-440Z" fill="${C.sand}" filter="url(#wc)"/>
+    <path d="M-20 360 q80 -12 150 0 q70 12 150 -4 q60 -10 140 2" fill="none" stroke="${INK}" stroke-width="3" filter="url(#wobble)"/>
+    <path id="titleRoad" d="M-40 460 q110 -60 220 -40 q120 22 260 -30" fill="none" stroke="#8b8579" stroke-width="22" stroke-linecap="round"/>
+    <path d="M-40 460 q110 -60 220 -40 q120 22 260 -30" fill="none" stroke="${C.cream}" stroke-width="2.5" stroke-dasharray="12 12"/>
+    ${LM.lighthouse(330, 350, 3.2)}${LM.dune(60, 368, 3)}${LM.pine(372, 410, 2.6)}${LM.pine(20, 430, 2.2)}
+    ${LM.ship(120, 318, 2.2)}
+    <g id="tCar" transform="translate(180 410)"><g transform="scale(2.6)">${carSVG().replace(/id="carBob"/, 'id="tCarBob"').replace(/id="carBody"/, '')}</g></g>
+    <g transform="translate(262 385) scale(.95)">${cobbaSVG().replace(/id="/g, 'data-t="')}</g>`;
+  gsap.to('#tCarBob', { y: -1.5, duration: .3, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+  gsap.fromTo('#tCar', { x: -120 }, { x: 180, duration: 2.2, ease: 'power3.out' });
+  gsap.to('#tCar .wheel', { rotation: 720, transformOrigin: '50% 50%', duration: 2.2, ease: 'power3.out' });
+  gsap.from('.logo h1', { y: -60, scale: .6, rotation: -8, opacity: 0, duration: 1, ease: 'elastic.out(1,.5)' });
+  gsap.to('.logo h1', { rotation: 1.5, y: 4, duration: 2.4, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 1 });
+  gsap.to('#title .sun', { scale: 1.06, duration: 2, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+}
+function initTitle() {
+  const saved = load();
+  $('#btnContinue').hidden = !(saved && saved.phase && saved.phase !== 'start');
+  titleArt();
+}
+function crewScreen() {
+  $('#crewGrid').innerHTML = ORDER.map(id => { const c = CREW[id]; return `<div class="cob">${avatar(id)}<div class="nm">${c.name}</div><div class="role">${c.role}</div><div class="ab"><b>${c.ability}</b>${c.abilityText}</div></div>`; }).join('')
+;
+  show('crew');
+  gsap.from('.cob', { y: 40, rotation: () => rand(-10, 10), opacity: 0, stagger: .1, duration: .7, ease: 'back.out(1.7)' });
+  gsap.from('.cob svg.av', { scale: 0, stagger: .1, duration: .8, ease: 'elastic.out(1,.45)', delay: .2 });
+  if (!$('#coupleNote')) $('#crewGrid').insertAdjacentHTML('afterend', `<p id="coupleNote" class="hand" style="text-align:center;font-size:20px;color:${C.rioja};margin:10px 0 0">Two couples: Paulo & Annette, Huw & Romy. Partners who both nail a mini-game earn a couple bonus.</p>`);
+}
+
+$('#btnStart').onclick = () => { Snd.init(); S = fresh(); save(); crewScreen(); };
+$('#btnPileIn').onclick = () => { Snd.pop('C5'); enterMap(); };
+$('#btnContinue').onclick = async () => {
+  Snd.init();
+  S = Object.assign(fresh(), load() || {});
+  if (S.phase === 'done' || S.phase === 'postcard') { fin(); return; }
+  if (S.phase === 'explore') { enterExplore(); return; }
+  if (S.phase === 'royan') {
+    show('map'); buildHud(); drawMap(); buildClouds(); skyState.t = S.route === 'coast' ? .82 : .5; renderSky();
+    gsap.set('#car', { x: STOPS.royan.xy[0], y: STOPS.royan.xy[1] });
+    await wait(30); Object.assign(cam, camTarget(STOPS.royan.xy[0], STOPS.royan.xy[1] + 30, legScale())); applyCam();
+    say('Welcome back. The oysters waited. They had no choice.', 3000);
+    mapAction('Explore Royan', enterExplore);
+    return;
+  }
+  enterMap();
+};
+addEventListener('resize', () => { if (!$('#map').hidden) applyCam(); renderSky(); });
+
+initTitle();
+})();
+</script>
+
+</body>
+</html>
