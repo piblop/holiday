@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f7ecd4">
+<meta name="theme-color" content="#fbf5e3">
 <script src="src/gate.js"></script>
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Cobs on Tour</title>
@@ -48,7 +48,7 @@ button{font:inherit;color:inherit}
 
 /* ---------- title ---------- */
 #title{background:linear-gradient(180deg,#f9d9a4 0%,#f4c38d 36%,#efd9a7 64%,#e9cf98 100%)}
-#title .sun{position:absolute;left:50%;top:14%;width:180px;height:180px;margin-left:-90px;border-radius:50%;background:radial-gradient(circle,#fff1c4 0 40%,#f7c65f 41% 66%,rgba(247,198,95,0) 67%);filter:url(#wc-soft)}
+#title .sun{position:absolute;left:50%;top:14%;width:180px;height:180px;margin-left:-90px;border-radius:50%;background:radial-gradient(circle,#fff1c4 0 40%,#f7c65f 41% 66%,rgba(247,198,95,0) 67%);}
 
 .logo{position:relative;z-index:2;margin-top:6vh}
 .logo h1{margin:0;font-family:Fredoka,system-ui,sans-serif;font-weight:700;font-size:clamp(54px,17vw,92px);line-height:.86;color:var(--cream);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 var(--ink);letter-spacing:.01em;text-wrap:balance}
@@ -323,6 +323,54 @@ button{font:inherit;color:inherit}
 .day-chip{display:inline-block;font-family:Fredoka,sans-serif;font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;background:var(--ink);color:var(--cream);padding:3px 10px;border-radius:10px}
 </style>
 
+<style>
+/* ---------- cosy island-life theme ---------- */
+:root{--sea:#35b3c4;--sea-2:#7ad6df;--sea-3:#c9f0ec;--sand:#f7e6b8;--sand-2:#ecd08c;--gold:#f5c342;--terra:#ee7f50;--rioja:#c9475d;--olive:#57a84a;--olive-2:#98d468;--ink:#5a4637;--ink-2:#8f7867;--paper:#fbf5e3;--cream:#fffdf3;--soft:0 5px 0 rgba(107,84,67,.28),0 10px 22px rgba(107,84,67,.14)}
+body,#app{background:var(--paper)}
+.tex{opacity:.16}
+.btn{border:none;border-radius:999px;box-shadow:var(--soft);padding:14px 30px;letter-spacing:.02em}
+.btn.sea{background:#29b3a4}.btn.gold{background:var(--gold)}.btn.ghost{background:var(--cream);color:var(--ink)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(107,84,67,.3)}
+.btn:focus-visible{outline:3px solid #29b3a4;outline-offset:4px}
+.sheet{border:none;border-radius:34px;background:var(--cream);box-shadow:0 14px 44px rgba(70,50,35,.3);padding:22px 18px 18px}
+.sheet::before{content:"";position:absolute;inset:8px;border:2px dashed rgba(107,84,67,.14);border-radius:28px;pointer-events:none}
+.sheet .eyebrow{color:#29a394}
+.choice{border:none;border-radius:24px;background:#f4eed8;box-shadow:0 4px 0 rgba(107,84,67,.16)}
+.choice.locked{border:2px dashed rgba(107,84,67,.3)}
+.choice .tagline{border:none;border-radius:999px;padding:2px 9px}
+.ability{border:2px dashed rgba(107,84,67,.3);border-radius:24px;background:#fff1c2}
+.m{border:none;border-radius:999px;background:rgba(255,253,243,.96);box-shadow:0 3px 0 rgba(107,84,67,.2);padding:3px 10px}
+.m .bar{border:none;background:#ece2c8;height:7px;border-radius:999px}
+.m .bar i{border-radius:999px}
+#sky{border-bottom:none;box-shadow:0 4px 0 rgba(107,84,67,.12)}
+#sunMoon{border:none;box-shadow:0 0 0 6px rgba(255,236,160,.45)}
+.icon-btn{border:none;box-shadow:0 4px 0 rgba(107,84,67,.28);background:var(--cream)}
+.exPlate{border:none;border-radius:24px;box-shadow:0 4px 0 rgba(107,84,67,.2);transform:none;padding:7px 16px 8px}
+#bubble{border:none;border-radius:28px;box-shadow:0 10px 28px rgba(70,50,35,.28);font-family:Nunito,system-ui,sans-serif;font-weight:700;font-size:16px;line-height:1.35;padding:18px 16px 12px;margin-bottom:78px}
+#bubble .who{position:absolute;top:-13px;left:16px;background:var(--gold);color:var(--ink);padding:3px 12px;border-radius:999px;font-size:12px;box-shadow:0 3px 0 rgba(107,84,67,.25)}
+#exToast{border:none;border-radius:999px;box-shadow:var(--soft)}
+.cob{border:none;border-radius:28px;box-shadow:var(--soft);transform:none!important}
+.cob .ab{border-radius:16px}
+.score-pill{border:none;border-radius:999px;box-shadow:0 3px 0 rgba(107,84,67,.25)}
+.res,.delta,.tape,.pick,.shop-item,.cob-card,.meter-row div{border:none!important;box-shadow:0 4px 0 rgba(107,84,67,.18)}
+.res{border-radius:22px}.pick{border-radius:22px}.shop-item{border-radius:22px}.delta{border-radius:16px}
+.tape{border-radius:22px}
+.pick.on{background:#ffe9a0}
+.mem .f,.mem .b{border:none;border-radius:20px;box-shadow:0 4px 0 rgba(107,84,67,.25)}
+.mem .f{background:radial-gradient(circle at 30% 30%,#9be3e8 0 22%,transparent 23%),radial-gradient(circle at 75% 70%,#9be3e8 0 18%,transparent 19%),#6fd0da}
+.mem .f span{color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.12)}
+.bonus{border:none;background:#ffe3e8;border-radius:22px;font-family:Nunito,sans-serif;font-weight:700;font-size:16px}
+.polaroid{box-shadow:0 6px 18px rgba(70,50,35,.25)}
+.pc-face{border:none;box-shadow:0 8px 24px rgba(70,50,35,.28);border-radius:14px}
+.day-chip,.preview-flag{border-radius:999px;background:#29a394}
+#title{background:linear-gradient(180deg,#bdeaf2 0%,#dff4f2 40%,#f7e6b8 64%,#f1dca6 100%)!important}
+#title .sun{filter:none;width:120px;height:120px;margin-left:-60px;top:10%;background:radial-gradient(circle,#fff6c8 0 45%,#ffd95e 46% 70%,rgba(255,217,94,0) 71%)}
+.logo h1{-webkit-text-stroke:0;color:#fffdf3;text-shadow:0 4px 0 #6b5443,0 8px 16px rgba(70,50,35,.25)}
+.logo h1 .on{color:var(--gold)}
+#mini{background:linear-gradient(#bfeef2,#e3f7f4)}
+#handoff{background:linear-gradient(#fff3c9,#f7e6b8)}
+.budget-bar{color:var(--cream);text-shadow:0 2px 0 rgba(0,0,0,.25)}
+</style>
 <div id="app">
  <div id="stage">
 
@@ -423,8 +471,8 @@ button{font:inherit;color:inherit}
 if (window.MotionPathPlugin) gsap.registerPlugin(MotionPathPlugin);
 const $ = (s, r = document) => r.querySelector(s);
 const NS = 'http://www.w3.org/2000/svg';
-const INK = '#2e2a33';
-const C = { sea:'#3f7f9c', sea2:'#7fb6c4', sea3:'#c4e1e2', sand:'#efd9a7', sand2:'#e2c07f', gold:'#d9a23a', terra:'#c45f38', rioja:'#8a1d34', olive:'#667535', olive2:'#a3ad63', paper:'#f7ecd4', cream:'#fdf7e8' };
+const INK = '#6b5443';
+const C = { sea:'#35b3c4', sea2:'#7ad6df', sea3:'#c9f0ec', sand:'#f7e6b8', sand2:'#ecd08c', gold:'#f5c342', terra:'#ee7f50', rioja:'#c9475d', olive:'#57a84a', olive2:'#98d468', paper:'#fbf5e3', cream:'#fffdf3' };
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = a => a[Math.floor(Math.random() * a.length)];
@@ -891,7 +939,7 @@ function drawMap() {
   el('ellipse', { cx: 60, cy: 420, rx: 120, ry: 70, fill: '#6aa5b8', opacity: .55 }, seaWash);
   // land
   const landD = sm(LAND, true);
-  const landEl = el('path', { d: landD, fill: C.sand, filter: 'url(#wc)' }, svg);
+  const landEl = el('path', { d: landD, fill: C.sand }, svg);
   const waves = el('g', { id: 'mapWaves', stroke: '#e9f4f2', 'stroke-width': 1.3, fill: 'none', 'stroke-linecap': 'round', opacity: .85 }, fx);
   let placed = 0;
   for (let i = 0; i < 400 && placed < 44; i++) {
@@ -907,21 +955,21 @@ function drawMap() {
   el('ellipse', { cx: P(42.5,-2.7)[0], cy: P(42.5,-2.7)[1], rx: 90, ry: 44, fill: '#e3b77e' }, tint);         // dry Rioja
   el('ellipse', { cx: P(43.0,-0.6)[0], cy: P(43.0,-0.6)[1], rx: 110, ry: 30, fill: '#d6c7a0' }, tint);        // Pyrenees
   // islands
-  el('path', { d: smooth([P(46.24,-1.56), P(46.21,-1.44), P(46.19,-1.30), P(46.16,-1.27), P(46.17,-1.40), P(46.20,-1.52)], true), fill: C.sand, filter: 'url(#wc)' }, svg);
-  el('path', { d: smooth([P(46.04,-1.42), P(45.98,-1.33), P(45.86,-1.24), P(45.82,-1.21), P(45.90,-1.31), P(46.01,-1.41)], true), fill: C.sand, filter: 'url(#wc)' }, svg);
+  el('path', { d: smooth([P(46.24,-1.56), P(46.21,-1.44), P(46.19,-1.30), P(46.16,-1.27), P(46.17,-1.40), P(46.20,-1.52)], true), fill: C.sand }, svg);
+  el('path', { d: smooth([P(46.04,-1.42), P(45.98,-1.33), P(45.86,-1.24), P(45.82,-1.21), P(45.90,-1.31), P(46.01,-1.41)], true), fill: C.sand }, svg);
   // Gironde estuary + rivers
   const [gx0, gy0] = P(45.585,-1.06), [gx1, gy1] = P(45.05,-0.66);
-  el('path', { d: `M${gx0 - 5} ${gy0 - 2} Q${gx0 + 20} ${gy0 + 20} ${gx1} ${gy1} L${gx1 + 3} ${gy1 - 1} Q${gx0 + 28} ${gy0 + 8} ${gx0 + 6} ${gy0 - 6}Z`, fill: C.sea2, filter: 'url(#wc-soft)' }, svg);
-  const rivers = el('g', { fill: 'none', stroke: C.sea, 'stroke-width': 1.6, 'stroke-linecap': 'round', filter: 'url(#wobble)' }, svg);
+  el('path', { d: `M${gx0 - 5} ${gy0 - 2} Q${gx0 + 20} ${gy0 + 20} ${gx1} ${gy1} L${gx1 + 3} ${gy1 - 1} Q${gx0 + 28} ${gy0 + 8} ${gx0 + 6} ${gy0 - 6}Z`, fill: C.sea2 }, svg);
+  const rivers = el('g', { fill: 'none', stroke: C.sea, 'stroke-width': 1.6, 'stroke-linecap': 'round' }, svg);
   el('path', { d: sm([[45.05,-0.66],[44.95,-0.6],[44.84,-0.56],[44.7,-0.35],[44.5,0.1]]) }, rivers);
   el('path', { d: sm([[43.495,-1.52],[43.5,-1.4],[43.55,-1.1],[43.7,-0.8]]) }, rivers);
   el('path', { d: sm([[42.65,-2.9],[42.52,-2.5],[42.4,-2.0]]) }, rivers);
   // arcachon basin
-  el('ellipse', { cx: P(44.68,-1.15)[0], cy: P(44.68,-1.15)[1], rx: 9, ry: 7, fill: C.sea2, filter: 'url(#wc-soft)' }, svg);
+  el('ellipse', { cx: P(44.68,-1.15)[0], cy: P(44.68,-1.15)[1], rx: 9, ry: 7, fill: C.sea2 }, svg);
   // coastline ink
   const ink = el('g', {}, svg);
-  roughPath(ink, sm(COAST), { strokeWidth: 1.6, roughness: 1.1 });
-  roughPath(ink, sm(COAST.map(([a, b]) => [a + .012, b - .03])), { strokeWidth: .6, stroke: '#5a7f8c', roughness: 1.6 });
+  roughPath(ink, sm(COAST), { strokeWidth: 1.8, roughness: .35, stroke: '#3a9fb0' });
+  el('path', { d: sm(COAST), fill: 'none', stroke: '#f3fbf8', 'stroke-width': 5, opacity: .6 }, ink);
   // landmarks
   const lm = el('g', { class: 'landmarks' }, svg);
   const put = (k, ll, s = 1) => { const [x, y] = P(...ll); lm.insertAdjacentHTML('beforeend', LM[k](x, y, s)); };
@@ -948,21 +996,21 @@ function drawMap() {
   roughPath(comp, 'M -26 0 A 26 26 0 1 0 26 0 A 26 26 0 1 0 -26 0', { strokeWidth: 1.1, roughness: .8, fill: 'rgba(253,247,232,.55)', fillStyle: 'solid' });
   comp.insertAdjacentHTML('beforeend', `<path d="M0 -34 L6 0 L0 34 L-6 0Z" fill="${C.cream}" stroke="${INK}" stroke-width="1.2"/><path d="M0 -34 L6 0 L-6 0Z" fill="${C.terra}" stroke="${INK}" stroke-width="1.2"/><path d="M-30 0 L0 5 L30 0 L0 -5Z" fill="${C.sand2}" stroke="${INK}" stroke-width="1.1"/><text y="-37" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="11" fill="${INK}">N</text>`);
   // cartouche
-  svg.insertAdjacentHTML('beforeend', `<g transform="translate(18 32) rotate(-3)"><path d="M0 0 h150 q8 18 0 36 h-150 q8 -18 0 -36Z" fill="${C.cream}" stroke="${INK}" stroke-width="1.5" filter="url(#wobble)"/><text x="75" y="17" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="15" fill="${C.rioja}">Cobs on Tour</text><text x="75" y="30" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="12" fill="${INK}">the Bay of Biscay, Oct 2027</text></g>`);
+  svg.insertAdjacentHTML('beforeend', `<g transform="translate(18 32) rotate(-3)"><path d="M0 0 h150 q8 18 0 36 h-150 q8 -18 0 -36Z" fill="${C.cream}" stroke="${INK}" stroke-width="1.5"/><text x="75" y="17" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="15" fill="${C.rioja}">Cobs on Tour</text><text x="75" y="30" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="12" fill="${INK}">the Bay of Biscay, Oct 2027</text></g>`);
   svg.insertAdjacentHTML('beforeend', `<text x="90" y="170" font-family="Caveat" font-weight="700" font-size="19" fill="#2f6378" opacity=".8" transform="rotate(-14 90 170)">Bay of Biscay</text>
     <text x="330" y="150" font-family="Caveat" font-weight="700" font-size="16" fill="#8a6a3a" opacity=".85">FRANCE</text>
     <text x="150" y="600" font-family="Caveat" font-weight="700" font-size="16" fill="#8a6a3a" opacity=".85">ESPAÑA</text>`);
   // insets for flights (Paris top-right, Bamberg bottom-right)
   svg.insertAdjacentHTML('beforeend', `
-    <g transform="translate(334 8)"><rect width="60" height="40" rx="6" fill="${C.cream}" stroke="${INK}" stroke-width="1.4" filter="url(#wobble)"/><path d="M30 8 l-6 22 h12Z M26 20 h8" fill="none" stroke="${INK}" stroke-width="1.3" stroke-linejoin="round"/><text x="30" y="37" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="11" fill="${INK}">Paris</text></g>
-    <g transform="translate(318 612)"><rect width="72" height="54" rx="6" fill="${C.cream}" stroke="${INK}" stroke-width="1.4" filter="url(#wobble)"/>${LM.stein(30, 30, 1.3)}${LM.castle(52, 32, .9)}<text x="36" y="47" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="12" fill="${INK}">Bamberg · finale</text></g>`);
+    <g transform="translate(334 8)"><rect width="60" height="40" rx="6" fill="${C.cream}" stroke="${INK}" stroke-width="1.4"/><path d="M30 8 l-6 22 h12Z M26 20 h8" fill="none" stroke="${INK}" stroke-width="1.3" stroke-linejoin="round"/><text x="30" y="37" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="11" fill="${INK}">Paris</text></g>
+    <g transform="translate(318 612)"><rect width="72" height="54" rx="6" fill="${C.cream}" stroke="${INK}" stroke-width="1.4"/>${LM.stein(30, 30, 1.3)}${LM.castle(52, 32, .9)}<text x="36" y="47" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="12" fill="${INK}">Bamberg · finale</text></g>`);
   // route: the stops in play, dotted and ghosted; flights dashed
   const route = el('g', { fill: 'none', 'stroke-linecap': 'round', id: 'routeGhost' }, svg);
   S.order.forEach((id, i) => {
     if (!i) return;
     const d = STOP[id];
     if (d.leg && d.leg.fly) el('path', { d: flightD(S.order[i - 1], id), stroke: INK, 'stroke-width': 1.3, 'stroke-dasharray': '4 4', opacity: .5 }, route);
-    else el('path', { d: smooth(legPts(id, 'coast')), stroke: INK, 'stroke-width': 1.6, 'stroke-dasharray': '1 5', opacity: .55, filter: 'url(#wobble)' }, route);
+    else el('path', { d: smooth(legPts(id, 'coast')), stroke: INK, 'stroke-width': 1.6, 'stroke-dasharray': '1 5', opacity: .55 }, route);
   });
   el('g', { id: 'legsDone' }, svg);
   el('g', { id: 'legNow' }, fx);
@@ -1002,7 +1050,7 @@ function buildClouds() {
   const host = $('#clouds'); host.innerHTML = '';
   for (let i = 0; i < 4; i++) {
     const w = rand(70, 120);
-    host.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 120 50" style="width:${w}px;left:${rand(0, 90)}%;top:${rand(0, 90)}%" data-f="${rand(1.15, 1.45).toFixed(2)}"><path d="M14 40 q-12 0 -10 -10 q2 -9 13 -7 q2 -14 18 -13 q10 -10 24 -2 q14 -6 22 6 q14 -1 16 12 q10 4 4 14Z" fill="#fffaf0" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round" filter="url(#wobble)" opacity=".92"/></svg>`);
+    host.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 120 50" style="width:${w}px;left:${rand(0, 90)}%;top:${rand(0, 90)}%" data-f="${rand(1.15, 1.45).toFixed(2)}"><path d="M14 40 q-12 0 -10 -10 q2 -9 13 -7 q2 -14 18 -13 q10 -10 24 -2 q14 -6 22 6 q14 -1 16 12 q10 4 4 14Z" fill="#fffaf0" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round" opacity=".92"/></svg>`);
   }
   host.querySelectorAll('svg').forEach(c => gsap.to(c, { x: '+=' + rand(20, 50), duration: rand(8, 14), repeat: -1, yoyo: true, ease: 'sine.inOut' }));
 }
@@ -1083,7 +1131,7 @@ const SPR = {
       <path d="M${-w / 2} 0 H${w / 2}" stroke="${INK}" stroke-width="2"/>${[...Array(Math.max(2, Math.floor(w / 12)))].map((_, i) => `<path d="M${-w / 2 + 6 + i * 12} ${-h / 2 + 3} v${h - 6}" stroke="rgba(46,42,51,.22)" stroke-width="1.4"/>`).join('')}
       ${tim ? `<rect x="${-w / 2 + 2}" y="${h / 2 - 2}" width="${w - 4}" height="10" fill="${wall}" ${SK} stroke-width="2"/>${[...Array(Math.floor(w / 14))].map((_, i) => `<rect x="${-w / 2 + 6 + i * 14}" y="${h / 2}" width="6" height="6" fill="${tim}"/>`).join('')}` : ''}</g>`; },
   church: (x, y, o = {}) => `<g transform="translate(${x} ${y})">
-    ${o.rock ? `<path d="M-62 44 q-12 -44 20 -64 q42 -24 82 -2 q30 22 16 66Z" fill="#d9c69a" ${SK} stroke-width="2.4" filter="url(#wobble)"/>` : ''}
+    ${o.rock ? `<path d="M-62 44 q-12 -44 20 -64 q42 -24 82 -2 q30 22 16 66Z" fill="#d9c69a" ${SK} stroke-width="2.4"/>` : ''}
     <rect x="-24" y="-22" width="48" height="30" fill="${o.wall || C.cream}" ${SK} stroke-width="2.4"/><path d="M-28 -22 L0 -40 L28 -22Z" fill="${o.roof || C.terra}" ${SK} stroke-width="2.4"/>
     <rect x="-8" y="-58" width="16" height="22" fill="${o.wall || C.cream}" ${SK} stroke-width="2.2"/><path d="M-10 -58 L0 -70 L10 -58Z" fill="${o.roof || C.terra}" ${SK} stroke-width="2"/><path d="M0 -4 v12" stroke="${INK}" stroke-width="3"/><circle cx="0" cy="-49" r="3" fill="${INK}"/></g>`,
   cathedral: (x, y, o = {}) => `<g transform="translate(${x} ${y})"><rect x="-44" y="-26" width="88" height="44" fill="#d8cbb0" ${SK} stroke-width="2.6"/><path d="M-48 -26 L0 -46 L48 -26Z" fill="#8b8579" ${SK} stroke-width="2.4"/>
@@ -1110,7 +1158,7 @@ const SPR = {
     <path d="M-36 8 h72 l-6 12 h-60Z" fill="${o.awn || C.sea}" ${SK} stroke-width="2"/>${[-24, -8, 8, 24].map(dx => `<path d="M${dx - 4} 8 h8 l-2 12 h-4Z" fill="${C.cream}" opacity=".85"/>`).join('')}
     ${o.sign ? `<rect x="-30" y="-40" width="60" height="14" rx="3" fill="${C.cream}" ${SK} stroke-width="1.6"/><text y="-29.5" text-anchor="middle" font-family="Fredoka" font-weight="600" font-size="9" fill="${INK}">${o.sign}</text>` : ''}
     <rect x="-26" y="26" width="52" height="12" rx="3" fill="#b98a55" ${SK} stroke-width="1.8"/>${[-18, -6, 6, 18].map((dx, i) => `<circle cx="${dx}" cy="25" r="5" fill="${[C.gold, C.rioja, C.olive2, C.sea2][i]}" ${SK} stroke-width="1.4"/>`).join('')}</g>`,
-  market: (x, y, o = {}) => `<g transform="translate(${x} ${y})"><rect x="-66" y="-40" width="132" height="70" rx="4" fill="rgba(46,42,51,.2)" transform="translate(4 5)"/>
+  marketOld: (x, y, o = {}) => `<g transform="translate(${x} ${y})"><rect x="-66" y="-40" width="132" height="70" rx="4" fill="rgba(46,42,51,.2)" transform="translate(4 5)"/>
     <rect x="-66" y="-40" width="132" height="70" rx="4" fill="${o.roof || '#6e8a7a'}" ${SK} stroke-width="2.6"/><path d="M-66 -5 H66" stroke="${INK}" stroke-width="2"/><path d="M-60 -34 H60 M-60 22 H60" stroke="rgba(255,255,255,.35)" stroke-width="3"/>
     <rect x="-34" y="-58" width="68" height="16" rx="3" fill="${C.cream}" ${SK} stroke-width="1.8"/><text y="-46" text-anchor="middle" font-family="Fredoka" font-weight="600" font-size="10" fill="${INK}">${o.sign || 'Les Halles'}</text>
     ${[-44, -16, 12, 40].map((dx, i) => `<g transform="translate(${dx} 42)"><rect x="-10" y="-5" width="20" height="10" rx="2" fill="${[C.terra, C.gold, C.olive2, C.sea2][i]}" ${SK} stroke-width="1.6"/></g>`).join('')}</g>`,
@@ -1123,7 +1171,7 @@ const SPR = {
   ferris: (x, y) => `<g transform="translate(${x} ${y})"><path d="M-26 20 L0 -30 L26 20" fill="none" stroke="${INK}" stroke-width="3"/><g class="ferrisWheel"><circle cx="0" cy="-30" r="36" fill="none" stroke="${C.terra}" stroke-width="3"/>${[...Array(8)].map((_, i) => { const a = i * Math.PI / 4; return `<path d="M0 -30 l${(36 * Math.cos(a)).toFixed(1)} ${(36 * Math.sin(a)).toFixed(1)}" stroke="${INK}" stroke-width="1.4"/><rect x="${(36 * Math.cos(a) - 5).toFixed(1)}" y="${(-30 + 36 * Math.sin(a) - 4).toFixed(1)}" width="10" height="8" rx="2" fill="${[C.gold, C.sea2, C.olive2, C.rioja][i % 4]}" ${SK} stroke-width="1.2"/>`; }).join('')}</g><circle cx="0" cy="-30" r="4" fill="${INK}"/></g>`,
   funicular: (x, y, o = {}) => `<g transform="translate(${x} ${y})"><path d="M-70 40 L70 -60" stroke="#8b8579" stroke-width="10" stroke-linecap="round"/><path d="M-70 40 L70 -60" stroke="${C.cream}" stroke-width="2" stroke-dasharray="6 5"/>
     <g class="funiCar"><rect x="-14" y="-10" width="28" height="18" rx="4" fill="${o.col || C.rioja}" ${SK} stroke-width="2" transform="rotate(-35)"/></g></g>`,
-  hermitage: (x, y) => `<g transform="translate(${x} ${y})"><path d="M-70 60 q10 -60 60 -80 q60 -10 80 40 q10 40 -30 50Z" fill="#9a8f78" ${SK} stroke-width="2.6" filter="url(#wobble)"/>
+  hermitage: (x, y) => `<g transform="translate(${x} ${y})"><path d="M-70 60 q10 -60 60 -80 q60 -10 80 40 q10 40 -30 50Z" fill="#9a8f78" ${SK} stroke-width="2.6"/>
     <path d="M-140 70 q40 -10 80 -30" fill="none" stroke="${C.sand}" stroke-width="10" stroke-linecap="round"/><path d="M-140 70 q40 -10 80 -30" fill="none" stroke="${INK}" stroke-width="1.4" stroke-dasharray="3 4"/>
     <path d="M-60 40 q20 -40 40 -46 q16 -20 26 -26" fill="none" stroke="${C.cream}" stroke-width="3" stroke-dasharray="4 3"/>
     <rect x="-8" y="-50" width="40" height="26" fill="${C.cream}" ${SK} stroke-width="2.2"/><path d="M-11 -50 L12 -66 L35 -50Z" fill="${C.terra}" ${SK} stroke-width="2"/><rect x="-2" y="-74" width="10" height="14" fill="${C.cream}" ${SK} stroke-width="1.8"/><circle cx="3" cy="-66" r="2.6" fill="${C.gold}"/></g>`,
@@ -1158,7 +1206,7 @@ const SPR = {
   oak: (x, y) => `<g transform="translate(${x} ${y})"><rect x="-6" y="-4" width="12" height="30" fill="#6b4a2f" ${SK} stroke-width="2"/><circle cx="0" cy="-26" r="34" fill="${C.olive}" ${SK} stroke-width="2.4"/><circle cx="-14" cy="-34" r="14" fill="#7c8c44"/><circle cx="16" cy="-20" r="12" fill="#7c8c44"/><rect x="-44" y="26" width="88" height="10" rx="3" fill="#d8cbb0" ${SK} stroke-width="1.8"/></g>`,
   stadium: (x, y) => `<g transform="translate(${x} ${y})"><ellipse rx="80" ry="54" fill="#e6e0d2" ${SK} stroke-width="2.6"/><ellipse rx="58" ry="36" fill="#7fae5a" ${SK} stroke-width="2"/><path d="M0 -36 V36" stroke="#fff" stroke-width="1.6"/><circle r="9" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M-80 0 q0 -60 80 -54" fill="none" stroke="${C.rioja}" stroke-width="6"/></g>`,
   combs: (x, y) => `<g transform="translate(${x} ${y})"><path d="M-40 30 q-10 -30 10 -40 q30 -10 50 10 q10 20 -10 30Z" fill="#9a8f78" ${SK} stroke-width="2.2"/>${[[-20, -6], [14, -2]].map(([a, b]) => `<path d="M${a} ${b} v-26 q0 -8 8 -8 h10 M${a} ${b - 14} h-12 q-6 0 -6 -6 v-10" fill="none" stroke="#6b4a2f" stroke-width="5" stroke-linecap="round"/>`).join('')}</g>`,
-  island: (x, y, o = {}) => `<g transform="translate(${x} ${y})"><ellipse rx="${o.rx || 50}" ry="${o.ry || 34}" fill="#8fa26a" ${SK} stroke-width="2.6" filter="url(#wobble)"/><circle cx="-10" cy="-8" r="12" fill="${C.olive}"/><circle cx="12" cy="4" r="10" fill="${C.olive}"/></g>`,
+  island: (x, y, o = {}) => `<g transform="translate(${x} ${y})"><ellipse rx="${o.rx || 50}" ry="${o.ry || 34}" fill="#8fa26a" ${SK} stroke-width="2.6"/><circle cx="-10" cy="-8" r="12" fill="${C.olive}"/><circle cx="12" cy="4" r="10" fill="${C.olive}"/></g>`,
   boat: (x, y, o = {}) => `<g transform="translate(${x} ${y}) rotate(${o.rot || 0})" class="${o.cls || ''}"><path d="M-22 -8 h36 l10 8 -10 8 h-36Z" fill="${o.col || C.terra}" ${SK} stroke-width="2"/><rect x="-12" y="-5" width="14" height="10" rx="2" fill="${C.cream}" ${SK} stroke-width="1.4"/></g>`,
   car: (x, y, o = {}) => `<g transform="translate(${x} ${y}) rotate(${o.rot ?? -90})"><rect x="-23" y="-12" width="52" height="30" rx="10" fill="rgba(46,42,51,.25)"/>
     <rect x="-26" y="-15" width="52" height="30" rx="10" fill="${C.terra}" ${SK} stroke-width="2.6"/><path d="M8 -12 q8 12 0 24 h-6 q4 -12 0 -24Z" fill="${C.sea3}" ${SK} stroke-width="1.8"/><path d="M-20 -11 q-4 11 0 22 h4 q-3 -11 0 -22Z" fill="${C.sea3}" ${SK} stroke-width="1.6"/>
@@ -1183,22 +1231,22 @@ const SPR = {
 function shade(hex, f) { const n = parseInt(hex.slice(1), 16); const c = s => Math.max(0, Math.min(255, Math.round(((n >> s) & 255) * f))); return `rgb(${c(16)},${c(8)},${c(0)})`; }
 SPR.house = (x, y, o = {}) => {
   const w = o.w || 60, h = o.h || 56, wallH = Math.round(h * .55), roofH = h - wallH;
-  const roof = o.roof || C.terra, wall = o.wall || C.cream, sh = o.shutter || (o.timber || C.sea);
+  const roof = o.roof || C.terra, wall = o.wall || '#fff6e0', sh = o.shutter || (o.timber || C.sea);
   const rs = roof.startsWith('#') ? roof : C.terra;
   const top = -wallH - roofH, eave = -wallH;
   const cols = Math.max(1, Math.floor((w - 16) / 20));
   const win = [...Array(cols)].map((_, i) => {
     const wx = -w / 2 + 10 + i * ((w - 20) / cols) + ((w - 20) / cols - 10) / 2;
     if (o.door !== false && i === Math.floor(cols / 2) && !o.awn) return `<path d="M${wx} 0 v-${Math.min(18, wallH - 6)} q5 -5 10 0 v${Math.min(18, wallH - 6)}" fill="${shade(rs, .7)}" stroke="${INK}" stroke-width="1.6"/>`;
-    return `<g><rect x="${wx - 3}" y="${eave + 6}" width="3" height="11" fill="${sh}" stroke="${INK}" stroke-width="1"/><rect x="${wx}" y="${eave + 6}" width="10" height="11" fill="#bfe0e6" stroke="${INK}" stroke-width="1.4"/><rect x="${wx + 10}" y="${eave + 6}" width="3" height="11" fill="${sh}" stroke="${INK}" stroke-width="1"/><path d="M${wx + 5} ${eave + 6} v11" stroke="${INK}" stroke-width=".8"/></g>`;
+    return `<g><rect x="${wx - 3}" y="${eave + 6}" width="3" height="11" fill="${sh}" stroke="${INK}" stroke-width="1"/><rect x="${wx}" y="${eave + 6}" width="10" height="11" rx="3" fill="#c9f0ec" stroke="${INK}" stroke-width="1.4"/><rect x="${wx + 1.5}" y="${eave + 7.5}" width="3" height="3" rx="1" fill="#fff"/><rect x="${wx + 10}" y="${eave + 6}" width="3" height="11" fill="${sh}" stroke="${INK}" stroke-width="1"/><path d="M${wx + 5} ${eave + 6} v11" stroke="${INK}" stroke-width=".8"/></g>`;
   }).join('');
   const timbers = o.timber ? `<path d="M${-w / 2 + 2} ${eave + 3} H${w / 2 - 2} M${-w / 2 + 2} ${eave + 20} H${w / 2 - 2}" stroke="${o.timber}" stroke-width="3"/>${[...Array(Math.floor(w / 18) + 1)].map((_, i) => `<path d="M${-w / 2 + 2 + i * 18} ${eave + 2} v${wallH - 2}" stroke="${o.timber}" stroke-width="2.4"/>`).join('')}` : '';
   const tiles = [...Array(Math.max(2, Math.floor(roofH / 6)))].map((_, i) => { const yy = eave - 5 - i * 6, inset = (i * 6 + 5) / roofH * 10; return `<path d="M${-w / 2 - 4 + inset} ${yy} H${w / 2 + 4 - inset}" stroke="${shade(rs, .78)}" stroke-width="1.4"/>`; }).join('');
   return `<g transform="translate(${x} ${y})"><ellipse cx="3" cy="3" rx="${w / 2 + 6}" ry="6" fill="rgba(46,42,51,.22)"/>
-    <rect x="${-w / 2}" y="${eave}" width="${w}" height="${wallH}" fill="${wall}" ${SK} stroke-width="2.4"/>
+    <rect x="${-w / 2}" y="${eave}" width="${w}" height="${wallH}" rx="5" fill="${wall}" ${SK} stroke-width="2.2"/>
     <rect x="${-w / 2}" y="${eave}" width="${w}" height="5" fill="rgba(46,42,51,.14)"/>
     ${timbers}${win}
-    <path d="M${-w / 2 - 6} ${eave} L${-w / 2 + 8} ${top} H${w / 2 - 8} L${w / 2 + 6} ${eave}Z" fill="${roof}" ${SK} stroke-width="2.4"/>${tiles}
+    <path d="M${-w / 2 - 6} ${eave + 2} Q${-w / 2 - 8} ${eave - 2} ${-w / 2 - 2} ${eave - 6} L${-w / 2 + 6} ${top + 4} Q${-w / 2 + 8} ${top} ${-w / 2 + 14} ${top} H${w / 2 - 14} Q${w / 2 - 8} ${top} ${w / 2 - 6} ${top + 4} L${w / 2 + 2} ${eave - 6} Q${w / 2 + 8} ${eave - 2} ${w / 2 + 6} ${eave + 2}Z" fill="${roof}" ${SK} stroke-width="2.2"/>${tiles}
     <path d="M${-w / 2 + 9} ${top + 2} H${w / 2 - 9}" stroke="${shade(rs, 1.25)}" stroke-width="2.4" stroke-linecap="round"/>
     ${o.chimney !== false && w > 50 ? `<rect x="${w / 4}" y="${top - 8}" width="8" height="12" fill="${shade(rs, .85)}" ${SK} stroke-width="1.6"/>` : ''}
     ${o.awn ? `<path d="M${-w / 2 - 2} ${eave + 4} H${w / 2 + 2} l-5 11 H${-w / 2 + 3}Z" fill="${o.awn}" ${SK} stroke-width="1.8"/>${[...Array(Math.floor(w / 14))].map((_, i) => `<path d="M${-w / 2 + 4 + i * 14} ${eave + 4} h6 l-1 11 h-5Z" fill="${C.cream}" opacity=".85"/>`).join('')}<rect x="-8" y="${eave + 17}" width="16" height="${wallH - 17}" fill="${shade(rs, .6)}" stroke="${INK}" stroke-width="1.4"/>` : ''}
@@ -1224,10 +1272,32 @@ SPR.monastery = (x, y) => `<g transform="translate(${x} ${y})">${SPR.house(-10, 
   <rect x="34" y="-70" width="26" height="70" fill="#e6d7b5" ${SK} stroke-width="2.4"/><path d="M31 -70 L47 -90 L63 -70Z" fill="#b0643a" ${SK} stroke-width="2"/><path d="M42 -56 v-6 q5 -5 10 0 v6" fill="${INK}" opacity=".7"/><circle cx="47" cy="-54" r="3" fill="${C.gold}"/></g>`;
 // how tall each landmark stands, so "!" markers float just above it
 const SPR_H = { house: 60, church: 80, cathedral: 120, lighthouse: 96, tower: 76, eiffel: 190, pyramid: 50, cafe: 60, shop: 60, market: 70, dune: 90, surfbeach: 30, pier: 20, ferris: 72, funicular: 70, hermitage: 84, transporter: 106, guggenheim: 80, puppy: 60, winery: 64, barrels: 30, kupela: 60, monastery: 96, brewery: 66, rathaus: 124, cheesefarm: 56, grill: 40, fronton: 46, oak: 66, stadium: 60, combs: 50, island: 40, boat: 16, car: 26, hotel: 64, station: 66, telescope: 20, sign: 36, mirror: 34, stall: 30, bench: 8, christ: 58, pintxobar: 58, whale: 20 };
+
+SPR.board = (x, y, o = {}) => `<g transform="translate(${x} ${y})"><ellipse cx="2" cy="6" rx="22" ry="5" fill="rgba(107,84,67,.18)"/>
+  <path d="M-14 4 V-26 M14 4 V-26" stroke="#a9774c" stroke-width="4" stroke-linecap="round"/>
+  <rect x="-22" y="-44" width="44" height="26" rx="7" fill="#fffdf3" ${SK} stroke-width="2"/>
+  <circle cx="-12" cy="-31" r="6" fill="#35b3c4"/><text x="-12" y="-27.5" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="9" fill="#fff">i</text>
+  <path d="M-3 -35 h18 M-3 -28 h13" stroke="#c9b894" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M-24 -44 q24 -10 48 0" fill="${o.col || C.terra}" ${SK} stroke-width="1.8"/></g>`;
+SPR.camera = (x, y) => `<g transform="translate(${x} ${y})"><ellipse cx="2" cy="6" rx="16" ry="4" fill="rgba(107,84,67,.18)"/>
+  <path d="M-10 6 L0 -16 L10 6 M0 -16 V6" stroke="#a9774c" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <rect x="-13" y="-32" width="26" height="18" rx="5" fill="#6b5443" ${SK} stroke-width="1.8"/><rect x="-6" y="-36" width="9" height="5" rx="2" fill="#6b5443"/>
+  <circle cx="0" cy="-23" r="6" fill="#c9f0ec" ${SK} stroke-width="1.8"/><circle cx="-1.5" cy="-24.5" r="1.6" fill="#fff"/><circle cx="9" cy="-28" r="1.6" fill="#f5c342"/></g>`;
+SPR.cobbaRock = (x, y) => `<g transform="translate(${x} ${y})"><ellipse cx="2" cy="4" rx="26" ry="6" fill="rgba(107,84,67,.18)"/>
+  <path d="M-24 2 q-4 -16 16 -20 q20 -2 26 12 q2 10 -18 10 q-18 0 -24 -2Z" fill="#b9ae9a" ${SK} stroke-width="2"/>
+  <g transform="translate(-20 -46) scale(.34)" class="cobbaSit">${cobbaSVG().replace(/id="/g, 'data-s="')}</g></g>`;
+SPR.market = (x, y, o = {}) => `<g transform="translate(${x} ${y})"><ellipse cx="3" cy="6" rx="74" ry="8" fill="rgba(107,84,67,.2)"/>
+  <rect x="-66" y="-40" width="132" height="44" rx="8" fill="#fff6e0" ${SK} stroke-width="2.2"/>
+  ${[-44, -15, 15, 44].map(dx => `<path d="M${dx - 11} 4 v-22 q11 -12 22 0 v22" fill="#c9f0ec" ${SK} stroke-width="1.8"/><path d="M${dx} -18 v22" stroke="${INK}" stroke-width="1"/>`).join('')}
+  <path d="M-74 -38 Q-60 -72 0 -76 Q60 -72 74 -38 Z" fill="${o.roof || '#5fb3a3'}" ${SK} stroke-width="2.2"/>
+  <path d="M-52 -46 Q0 -70 52 -46" stroke="rgba(255,255,255,.5)" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <rect x="-34" y="-62" width="68" height="15" rx="7" fill="#fffdf3" ${SK} stroke-width="1.6"/><text y="-51" text-anchor="middle" font-family="Fredoka" font-weight="600" font-size="9.5" fill="${INK}">${o.sign || 'Les Halles'}</text>
+  ${[-48, -18, 18, 48].map((dx, i) => `<g transform="translate(${dx} 16)"><rect x="-11" y="-4" width="22" height="9" rx="4" fill="${[C.terra, C.gold, C.olive2, C.sea2][i]}" ${SK} stroke-width="1.4"/></g>`).join('')}</g>`;
+Object.assign(SPR_H, { board: 50, camera: 38, cobbaRock: 52, market: 80 });
 /* ================= EXPLORE ENGINE: walkable top-down stops ================= */
 // Every stop is a scene config (see STOP data). The four Cobs walk in a conga line; tap the
 // ground to walk, tap a place to walk there and interact with it.
-const GROUND = { sand: C.sand, grass: '#bccf8f', stone: '#dcd2bd', city: '#d8cdb6', soil: '#dcc093', snow: '#eef0ec' };
+const GROUND = { sand: '#f7e6b8', grass: '#9ed873', stone: '#ebe3cf', city: '#efe6cf', soil: '#ecd39c', snow: '#eef0ec' };
 let EX = null, SCN = null, STOPID = null;
 const here = () => STOP[S.order[S.idx]];
 const dkey = id => `${STOPID}:${id}`;
@@ -1239,28 +1309,29 @@ function sceneSVG(sc, w, h) {
   const out = [];
   const gcol = GROUND[sc.ground || 'sand'] || sc.ground;
   out.push(`<rect x="-500" y="-500" width="${w + 1000}" height="${h + 1000}" fill="${sc.outside || C.sea2}"/>`);
-  out.push(`<rect x="0" y="0" width="${w}" height="${h}" fill="${gcol}" filter="url(#wc)"/>`);
+  out.push(`<rect x="0" y="0" width="${w}" height="${h}" fill="${gcol}"/>`);
   // ground texture: grass tufts or cobbles
   const tex = [];
   for (let i = 0; i < (sc.texN ?? 70); i++) {
     const x = rand(8, w - 8), y = rand(8, h - 8);
-    if (sc.ground === 'stone' || sc.ground === 'city') tex.push(`<ellipse cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" rx="${rand(3, 6).toFixed(1)}" ry="${rand(2, 4).toFixed(1)}" fill="rgba(46,42,51,.08)"/>`);
-    else tex.push(`<path d="M${x.toFixed(0)} ${y.toFixed(0)} l-3 -7 M${x.toFixed(0)} ${y.toFixed(0)} l0 -9 M${x.toFixed(0)} ${y.toFixed(0)} l3 -7" stroke="${sc.ground === 'soil' ? '#9a7a45' : C.olive}" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>`);
+    if (sc.ground === 'stone' || sc.ground === 'city') tex.push(`<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="${rand(10, 16).toFixed(0)}" height="${rand(7, 10).toFixed(0)}" rx="4" fill="rgba(107,84,67,.07)"/>`);
+    else if (sc.ground === 'sand') tex.push(`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${rand(1.2, 2.4).toFixed(1)}" fill="rgba(190,150,80,.25)"/>`);
+    else tex.push(`<path d="M${x.toFixed(0)} ${y.toFixed(0)} q3 -6 6 0 q3 -6 6 0" stroke="${sc.ground === 'soil' ? '#c9a45e' : '#7cc65a'}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`);
   }
   out.push(tex.join(''));
-  (sc.beach || []).forEach(b => out.push(`<path d="${smooth(b.pts, true)}" fill="#f3e2b4" filter="url(#wc)"/>`));
+  (sc.beach || []).forEach(b => out.push(`<path d="${smooth(b.pts, true)}" fill="#f9ecc4"/>`));
   (sc.vines || []).forEach(v => { for (let yy = v.y; yy < v.y + v.h; yy += 16) out.push(`<path d="M${v.x} ${yy} h${v.w}" stroke="#7c8c44" stroke-width="7" stroke-linecap="round" stroke-dasharray="2 6"/><path d="M${v.x} ${yy + 4} h${v.w}" stroke="#9a7a45" stroke-width="1" opacity=".5"/>`); });
   (sc.water || []).forEach((wt, i) => {
     const d = smooth(wt.pts, true);
-    out.push(`<path class="exBlock" d="${d}" fill="${wt.kind === 'river' ? '#8cbfcb' : C.sea2}" filter="url(#wc)"/>`);
-    out.push(`<path d="${d}" fill="none" stroke="${INK}" stroke-width="2.4" filter="url(#wobble)"/>`);
+    out.push(`<path class="exBlock" d="${d}" fill="${wt.kind === 'river' ? '#6fcfdc' : '#5ccbd8'}"/>`);
+    out.push(`<path d="${d}" fill="none" stroke="#f3fbf8" stroke-width="9" opacity=".55"/><path d="${d}" fill="none" stroke="#3a9fb0" stroke-width="2.6"/>`);
     out.push(`<path d="${d}" fill="none" stroke="#e9f4f2" stroke-width="2" stroke-dasharray="10 8" class="exFoam" transform="translate(${wt.foam ? wt.foam.join(' ') : '0 0'}) scale(.985)" transform-origin="${w / 2} ${h / 2}"/>`);
   });
   (sc.waves || []).forEach(([x, y]) => out.push(`<path class="exWave" d="M${x} ${y} q4 -4 8 0 t8 0" stroke="#e9f4f2" stroke-width="1.8" fill="none" stroke-linecap="round"/>`));
   (sc.roads || []).forEach(r => {
     const d = smooth(r.pts), wd = r.w || 36;
-    const col = r.kind === 'path' ? '#e8d6a8' : r.kind === 'street' ? '#bdb3a0' : '#9a948a';
-    out.push(`<path d="${d}" fill="none" stroke="${INK}" stroke-width="${wd + 5}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${col}" stroke-width="${wd}" stroke-linecap="round" stroke-linejoin="round"/>`);
+    const col = r.kind === 'path' ? '#f4dfa8' : r.kind === 'street' ? '#e0d4bb' : '#c7bfb0';
+    out.push(`<path d="${d}" fill="none" stroke="${r.kind === 'path' ? '#e3c88a' : '#b3a893'}" stroke-width="${wd + 5}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${col}" stroke-width="${wd}" stroke-linecap="round" stroke-linejoin="round"/>`);
     if (r.kind === 'road' || !r.kind) out.push(`<path d="${d}" fill="none" stroke="${C.cream}" stroke-width="3" stroke-dasharray="16 14"/>`);
   });
   (sc.bridges || []).forEach(b => {
@@ -1268,11 +1339,12 @@ function sceneSVG(sc, w, h) {
     const along = b.w > b.h;
     for (let t = 8; t < (along ? b.w : b.h); t += 10) out.push(along ? `<path d="M${b.x + t} ${b.y} v${b.h}" stroke="${b.stone ? '#a89c84' : '#a87a45'}" stroke-width="1.2"/>` : `<path d="M${b.x} ${b.y + t} h${b.w}" stroke="${b.stone ? '#a89c84' : '#a87a45'}" stroke-width="1.2"/>`);
   });
-  (sc.houses || []).forEach(([x, y, o]) => out.push(SPR.house(x, y, o || {})));
+  // row houses step aside for any place of interest standing in the same spot
+  (sc.houses || []).filter(([x, y]) => !(sc.pois || []).some(p => { const ax = p.art ? (p.art[1] ?? p.x) : p.x, ay = p.art ? (p.art[2] ?? p.y) : p.y; return Math.abs(ax - x) < 80 && ay - y < 115 && ay - y > -60; })).forEach(([x, y, o]) => out.push(SPR.house(x, y, o || {})));
   (sc.trees || []).forEach(([x, y, k, s = 1]) => {
-    if (k === 'pine') out.push(LM.pine(x, y, 2.4 * s));
+    if (k === 'pine') out.push(TREE.pine(x, y, s));
     else if (k === 'palm') out.push(`<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 q2 -18 0 -30" stroke="#8d6538" stroke-width="4" fill="none"/>${[0, 72, 144, 216, 288].map(a => `<path d="M0 -30 q${(14 * Math.cos(a * Math.PI / 180)).toFixed(1)} ${(-8 + 14 * Math.sin(a * Math.PI / 180)).toFixed(1)} ${(22 * Math.cos(a * Math.PI / 180)).toFixed(1)} ${(22 * Math.sin(a * Math.PI / 180)).toFixed(1)}" stroke="${C.olive}" stroke-width="5" fill="none" stroke-linecap="round"/>`).join('')}</g>`);
-    else out.push(`<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="3" cy="4" rx="17" ry="8" fill="rgba(46,42,51,.2)"/><circle r="17" fill="${k === 'plane' ? '#8fa26a' : C.olive}" stroke="${INK}" stroke-width="2"/><circle cx="-5" cy="-5" r="7" fill="${k === 'plane' ? '#a9bb7e' : '#7c8c44'}"/></g>`);
+    else out.push(TREE.round(x, y, s, k === 'plane' ? '#6cbf55' : '#5fb24f'));
   });
   if (sc.deco) out.push(sc.deco(w, h));
   return out.join('\n');
@@ -1311,8 +1383,20 @@ function critterSVG(kind) {
 }
 
 function exPlate(title, sub, extra = '') { return `<span class="exPlate"><b>${title}</b><small>${sub}</small>${extra}</span>`; }
+function defaultArt(p) {
+  if (p.art || p.type === 'custom') return p.art;
+  const at = (name, dy, o) => [name, p.x, p.y + dy, o || {}];
+  if (p.type === 'eat') return at('stall', -26, { awn: C.terra });
+  if (p.type === 'shop') return at('stall', -26, { awn: '#35b3c4', goods: [C.gold, C.rioja, C.olive2] });
+  if (p.type === 'photo') return at('camera', -8);
+  if (p.type === 'cobba') return at('cobbaRock', -6);
+  if (p.type === 'leave') return at('car', -26, { rot: 0 });
+  if (p.type === 'mini') return at('board', -10, { col: C.gold });
+  return at('board', -10, { col: C.terra });
+}
 function enterExplore() {
   STOPID = S.order[S.idx]; const d = STOP[STOPID]; SCN = d.scene;
+  if (!SCN.custom) (SCN.pois || []).forEach(p => { if (!p.art) p.art = defaultArt(p); });
   mapAction('');
   S.phase = 'explore'; save();
   show('explore');
@@ -1336,8 +1420,9 @@ function enterExplore() {
   poiIdle();
   ['romy', 'huw', 'paulo', 'annette'].forEach(id => {
     const g = el('g', { class: 'tok' }, partyG);
-    g.innerHTML = `<ellipse cx="0" cy="15" rx="15" ry="5" fill="rgba(46,42,51,.28)"/><g class="tokInner"><svg x="-21" y="-26" width="42" height="42" viewBox="0 0 100 100">${avatar(id).replace(/^<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '')}</svg></g>`;
-    EX.tokens.unshift({ g, inner: g.querySelector('.tokInner'), id });
+    const shoe = '#7a5a44';
+    g.innerHTML = `<ellipse cx="0" cy="17" rx="13" ry="4.5" fill="rgba(107,84,67,.25)"/><g class="tokInner"><ellipse class="fl" cx="-6" cy="14" rx="5" ry="3.6" fill="${shoe}" stroke="${INK}" stroke-width="1.4"/><ellipse class="fr" cx="6" cy="14" rx="5" ry="3.6" fill="${shoe}" stroke="${INK}" stroke-width="1.4"/><rect x="-8" y="4" width="16" height="10" rx="4" fill="${CREW[id].look.shirt}" stroke="${INK}" stroke-width="1.6"/><svg x="-20" y="-30" width="40" height="40" viewBox="0 0 100 100">${avatar(id).replace(/^<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '')}</svg></g>`;
+    EX.tokens.unshift({ g, inner: g.querySelector('.tokInner'), fl: g.querySelector('.fl'), fr: g.querySelector('.fr'), id, pos: { x: start.x, y: start.y } });
   });
   drawMarks();
   // ambient motion shared by every scene
@@ -1350,6 +1435,7 @@ function enterExplore() {
   gsap.to(svg2.querySelectorAll('.smoke circle'), { y: -10, opacity: 0, duration: 1.8, repeat: -1, stagger: .4, ease: 'sine.out' });
   gsap.to(svg2.querySelectorAll('.funiCar'), { x: 110, y: -78, duration: 5, repeat: -1, yoyo: true, ease: 'sine.inOut' });
   gsap.to(svg2.querySelectorAll('.gondola'), { x: 190, duration: 6, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+  gsap.to(svg2.querySelectorAll('.cobbaSit'), { y: -3, duration: 1.1, yoyo: true, repeat: -1, ease: 'sine.inOut' });
   gsap.to(svg2.querySelectorAll('.sheepG'), { y: -2, duration: .6, repeat: -1, yoyo: true, ease: 'sine.inOut', stagger: .3 });
   gsap.to(svg2.querySelectorAll('.bobBoat'), { y: 4, rotation: 2, duration: 1.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
   gsap.to(svg2.querySelectorAll('.mirrorGlint'), { opacity: .2, duration: 1.4, repeat: -1, yoyo: true, ease: 'sine.inOut' });
@@ -1361,7 +1447,7 @@ function enterExplore() {
   gsap.ticker.add(exTick);
   vp.onpointerdown = exTap;
   $('#exPrompt').innerHTML = '';
-  if (!S.done[dkey('_hello')]) { markDone('_hello'); say(d.hello || 'Tap to walk. Tap a place to visit it.', 5200); if (S.idx === 0) setTimeout(() => say('Tip: every “!” is something to do. The car, train or plane is how you leave.', 4200), 5600); }
+  if (!S.done[dkey('_hello')]) { markDone('_hello'); say(d.hello || 'Tap to walk. Tap a place to visit it.', 5200); if (S.idx === 0) setTimeout(() => STOPID === 'paris' && !$('#explore').hidden && say('Tip: every “!” is something to do. The car, train or plane is how you leave.', 4200), 5600); }
   else say(pick(SCN.back || ['Where to next?', 'Plenty left to see.', 'The car’s waiting when you are.']), 2600);
 }
 function leaveExplore() {
@@ -1383,14 +1469,26 @@ function exTick() {
   const L = EX.lead, last = EX.trail[0];
   const moving = Math.hypot(L.x - last.x, L.y - last.y) > 0.5;
   if (moving) { EX.trail.unshift({ x: L.x, y: L.y }); if (EX.trail.length > 120) EX.trail.pop(); }
+  EX.idle = moving ? 0 : (EX.idle || 0) + 1;
+  // walking: follow the leader's trail; standing still: gather round in a little huddle
+  const HUDDLE = [[0, 0], [-24, 12], [24, 12], [0, 24]];
   EX.tokens.forEach((tk, i) => {
-    const p = i === 0 ? L : EX.trail[Math.min(EX.trail.length - 1, i * 9)];
-    tk.g.setAttribute('transform', `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`);
-    const ph = (EX.t + i * 7) * .35;
-    const wob = moving ? Math.sin(ph) * 9 : Math.sin(EX.t * .05 + i) * 2;
-    const hop = moving ? -Math.abs(Math.sin(ph)) * 5 : 0;
+    const tr = EX.trail[Math.min(EX.trail.length - 1, i * 13)];
+    const tgt = i === 0 ? L : EX.idle > 18 ? { x: L.x + HUDDLE[i][0], y: L.y + HUDDLE[i][1] } : tr;
+    const k = i === 0 ? 1 : EX.idle > 18 ? .12 : .35;
+    const was = { ...tk.pos };
+    tk.pos.x += (tgt.x - tk.pos.x) * k; tk.pos.y += (tgt.y - tk.pos.y) * k;
+    const stepping = Math.hypot(tk.pos.x - was.x, tk.pos.y - was.y) > .25;
+    tk.g.setAttribute('transform', `translate(${tk.pos.x.toFixed(1)} ${tk.pos.y.toFixed(1)})`);
+    const ph = (EX.t + i * 7) * .38;
+    const wob = stepping ? Math.sin(ph) * 6 : Math.sin(EX.t * .05 + i) * 1.5;
+    const hop = stepping ? -Math.abs(Math.sin(ph)) * 3.5 : 0;
     tk.inner.setAttribute('transform', `translate(0 ${hop.toFixed(1)}) rotate(${wob.toFixed(1)})`);
+    const f = stepping ? Math.sin(ph) * 2.2 : 0;
+    tk.fl.setAttribute('cy', (14 - Math.max(0, f)).toFixed(1)); tk.fr.setAttribute('cy', (14 - Math.max(0, -f)).toFixed(1));
   });
+  // lower Cobs draw in front
+  if (EX.t % 8 === 0) { const party = $('#exParty'); EX.tokens.slice().sort((a, b) => a.pos.y - b.pos.y).forEach(tk => party.appendChild(tk.g)); }
   const t = exCamTarget(); EX.cam.x += (t.x - EX.cam.x) * .12; EX.cam.y += (t.y - EX.cam.y) * .12; exApplyCam();
   if (EX.t % 3) return;
   let near = null, nd = 1e9;
@@ -1719,8 +1817,8 @@ function photoArt(ph, w = 200, h = 200, title) {
   const gid = 'pg' + Math.random().toString(36).slice(2, 7);
   const [name, opts = {}, sc = 1.3, dx = 0, dy = 0] = o.sprite;
   return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bot}"/></linearGradient></defs>
-    <rect width="${w}" height="${h}" fill="url(#${gid})"/>${o.sun !== false ? `<circle cx="${w * .76}" cy="${h * .26}" r="${h * .1}" fill="#fff1c4" filter="url(#wc-soft)"/>` : ''}
-    ${o.sea ? `<path d="M0 ${h * .62} h${w} v${h * .38} h-${w}Z" fill="${C.sea}" filter="url(#wc)"/><path d="M0 ${h * .67} q${w * .25} -5 ${w * .5} 0 t${w * .5} 0" fill="none" stroke="#fbe6b8" stroke-width="2" opacity=".6"/>` : ''}
+    <rect width="${w}" height="${h}" fill="url(#${gid})"/>${o.sun !== false ? `<circle cx="${w * .76}" cy="${h * .26}" r="${h * .1}" fill="#fff1c4"/>` : ''}
+    ${o.sea ? `<path d="M0 ${h * .62} h${w} v${h * .38} h-${w}Z" fill="${C.sea}"/><path d="M0 ${h * .67} q${w * .25} -5 ${w * .5} 0 t${w * .5} 0" fill="none" stroke="#fbe6b8" stroke-width="2" opacity=".6"/>` : ''}
     <path d="M${-w * .1} ${h * .86} q${w * .6} -${h * .12} ${w * 1.2} 0 v${h * .3} h-${w * 1.3}Z" fill="${o.ground || '#b9cc8e'}" stroke="${INK}" stroke-width="2"/>
     <g transform="translate(${w / 2 + dx} ${h * .8 + dy}) scale(${sc * w / 200})">${SPR[name](0, 0, opts)}</g>
     ${title ? `<text x="${w / 2}" y="${h * .2}" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="${Math.min(h * .18, w * 1.1 / Math.max(6, title.length))}" fill="${C.cream}" stroke="${INK}" stroke-width="4" paint-order="stroke" letter-spacing="1">${title.toUpperCase()}</text><text x="${w / 2}" y="${h * .07}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${h * .07}" fill="${INK}">Greetings from</text>` : ''}</svg>`;
@@ -1735,7 +1833,7 @@ function stampSVG(id, cls = 'stamp') {
   const uid = 'sa' + id + Math.random().toString(36).slice(2, 6);
   const glyph = LM[d.stampIcon || 'lighthouse'](0, 4, 2.2).replace(/fill="(?!none)[^"]*"/g, 'fill="none"').replace(/stroke="[^"]*"/g, `stroke="${col}"`);
   return `<svg class="${cls}" viewBox="0 0 140 140"><defs><path id="${uid}" d="M70 70 m-50 0 a50 50 0 1 1 100 0 a50 50 0 1 1 -100 0"/></defs>
-    <g fill="none" stroke="${col}" stroke-width="3.5" filter="url(#wobble)" opacity=".92"><circle cx="70" cy="70" r="62"/><circle cx="70" cy="70" r="40"/></g>
+    <g fill="none" stroke="${col}" stroke-width="3.5" opacity=".92"><circle cx="70" cy="70" r="62"/><circle cx="70" cy="70" r="40"/></g>
     <text font-family="Fredoka" font-weight="700" font-size="12" letter-spacing="1" fill="${col}" opacity=".92"><textPath href="#${uid}" textLength="312" lengthAdjust="spacing">${txt}${txt.length < 22 ? txt : ''}</textPath></text>
     <g transform="translate(70 62)" opacity=".92">${glyph}</g>
     <text x="70" y="94" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="9.5" fill="${col}" opacity=".92">${(d.stampDate || d.date).toUpperCase()} 2027</text>
@@ -1779,6 +1877,18 @@ function poiDoneFx(id) {
   gsap.fromTo(tick, { scale: 0, svgOrigin: `${mx} ${my}` }, { scale: 1, duration: .5, ease: 'back.out(3)' });
   gsap.to(tick, { opacity: 0, y: -14, delay: 1.6, duration: .5, onComplete: () => tick.remove() });
 }
+
+/* ---------- cosy trees ---------- */
+const TREE = {
+  round: (x, y, s = 1, col = '#5fb24f') => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="2" cy="14" rx="18" ry="6" fill="rgba(107,84,67,.18)"/>
+    <rect x="-4" y="0" width="8" height="14" rx="3" fill="#a9774c" stroke="${INK}" stroke-width="1.6"/>
+    <path d="M-20 0 q-4 -16 8 -24 q6 -12 20 -4 q14 2 12 18 q4 12 -8 16 q-14 6 -24 0 q-10 0 -8 -6Z" fill="${col}" stroke="${INK}" stroke-width="1.8"/>
+    <path d="M-12 -14 q4 -8 12 -8" stroke="rgba(255,255,255,.55)" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M-16 4 q12 6 28 0" stroke="rgba(0,60,20,.15)" stroke-width="5" fill="none" stroke-linecap="round"/></g>`,
+  pine: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="2" cy="12" rx="14" ry="5" fill="rgba(107,84,67,.18)"/><rect x="-3" y="4" width="6" height="9" rx="2" fill="#a9774c" stroke="${INK}" stroke-width="1.4"/>
+    ${[[0, 16], [-10, 13], [-19, 10]].map(([dy, hw]) => `<path d="M-${hw} ${dy + 6} Q0 ${dy - 12} ${hw} ${dy + 6} Q0 ${dy + 10} -${hw} ${dy + 6}Z" fill="#3f9a57" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/>`).join('')}
+    <path d="M-5 -20 q3 -4 6 -4" stroke="rgba(255,255,255,.5)" stroke-width="3" fill="none" stroke-linecap="round"/></g>`,
+};
 /* ---------- Royan: the hand-drawn La Cayenne oyster port ---------- */
 const R_WATER = [[0,0],[150,0],[166,120],[152,260],[170,420],[158,560],[150,660],[232,738],[300,790],[372,850],[392,920],[0,920]];
 const R_BOARDWALK = { x: 146, y: 96, w: 50, h: 560 };
@@ -1808,10 +1918,10 @@ function royanArt() {
   for (let y = R_BOARDWALK.y + 8; y < R_BOARDWALK.y + R_BOARDWALK.h; y += 10) planks.push(`<path d="M${R_BOARDWALK.x} ${y} h${R_BOARDWALK.w}" stroke="#a87a45" stroke-width="1.2"/>`);
   return `
   <rect x="-400" y="-400" width="${600 + 800}" height="${920 + 800}" fill="${C.sea2}"/>
-  <rect x="0" y="0" width="${600}" height="${920}" fill="${C.sand}" filter="url(#wc)"/>
+  <rect x="0" y="0" width="${600}" height="${920}" fill="${C.sand}"/>
   ${tufts.join('')}
-  <path id="exWater" class="exBlock" d="${waterD}" fill="${C.sea2}" filter="url(#wc)"/>
-  <path d="${edge}" fill="none" stroke="${INK}" stroke-width="2.6" filter="url(#wobble)"/>
+  <path id="exWater" class="exBlock" d="${waterD}" fill="${C.sea2}"/>
+  <path d="${edge}" fill="none" stroke="${INK}" stroke-width="2.6"/>
   <path d="${smooth(R_WATER.slice(0, 11).map(([x, y]) => [x - 9, y + 5]))}" fill="none" stroke="#e9f4f2" stroke-width="2" stroke-dasharray="10 8" class="exFoam"/>
   ${parks.join('')}
   <g class="exWaves" stroke="#e9f4f2" stroke-width="1.8" fill="none" stroke-linecap="round">${[[40,60],[100,40],[60,650],[120,740],[40,800],[200,860],[280,890],[30,700],[110,610]].map(([x, y]) => `<path d="M${x} ${y} q4 -4 8 0 t8 0"/>`).join('')}</g>
@@ -1835,12 +1945,12 @@ function royanArt() {
   <g transform="translate(236 150)"><circle r="8" fill="${C.terra}" stroke="${INK}" stroke-width="2"/><circle cx="14" cy="6" r="7" fill="${C.gold}" stroke="${INK}" stroke-width="2"/><circle cx="4" cy="16" r="6" fill="${C.cream}" stroke="${INK}" stroke-width="2"/></g>
   <g transform="translate(252 500) rotate(-20)"><circle cx="-10" r="7" fill="none" stroke="${INK}" stroke-width="2.2"/><circle cx="10" r="7" fill="none" stroke="${INK}" stroke-width="2.2"/><path d="M-10 0 l8 -9 h10 l2 9 M-2 -9 l-2 -4" fill="none" stroke="${C.sea}" stroke-width="2.4" stroke-linejoin="round"/></g>
   <!-- Cobba's rock + tide pool -->
-  <ellipse cx="348" cy="594" rx="30" ry="14" fill="${C.sea2}" stroke="${INK}" stroke-width="2" filter="url(#wc-soft)"/>
+  <ellipse cx="348" cy="594" rx="30" ry="14" fill="${C.sea2}" stroke="${INK}" stroke-width="2"/>
   <path d="M292 584 q-4 -18 18 -22 q22 -2 24 16 q2 12 -20 12 q-18 0 -22 -6Z" fill="#a39a88" stroke="${INK}" stroke-width="2.4"/>
   <g id="exCobbaHold"><g transform="translate(292 530) scale(.34)">${cobbaSVG().replace(/id="/g, 'data-e="')}</g></g>
   <!-- Talmont church on its clifftop -->
   <g transform="translate(410 760)">
-    <path d="M-62 44 q-12 -44 20 -64 q42 -24 82 -2 q30 22 16 66Z" fill="#d9c69a" stroke="${INK}" stroke-width="2.4" filter="url(#wobble)"/>
+    <path d="M-62 44 q-12 -44 20 -64 q42 -24 82 -2 q30 22 16 66Z" fill="#d9c69a" stroke="${INK}" stroke-width="2.4"/>
     <rect x="-24" y="-22" width="48" height="30" fill="${C.cream}" stroke="${INK}" stroke-width="2.4"/>
     <path d="M-28 -22 L0 -40 L28 -22Z" fill="${C.terra}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>
     <rect x="-8" y="-58" width="16" height="22" fill="${C.cream}" stroke="${INK}" stroke-width="2.2"/><path d="M-10 -58 L0 -68 L10 -58Z" fill="${C.terra}" stroke="${INK}" stroke-width="2"/>
@@ -1883,8 +1993,8 @@ function royanArt() {
 
 function talmontScene() {
   return `<svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice">
-    <rect width="200" height="200" fill="#bfe0e6"/><circle cx="150" cy="50" r="22" fill="#fff4c4" filter="url(#wc-soft)"/>
-    <path d="M0 120 h200 v80 h-200Z" fill="${C.sea}" filter="url(#wc)"/>
+    <rect width="200" height="200" fill="#bfe0e6"/><circle cx="150" cy="50" r="22" fill="#fff4c4"/>
+    <path d="M0 120 h200 v80 h-200Z" fill="${C.sea}"/>
     <path d="M60 200 q-10 -60 30 -84 q50 -22 110 -8 v92Z" fill="#d9c69a" stroke="${INK}" stroke-width="2.5"/>
     <rect x="100" y="70" width="60" height="40" fill="${C.cream}" stroke="${INK}" stroke-width="2.5"/>
     <path d="M96 70 L130 48 L164 70Z" fill="${C.terra}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
@@ -1900,8 +2010,8 @@ function royanScene(w = 200, h = 200, withTitle = false) {
   return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice">
     <defs><linearGradient id="rs-sky${withTitle ? 'p' : ''}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f29f6b"/><stop offset=".6" stop-color="#fbd08a"/><stop offset="1" stop-color="#fbe6b8"/></linearGradient></defs>
     <rect width="${w}" height="${h}" fill="url(#rs-sky${withTitle ? 'p' : ''})"/>
-    <circle cx="${w * .72}" cy="${h * .42}" r="${h * .13}" fill="#ffe39a" filter="url(#wc-soft)"/>
-    <path d="M0 ${h * .55} h${w} v${h * .45} h-${w}Z" fill="${C.sea}" filter="url(#wc)"/>
+    <circle cx="${w * .72}" cy="${h * .42}" r="${h * .13}" fill="#ffe39a"/>
+    <path d="M0 ${h * .55} h${w} v${h * .45} h-${w}Z" fill="${C.sea}"/>
     <path d="M0 ${h * .6} q${w * .25} -6 ${w * .5} 0 t${w * .5} 0" fill="none" stroke="#fbe6b8" stroke-width="2" opacity=".7"/>
     ${[0, 1, 2, 3, 4].map(i => { const x = w * .06 + i * w * .19, c = [C.terra, C.sea2, C.gold, C.olive2, C.rioja][i];
       return `<g transform="translate(${x} ${h * .36})"><path d="M0 ${h * .2} v-${h * .12} l${w * .07} -${h * .07} l${w * .07} ${h * .07} v${h * .12}Z" fill="${C.cream}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path d="M-2 ${h * .08} l${w * .09} -${h * .085} l${w * .09} ${h * .085}" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round"/><rect x="${w * .045}" y="${h * .1}" width="${w * .05}" height="${h * .1}" fill="${c}" stroke="${INK}" stroke-width="1.5"/><path d="M${w * .02} ${h * .2} v${h * .08} M${w * .12} ${h * .2} v${h * .08}" stroke="${INK}" stroke-width="2"/></g>`; }).join('')}
@@ -2049,7 +2159,7 @@ function gaugeObject(kind) {
   return `<g id="gObj"><path d="M-120 18 q-18 -40 24 -64 q60 -30 128 -10 q60 20 58 60 q-10 40 -90 50 q-100 8 -120 -36Z" fill="${A.shell}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
     <path d="M-104 10 q-6 -30 36 -44 q60 -20 110 -2 q40 16 40 44 q-6 22 -80 30 q-90 2 -106 -28Z" fill="${A.flesh}" stroke="${INK}" stroke-width="3"/>
     <g id="gLid"><path d="M-122 12 q-16 -44 30 -66 q64 -28 132 -6 q58 20 52 60 q-66 26 -214 12Z" fill="${A.lid}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/>
-    <path d="M-100 -8 q60 -30 150 -14 M-108 6 q70 -22 170 -6 M-80 -30 q50 -16 110 -8" fill="none" stroke="rgba(46,42,51,.35)" stroke-width="3.5" stroke-linecap="round" filter="url(#wobble)"/></g></g>`;
+    <path d="M-100 -8 q60 -30 150 -14 M-108 6 q70 -22 170 -6 M-80 -30 q50 -16 110 -8" fill="none" stroke="rgba(46,42,51,.35)" stroke-width="3.5" stroke-linecap="round"/></g></g>`;
 }
 function gaugeTool(kind) {
   if (kind === 'turbot') return `<g id="gTool" transform="translate(120 -60) rotate(-20)"><path d="M0 0 L-70 20 M0 8 L-70 28" stroke="#9aa0a6" stroke-width="5" stroke-linecap="round"/><rect x="0" y="-6" width="70" height="20" rx="8" fill="#6b4a2f" stroke="${INK}" stroke-width="3"/></g>`;
@@ -2064,7 +2174,7 @@ GAMES.gauge = {
     const svg = stageSVG('0 0 400 460');
     const shell = cfg.kind === 'oyster' || cfg.kind === 'mussel';
     svg.innerHTML = `<defs><radialGradient id="flesh" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#fbf4e2"/><stop offset=".7" stop-color="#e9dcc0"/><stop offset="1" stop-color="#c9b996"/></radialGradient></defs>
-      <path d="M-40 320 q240 -30 480 0 v200 h-480Z" fill="#b98a55" filter="url(#wc)"/><path d="M-40 320 q240 -30 480 0" fill="none" stroke="${INK}" stroke-width="3"/>
+      <path d="M-40 320 q240 -30 480 0 v200 h-480Z" fill="#b98a55"/><path d="M-40 320 q240 -30 480 0" fill="none" stroke="${INK}" stroke-width="3"/>
       <g id="doneTray" transform="translate(330 360)"><ellipse rx="52" ry="13" fill="#e7eef0" stroke="${INK}" stroke-width="2.5"/></g>
       <g transform="translate(200 128)"><path id="gTrackO" d="${arc(120, -80, 80)}" fill="none" stroke="${INK}" stroke-width="30" stroke-linecap="round"/><path d="${arc(120, -80, 80)}" fill="none" stroke="#fdf7e8" stroke-width="24" stroke-linecap="round"/>
         <path id="gZone" fill="none" stroke="${C.gold}" stroke-width="24"/><path id="gPerf" fill="none" stroke="${C.terra}" stroke-width="24"/>
@@ -2141,7 +2251,7 @@ GAMES.climb = {
     // zig-zag path from bottom-left to the top
     const pts = [...Array(N + 1)].map((_, i) => [60 + (i % 2 ? 280 : 0) * (1 - i / N) + (i % 2 ? 0 : 20 * i / N), 430 - i * 22]);
     const pathD = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(0) + ' ' + p[1]).join(' ');
-    svg.innerHTML = `${cfg.sand ? `<path d="M0 460 L0 200 Q200 20 400 180 L400 460Z" fill="#e8c880" stroke="${INK}" stroke-width="3" filter="url(#wobble)"/>` : `<path d="M0 460 L60 420 Q120 120 250 60 Q360 90 400 200 V460Z" fill="#9a8f78" stroke="${INK}" stroke-width="3" filter="url(#wobble)"/><rect x="0" y="380" width="400" height="80" fill="${C.sea}" opacity=".85"/>`}
+    svg.innerHTML = `${cfg.sand ? `<path d="M0 460 L0 200 Q200 20 400 180 L400 460Z" fill="#e8c880" stroke="${INK}" stroke-width="3"/>` : `<path d="M0 460 L60 420 Q120 120 250 60 Q360 90 400 200 V460Z" fill="#9a8f78" stroke="${INK}" stroke-width="3"/><rect x="0" y="380" width="400" height="80" fill="${C.sea}" opacity=".85"/>`}
       <path d="${pathD}" fill="none" stroke="${cfg.sand ? '#c9a15e' : C.sand}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="${pathD}" fill="none" stroke="${INK}" stroke-width="2" stroke-dasharray="3 5"/>
       <g transform="translate(${pts[N][0]} ${pts[N][1] - 6}) scale(.7)">${cfg.top === 'lighthouse' ? SPR.lighthouse(0, 20) : cfg.top === 'hermitage' ? `<rect x="-24" y="-40" width="48" height="34" fill="${C.cream}" stroke="${INK}" stroke-width="3"/><path d="M-28 -40 L0 -60 L28 -40Z" fill="${C.terra}" stroke="${INK}" stroke-width="3"/><g id="bell"><circle cx="0" cy="-22" r="7" fill="${C.gold}" stroke="${INK}" stroke-width="2"/></g>` : `<path d="M-6 0 V-50 L20 -40 L-6 -30" fill="${C.terra}" stroke="${INK}" stroke-width="3"/>`}</g>
@@ -2934,7 +3044,7 @@ Object.assign(STOP, {
       sub: 'Echaurren · the río Oja', ground: 'grass', outside: '#bccf8f', start: { x: 300, y: 820 },
       water: [{ kind: 'river', pts: [[-40, 520], [300, 480], [640, 520], [640, 590], [300, 560], [-40, 600]] }],
       bridges: [{ x: 280, y: 470, w: 44, h: 140, stone: true }],
-      houses: [...rowH(80, 150, 2, 110, { w: 90, h: 54, roof: '#b0643a' }), ...rowH(80, 700, 2, 110, { w: 90, h: 54, roof: C.terra })],
+      houses: [...rowH(80, 150, 2, 110, { w: 90, h: 54, roof: '#b0643a' }), ...rowH(380, 700, 2, 110, { w: 90, h: 54, roof: C.terra })],
       trees: [[40, 380, 'pine'], [100, 360, 'pine'], [560, 700, 'pine'], [520, 760, 'pine'], [560, 380, 'pine']],
       deco: () => [[120, 40], [300, 20], [480, 40]].map(([x, y]) => LM.mount(x, y + 60, 3.5)).join(''),
       pois: [
@@ -3310,20 +3420,20 @@ const GAME_LABEL = { gauge: 'Shucked / grilled', climb: 'Steps climbed', surf: '
 function titleArt() {
   const svg = $('#titleArt'), fx = $('#titleFx');
   svg.innerHTML = `
-    <path d="M-20 330 q120 -30 220 -10 t240 -20 v240 h-460Z" fill="${C.sea}" filter="url(#wc)"/>
-    <path d="M-20 360 q80 -12 150 0 q70 12 150 -4 q60 -10 140 2 v180 h-440Z" fill="${C.sand}" filter="url(#wc)"/>
-    <path d="M-20 360 q80 -12 150 0 q70 12 150 -4 q60 -10 140 2" fill="none" stroke="${INK}" stroke-width="3" filter="url(#wobble)"/>
+    <path d="M-20 330 q120 -30 220 -10 t240 -20 v240 h-460Z" fill="${C.sea}"/>
+    <path d="M-20 360 q80 -12 150 0 q70 12 150 -4 q60 -10 140 2 v180 h-440Z" fill="${C.sand}"/>
+    <path d="M-20 360 q80 -12 150 0 q70 12 150 -4 q60 -10 140 2" fill="none" stroke="${INK}" stroke-width="3"/>
     <path d="M-40 460 q110 -60 220 -40 q120 22 260 -30" fill="none" stroke="#8b8579" stroke-width="22" stroke-linecap="round"/>
     <path d="M-40 460 q110 -60 220 -40 q120 22 260 -30" fill="none" stroke="${C.cream}" stroke-width="2.5" stroke-dasharray="12 12"/>
     ${LM.lighthouse(330, 350, 3.2)}${LM.dune(60, 368, 3)}${LM.pine(372, 410, 2.6)}${LM.pine(20, 430, 2.2)}`;
-  fx.innerHTML = `${LM.ship(120, 318, 2.2).replace('<g ', '<g id="tShip" ')}
+  fx.innerHTML = `<g id="tShip">${LM.ship(120, 318, 2.2)}</g>
     <g id="tCar" transform="translate(180 410)"><g transform="scale(2.6)">${carSVG().replace(/id="carBob"/, 'id="tCarBob"').replace(/id="carBody"/, '')}</g></g>
     <g transform="translate(262 385) scale(.95)"><g id="tCobba">${cobbaSVG().replace(/id="/g, 'data-t="')}</g></g>`;
   gsap.killTweensOf('#titleFx *');
   gsap.to('#tCarBob', { y: -1.5, duration: .3, repeat: -1, yoyo: true, ease: 'sine.inOut' });
   gsap.fromTo('#tCar', { x: -120 }, { x: 180, duration: 2.2, ease: 'power3.out' });
   gsap.to('#tCar .wheel', { rotation: 720, transformOrigin: '50% 50%', duration: 2.2, ease: 'power3.out' });
-  gsap.to('#tShip', { y: 4, rotation: 3, svgOrigin: '120 318', duration: 2, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+  gsap.to('#tShip', { y: 4, x: 6, duration: 2, yoyo: true, repeat: -1, ease: 'sine.inOut' });
   gsap.to('#tCobba', { y: -6, rotation: 3, svgOrigin: '60 100', duration: 1.3, yoyo: true, repeat: -1, ease: 'sine.inOut' });
   gsap.from('.logo h1', { y: -60, scale: .6, rotation: -8, opacity: 0, duration: 1, ease: 'elastic.out(1,.5)' });
   gsap.to('.logo h1', { rotation: 1.5, y: 4, duration: 2.4, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: 1 });
