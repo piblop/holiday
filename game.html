@@ -423,6 +423,16 @@ body,#app{background:var(--paper);color:var(--ink)}
 #scrap{background:#f7e7c4}
 .stars span.on{color:#ffe08a}
 </style>
+<style>
+/* ---------- 3D diorama explore (Annette's Big Day v2 look) ---------- */
+#ex3d{position:absolute;inset:0;display:block;touch-action:none}
+#exView{background:linear-gradient(#bfe6ff,#ffe3c4)}
+#exRot{position:absolute;right:12px;top:calc(66px + env(safe-area-inset-top,0px));z-index:22;display:flex;gap:8px}
+#exRot .icon-btn{width:40px;height:40px;font:700 20px Fredoka,sans-serif;color:#6b5443}
+.exPlate,.m,.icon-btn,#exToast{background:#fff8ec;border:2px solid #efd6ae!important;box-shadow:0 3px 0 #e6c99b!important}
+#bubble{background:#fff8ec;border:2.5px solid #efd6ae;box-shadow:0 4px 0 #e6c99b,0 10px 24px rgba(90,60,40,.18)}
+#bubble::after{content:"▼";position:absolute;right:16px;bottom:8px;font-size:11px;color:#ff7aa8}
+</style>
 <div id="app">
  <div id="stage">
 
@@ -517,6 +527,7 @@ body,#app{background:var(--paper);color:var(--ink)}
 <script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (() => {
 'use strict';
@@ -3525,6 +3536,555 @@ function openMenu(k) {
   const close = () => gsap.to(layer, { opacity: 0, duration: .18, onComplete: () => layer.remove() });
   layer.querySelector('#mvClose').onclick = close;
   layer.onclick = e => { if (e.target === layer) close(); };
+}
+/* ================= 3D DIORAMA EXPLORE (Annette's Big Day v2 style) ================= */
+// Every stop is a floating toy-diorama island: checker tiles, toon shading, soft shadows,
+// chibi toy Cobs, and low-poly landmarks. Builders are lifted from Annette's Big Day v2
+// (makePerson, makeIslandBase, makeTree, clouds, sparkle FX, the diorama camera).
+// Game logic (EX state, POIs, cards, walking rules) is unchanged; only rendering moves to 3D.
+const D3 = (() => {
+  if (!window.THREE) return null;
+  const TAU = Math.PI * 2, INK = '#4a3b52', TILE = 40; // 1 world unit = 1 tile = 40 scene px
+  const hsh = (x, y, n) => { let h = (x * 374761393 + y * 668265263 + (n || 0) * 982451653) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) % 1000 / 1000; };
+  const CONF = ['#ff7aa8', '#ffd166', '#7fc8f8', '#b9a3ff', '#7cc576', '#ffffff'];
+
+  /* ---- renderer, scene, camera, lights ---- */
+  let renderer = null, scene, world, camera, sun, hemi, skyCanvas, skyTex, host = null;
+  const TOON = (() => { const d = new Uint8Array([120, 200, 255]); const t = new THREE.DataTexture(d, 3, 1, THREE.LuminanceFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+  const GEO = {}, MATS = {};
+  const geo = (k, f) => GEO[k] || (GEO[k] = f());
+  const G_BOX = geo('box', () => new THREE.BoxGeometry(1, 1, 1)), G_SPH = geo('sph', () => new THREE.SphereGeometry(0.5, 18, 12));
+  const G_CYL = geo('cyl', () => new THREE.CylinderGeometry(0.5, 0.5, 1, 16)), G_CONE = geo('cone', () => new THREE.ConeGeometry(0.5, 1, 16));
+  const G_PYR = geo('pyr', () => new THREE.ConeGeometry(0.5, 1, 4)), G_TOR = geo('tor', () => new THREE.TorusGeometry(0.5, 0.08, 8, 32));
+  const G_TORSO = geo('torso', () => new THREE.CylinderGeometry(0.13, 0.17, 0.3, 16)), G_SKIRT = geo('skirt', () => new THREE.CylinderGeometry(0.12, 0.25, 0.36, 18));
+  const G_PRISM = geo('prism', () => { const g = new THREE.CylinderGeometry(0.5, 0.5, 1, 3); g.rotateZ(Math.PI / 2); g.rotateX(-Math.PI / 2); return g; });
+  const starShape = (() => { const s = new THREE.Shape(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 0.22 : 0.5, a = i / 10 * TAU + Math.PI / 2, x = Math.cos(a) * r, y = Math.sin(a) * r; i ? s.lineTo(x, y) : s.moveTo(x, y); } return s; })();
+  const G_STAR = geo('star', () => { const g = new THREE.ExtrudeGeometry(starShape, { depth: 0.12, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 2 }); g.center(); return g; });
+  function M(color, o) {
+    const k = color + (o ? JSON.stringify(o) : ''); if (MATS[k]) return MATS[k];
+    const m = o && o.glow ? new THREE.MeshBasicMaterial({ color, transparent: !!o.alpha, opacity: o.alpha || 1 })
+      : new THREE.MeshToonMaterial({ color, gradientMap: TOON, transparent: !!(o && o.alpha), opacity: (o && o.alpha) || 1 });
+    return (MATS[k] = m);
+  }
+  function mk(g, color, s, p, parent, o) {
+    const m = new THREE.Mesh(g, M(color, o && (o.glow || o.alpha) ? { glow: o.glow, alpha: o.alpha } : null));
+    if (s) m.scale.set(s[0], s[1], s[2]); if (p) m.position.set(p[0], p[1], p[2]);
+    m.castShadow = !(o && (o.noShadow || o.glow)); m.receiveShadow = true; if (parent) parent.add(m); return m;
+  }
+  const grp = (parent, x, y, z) => { const g = new THREE.Group(); g.position.set(x || 0, y || 0, z || 0); if (parent) parent.add(g); return g; };
+  let OWNED = [];
+  function mergeGeos(list, vc) {
+    const pos = [], nor = [], idx = [], col = []; let off = 0;
+    list.forEach(c => { const cc = c.material.color; const g = c.geometry.clone(); g.applyMatrix4(c.matrix); const p = g.attributes.position, n = g.attributes.normal;
+      for (let i = 0; i < p.count; i++) { pos.push(p.getX(i), p.getY(i), p.getZ(i)); nor.push(n.getX(i), n.getY(i), n.getZ(i)); if (vc) col.push(cc.r, cc.g, cc.b); }
+      if (g.index) for (let i = 0; i < g.index.count; i++) idx.push(g.index.getX(i) + off); else for (let i = 0; i < p.count; i++) idx.push(i + off); off += p.count; g.dispose(); });
+    const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+    if (vc) out.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); out.setIndex(idx); out.computeBoundingSphere(); return out;
+  }
+  const VCM = {};
+  const vcMat = m => { const k = m.type + ':' + m.opacity; return VCM[k] || (VCM[k] = m.isMeshBasicMaterial ? new THREE.MeshBasicMaterial({ vertexColors: true, transparent: m.transparent, opacity: m.opacity }) : new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: TOON, transparent: m.transparent, opacity: m.opacity })); };
+  function mergeStatic(obj) {
+    obj.children.slice().forEach(c => { if (!c.isMesh && c.children.length && !c.userData.live) mergeStatic(c); });
+    const b = new Map();
+    obj.children.forEach(c => { if (!c.isMesh || c.isInstancedMesh || c.children.length || c.userData.live) return; c.updateMatrix(); const k = c.material.type + ':' + c.material.opacity + ':' + (c.castShadow ? 's' : ''); if (!b.has(k)) b.set(k, []); b.get(k).push(c); });
+    b.forEach(list => { if (list.length < 2) return; const same = list.every(c => c.material === list[0].material);
+      const m = new THREE.Mesh(mergeGeos(list, !same), same ? list[0].material : vcMat(list[0].material)); m.castShadow = list[0].castShadow; m.receiveShadow = true;
+      list.forEach(c => obj.remove(c)); obj.add(m); OWNED.push(m.geometry); });
+    return obj;
+  }
+  const live = o => { o.userData.live = true; return o; };
+
+  function init() {
+    if (renderer) return;
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.domElement.id = 'ex3d';
+    scene = new THREE.Scene(); world = new THREE.Group(); scene.add(world);
+    camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
+    hemi = new THREE.HemisphereLight(0xffffff, 0xb9a3c9, 0.55); scene.add(hemi);
+    sun = new THREE.DirectionalLight(0xfff1dc, 0.6); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.02;
+    scene.add(sun, sun.target);
+    skyCanvas = document.createElement('canvas'); skyCanvas.width = 4; skyCanvas.height = 256; skyTex = new THREE.CanvasTexture(skyCanvas); scene.background = skyTex;
+    FX.init(scene);
+  }
+  const SKIES = { france: ['#bfe6ff', '#ffe3c4'], basque: ['#b8e4ff', '#e6f7e0'], rioja: ['#ffd9a8', '#ffeccc'], germany: ['#c9d8ff', '#f3e6ff'] };
+  function setSky(region) {
+    const [top, bot] = SKIES[region] || SKIES.france, c = skyCanvas.getContext('2d'), g = c.createLinearGradient(0, 0, 0, 256);
+    g.addColorStop(0, top); g.addColorStop(1, bot); c.fillStyle = g; c.fillRect(0, 0, 4, 256); skyTex.needsUpdate = true;
+  }
+  function fitSun(cx, cz, half) { sun.target.position.set(cx, 0, cz); sun.position.set(cx - 9, 30, cz + 14); Object.assign(sun.shadow.camera, { left: -half, right: half, top: half, bottom: -half, near: 1, far: 90 }); sun.shadow.camera.updateProjectionMatrix(); }
+
+  /* ---- particles (pooled points, from v2) ---- */
+  const FX = (() => {
+    const N = 700, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), P = [], c = new THREE.Color(); let g, pts;
+    return {
+      init(sc) {
+        g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        const dot = document.createElement('canvas'); dot.width = dot.height = 32; const d = dot.getContext('2d'); d.fillStyle = '#fff'; d.beginPath(); d.arc(16, 16, 14, 0, TAU); d.fill();
+        pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 9, sizeAttenuation: false, vertexColors: true, map: new THREE.CanvasTexture(dot), transparent: true, alphaTest: 0.3, depthWrite: false }));
+        pts.frustumCulled = false; sc.add(pts);
+      },
+      emit(x, y, z, color, n, speed, o = {}) { if (REDUCED) n = Math.ceil(n / 2);
+        for (let i = 0; i < n && P.length < N; i++) { const a = Math.random() * TAU, e = Math.random() * Math.PI - Math.PI / 2, s = speed * (0.5 + Math.random() * 0.6), cc = Array.isArray(color) ? color[Math.floor(Math.random() * color.length)] : color;
+          P.push({ x, y, z, vx: Math.cos(a) * Math.cos(e) * s, vy: Math.sin(e) * s + (o.lift || 0), vz: Math.sin(a) * Math.cos(e) * s, life: (o.life || 1) * (0.7 + Math.random() * 0.5), g: o.g == null ? 6 : o.g, c: c.set(cc).toArray() }); } },
+      update(dt) { let j = 0;
+        for (let i = 0; i < P.length; i++) { const p = P[i]; p.life -= dt; if (p.life <= 0) continue; p.vy -= p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+          pos[j * 3] = p.x; pos[j * 3 + 1] = p.y; pos[j * 3 + 2] = p.z; const f = Math.min(1, p.life * 2); col[j * 3] = p.c[0] * f + (1 - f); col[j * 3 + 1] = p.c[1] * f + (1 - f); col[j * 3 + 2] = p.c[2] * f + (1 - f); P[j++] = p; }
+        P.length = j; g.setDrawRange(0, j); g.attributes.position.needsUpdate = true; g.attributes.color.needsUpdate = true; },
+      clear() { P.length = 0; if (g) g.setDrawRange(0, 0); },
+    };
+  })();
+  const sparkle = (x, y, z, n) => FX.emit(x, y, z, ['#fff4c9', '#ffd166', '#ffffff'], n || 14, 2.2, { g: 1, life: 0.8 });
+  const confetti = (x, y, z, n) => FX.emit(x, y, z, CONF, n || 40, 4.5, { g: 5, life: 1.6, lift: 2 });
+
+  /* ---- people (v2 makePerson) ---- */
+  function makePerson(o) {
+    const g = new THREE.Group(), body = grp(g);
+    const skin = o.skin || '#f9d1b0', hair = o.hair || '#6b4a32', top = o.top || '#7f93b3', bot = o.bottom || top, shoe = o.shoe || '#fdfdfd';
+    const legL = grp(body, -0.075, 0.24, 0), legR = grp(body, 0.075, 0.24, 0);
+    [legL, legR].forEach(L => { mk(G_CYL, bot, [0.1, 0.22, 0.1], [0, -0.11, 0], L); mk(G_SPH, shoe, [0.13, 0.08, 0.17], [0, -0.21, 0.025], L); live(L); });
+    mk(G_TORSO, top, [1, 1, 1], [0, 0.38, 0], body); mk(G_CYL, bot, [0.33, 0.07, 0.3], [0, 0.245, 0], body);
+    const armL = grp(body, -0.2, 0.49, 0), armR = grp(body, 0.2, 0.49, 0);
+    [armL, armR].forEach(A => { mk(G_SPH, top, [0.09, 0.2, 0.09], [0, -0.08, 0], A); mk(G_SPH, skin, [0.08, 0.08, 0.08], [0, -0.18, 0.01], A); live(A); });
+    const head = grp(body, 0, 0.78, 0);
+    mk(G_SPH, skin, [0.5, 0.47, 0.47], [0, 0, 0], head);
+    [-1, 1].forEach(s => { mk(G_SPH, o.eye || INK, [0.055, 0.08, 0.03], [s * 0.085, -0.005, 0.222], head, { noShadow: true }); mk(G_SPH, '#ffffff', [0.022, 0.022, 0.012], [s * 0.085 + 0.013, 0.02, 0.236], head, { noShadow: true }); mk(G_SPH, '#ff9fb2', [0.075, 0.035, 0.02], [s * 0.145, -0.065, 0.2], head, { noShadow: true }); });
+    mk(G_SPH, '#c2566e', [0.045, 0.018, 0.012], [0, -0.085, 0.228], head, { noShadow: true }); mk(G_SPH, skin, [0.035, 0.028, 0.03], [0, -0.04, 0.232], head, { noShadow: true });
+    [-1, 1].forEach(s => { const br = mk(G_BOX, o.brow || hair, [0.06, 0.012, 0.012], [s * 0.088, 0.075, 0.222], head, { noShadow: true }); br.rotation.z = s * -0.18; mk(G_SPH, skin, [0.06, 0.09, 0.05], [s * 0.235, -0.02, 0.01], head, { noShadow: true });
+      if (o.lashes) { const l = mk(G_BOX, INK, [0.03, 0.01, 0.01], [s * 0.125, 0.035, 0.224], head, { noShadow: true }); l.rotation.z = s * -0.6; } });
+    mk(G_SPH, '#ffffff', [0.16, 0.05, 0.08], [-0.1, 0.24, 0.12], head, { noShadow: true, glow: true, alpha: 0.35 });
+    mk(G_SPH, hair, [0.53, 0.52, 0.53], [0, 0.06, -0.05], head); mk(G_SPH, hair, [0.44, 0.15, 0.22], [0, 0.14, 0.12], head);
+    if (o.hairStyle === 'long') { mk(G_SPH, hair, [0.5, 0.62, 0.32], [0, -0.13, -0.11], head); [-1, 1].forEach(s => mk(G_SPH, hair, [0.13, 0.36, 0.15], [s * 0.2, -0.13, 0.03], head)); }
+    if (o.hairStyle === 'bob') [-1, 1].forEach(s => mk(G_SPH, hair, [0.16, 0.3, 0.3], [s * 0.19, -0.07, -0.01], head));
+    if (o.hairStyle === 'fluffy') [[-0.1, 0.25, 0.02], [0.08, 0.27, -0.04], [0.16, 0.2, 0.06], [-0.18, 0.18, -0.02]].forEach(p => mk(G_SPH, hair, [0.16, 0.14, 0.16], p, head));
+    if (o.bow) { const b = grp(head, 0.17, 0.22, 0.02); b.rotation.z = -0.4; [-1, 1].forEach(s => { const c = mk(G_CONE, o.bow, [0.09, 0.12, 0.06], [s * 0.06, 0, 0], b); c.rotation.z = s * Math.PI / 2; }); mk(G_SPH, o.bow, [0.05, 0.05, 0.05], [0, 0, 0], b); }
+    if (o.glasses) [-1, 1].forEach(s => mk(G_TOR, INK, [0.19, 0.19, 0.19], [s * 0.085, 0, 0.235], head, { noShadow: true }));
+    if (o.sunnies) { [-1, 1].forEach(s => mk(G_SPH, '#3f6f8f', [0.12, 0.07, 0.05], [s * 0.1, 0.2, 0.19], head, { noShadow: true })); }
+    if (o.pencil) { const p = mk(G_CYL, '#ffd166', [0.025, 0.2, 0.025], [0.25, 0.08, 0.02], head, { noShadow: true }); p.rotation.z = -0.9; }
+    if (o.napkin) { const n = mk(G_CONE, '#ffffff', [0.14, 0.1, 0.04], [0, 0.52, 0.15], body, { noShadow: true }); n.rotation.x = Math.PI; }
+    g.userData = { body, head, legL, legR, armL, armR, walk: 0 };
+    mergeStatic(head); return g;
+  }
+  const LOOKS = {
+    paulo: { skin: '#b57848', hair: '#2a1d12', hairStyle: 'fluffy', eye: '#3a2414', top: '#7fc8f8', bottom: '#3f6fb0', shoe: '#f4f6fb', sunnies: true },
+    annette: { skin: '#f9d1b0', hair: '#f5d271', brow: '#d9a94a', lashes: true, hairStyle: 'long', eye: '#3d7be0', bow: '#ff7aa8', top: '#ff9fc3', bottom: '#7f93b3', shoe: '#ffffff', pencil: true },
+    huw: { skin: '#f2c9a6', hair: '#7a5230', hairStyle: 'fluffy', eye: '#4a3222', top: '#7cc576', bottom: '#6b5a4a', shoe: '#f4f6fb', napkin: true },
+    romy: { skin: '#f7d6b8', hair: '#f5d271', brow: '#d9a94a', lashes: true, hairStyle: 'bob', eye: '#5a7a3a', glasses: true, top: '#ffd166', bottom: '#7f93b3', shoe: '#ffffff' },
+  };
+
+  /* ---- scenery (v2 builders + new toy landmarks) ---- */
+  function makeIslandBase(parent, w, d, top, cx, cz) {
+    const g = grp(parent, cx, 0, cz);
+    mk(G_BOX, top, [w + 0.3, 0.3, d + 0.3], [0, -0.25, 0], g); mk(G_BOX, '#e8c9a0', [w + 0.1, 0.35, d + 0.1], [0, -0.55, 0], g); mk(G_BOX, '#d4a77e', [w - 0.3, 0.4, d - 0.3], [0, -0.9, 0], g);
+    const n = Math.floor((w + d) * 1.3);
+    for (let i = 0; i < n; i++) { const p = i / n * 2 * (w + d); let x, z; if (p < w) { x = -w / 2 + p; z = d / 2 + 0.16; } else if (p < w + d) { x = w / 2 + 0.16; z = d / 2 - (p - w); } else if (p < 2 * w + d) { x = w / 2 - (p - w - d); z = -d / 2 - 0.16; } else { x = -w / 2 - 0.16; z = -d / 2 + (p - 2 * w - d); }
+      mk(G_SPH, top, [0.3, 0.3 + hsh(i, 1) * 0.35, 0.3], [x, -0.42 - hsh(i, 2) * 0.12, z], g, { noShadow: true }); }
+    for (let i = 0; i < 9; i++) { const c = mk(G_CONE, i % 2 ? '#c89b74' : '#b98a64', [1.4 + hsh(i, 3) * 1.4, 1.6 + hsh(i, 4) * 2, 1.4 + hsh(i, 5) * 1.2], [(hsh(i, 6) - 0.5) * (w - 2), -1.6 - hsh(i, 7), (hsh(i, 8) - 0.5) * (d - 2)], g, { noShadow: true }); c.rotation.x = Math.PI; }
+    return mergeStatic(g);
+  }
+  function makeTree(parent, x, z, s, col) { const g = grp(parent, x, 0, z); s = s || 1; mk(G_CYL, '#a8744f', [0.14 * s, 0.6 * s, 0.14 * s], [0, 0.3 * s, 0], g); const c = col || '#7cc576'; mk(G_SPH, c, [0.8 * s, 0.7 * s, 0.8 * s], [0, 0.85 * s, 0], g); mk(G_SPH, c, [0.55 * s, 0.5 * s, 0.55 * s], [0.18 * s, 1.18 * s, 0.05 * s], g); return g; }
+  function makePine(parent, x, z, s) { const g = grp(parent, x, 0, z); s = s || 1; mk(G_CYL, '#a8744f', [0.12 * s, 0.4 * s, 0.12 * s], [0, 0.2 * s, 0], g); [[0.55, 0.9, 0.55], [0.44, 0.75, 0.95], [0.32, 0.6, 1.3]].forEach(([r, h, y]) => mk(G_CONE, '#4fa66a', [r * 2 * s, h * s, r * 2 * s], [0, y * s, 0], g)); return g; }
+  function makeFruitTree(parent, x, z, s) { const g = makeTree(parent, x, z, s, '#86cf6c'); for (let i = 0; i < 5; i++) mk(G_SPH, ['#ff7a8a', '#ffb070', '#ff5c7a'][i % 3], [0.13 * s, 0.13 * s, 0.13 * s], [Math.cos(i * 1.3) * 0.36 * s, (0.75 + hsh(i, 1) * 0.5) * s, Math.sin(i * 1.3) * 0.36 * s + 0.1], g, { noShadow: true }); return g; }
+  function makeFlower(parent, x, z, c) { const g = grp(parent, x, 0, z); mk(G_CYL, '#5fae63', [0.03, 0.22, 0.03], [0, 0.11, 0], g, { noShadow: true }); for (let i = 0; i < 5; i++) mk(G_SPH, c, [0.09, 0.05, 0.09], [Math.cos(i / 5 * TAU) * 0.07, 0.24, Math.sin(i / 5 * TAU) * 0.07], g, { noShadow: true }); mk(G_SPH, '#ffd166', [0.07, 0.06, 0.07], [0, 0.26, 0], g, { noShadow: true }); return g; }
+  function makeCloud(parent, x, y, z, s) { const g = grp(parent, x, y, z); [[0, 0, 0, 1], [0.7, -0.1, 0.1, 0.75], [-0.7, -0.12, 0, 0.7], [0.25, 0.3, -0.1, 0.7], [-0.3, 0.2, 0.2, 0.6]].forEach(([a, b, c, r]) => mk(G_SPH, '#ffffff', [r * s, r * s * 0.8, r * s], [a * s, b * s, c * s], g, { noShadow: true })); g.userData.speed = 0.15 + Math.random() * 0.25; return g; }
+
+  // labels on shop signs: canvas texture planes, cached per text
+  const LBL = {};
+  function label(text, w = 1.1) {
+    const key = text + w; let tex = LBL[key];
+    if (!tex) { const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d');
+      x.fillStyle = '#fffaf0'; x.beginPath(); x.roundRect ? x.roundRect(4, 4, 248, 56, 22) : x.rect(4, 4, 248, 56); x.fill(); x.lineWidth = 5; x.strokeStyle = '#e2c49a'; x.stroke();
+      x.fillStyle = '#5a4637'; x.font = '600 30px Fredoka, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; let fs = 30; while (x.measureText(text).width > 228 && fs > 14) { fs -= 2; x.font = `600 ${fs}px Fredoka, sans-serif`; } x.fillText(text, 128, 34);
+      tex = LBL[key] = new THREE.CanvasTexture(c); tex.anisotropy = 4; }
+    const m = new THREE.Mesh(geo('lblplane', () => new THREE.PlaneGeometry(1, 0.25)), new THREE.MeshBasicMaterial({ map: tex, transparent: true })); m.scale.set(w, w, 1); m.userData.live = true; return m;
+  }
+  const hexOf = c => (typeof c === 'string' && c[0] === '#') ? c : '#e8916b';
+  // a toy house: box walls, prism roof, windows, door; w/h in scene px (from the 2D data)
+  function house(o = {}) {
+    const g = new THREE.Group(), W = Math.max(1.1, (o.w || 60) / TILE), D = W * 0.72, H = 0.62 + W * 0.18;
+    const wall = hexOf(o.wall) === '#e8916b' ? '#fff4e2' : hexOf(o.wall), roof = hexOf(o.roof);
+    mk(G_BOX, wall, [W, H, D], [0, H / 2, 0], g);
+    const r = mk(G_PRISM, roof, [W + 0.22, 0.62 + W * 0.08, D + 0.28], [0, H + (0.62 + W * 0.08) * 0.25, 0], g);
+    if (o.timber) { mk(G_BOX, hexOf(o.timber), [W + 0.02, 0.05, D + 0.02], [0, H - 0.05, 0], g); for (let i = 0; i <= Math.floor(W / 0.36); i++) mk(G_BOX, hexOf(o.timber), [0.05, H, 0.02], [-W / 2 + i * (W / Math.floor(W / 0.36)), H / 2, D / 2 + 0.005], g, { noShadow: true }); }
+    const nw = Math.max(1, Math.floor(W / 0.5));
+    for (let i = 0; i < nw; i++) { const x = -W / 2 + (i + 0.5) * W / nw; if (nw > 1 && i === Math.floor(nw / 2) && !o.awn) continue; mk(G_BOX, '#bfe6f5', [0.18, 0.2, 0.03], [x, H * 0.62, D / 2 + 0.01], g, { noShadow: true }); [-1, 1].forEach(s => mk(G_BOX, hexOf(o.shutter || o.timber || '#7fc8f8'), [0.06, 0.2, 0.03], [x + s * 0.13, H * 0.62, D / 2 + 0.012], g, { noShadow: true })); }
+    mk(G_BOX, '#a8744f', [0.22, 0.34, 0.04], [nw > 1 ? 0 : W * 0.28, 0.17, D / 2 + 0.01], g, { noShadow: true });
+    if (o.awn) { const a = mk(G_BOX, hexOf(o.awn), [W + 0.05, 0.05, 0.3], [0, H * 0.42, D / 2 + 0.15], g); a.rotation.x = 0.35; for (let i = 0; i < Math.floor(W / 0.2); i++) if (i % 2) mk(G_BOX, '#ffffff', [0.1, 0.055, 0.31], [-W / 2 + 0.1 + i * 0.2, H * 0.42 + 0.005, D / 2 + 0.15], g, { noShadow: true }).rotation.x = 0.35; }
+    if (o.sign) { const l = label(o.sign, Math.min(1.4, W * 0.9)); l.position.set(0, H + 0.08, D / 2 + 0.2); g.add(l); }
+    if (o.chimney !== false && W > 1.2) mk(G_BOX, '#c9a27e', [0.16, 0.34, 0.16], [W * 0.26, H + 0.42, -D * 0.1], g);
+    g.userData.h = H + 0.62 + W * 0.08; return g;
+  }
+  const B3 = {
+    house: o => house(o), hotel: o => house({ w: 84, roof: '#9fb7c8', sign: o.sign || 'HÔTEL', ...o }),
+    cafe: o => { const g = house({ w: 74, roof: o.roof || '#b9a3ff', awn: o.awn || '#ff7a8a', sign: o.sign }); [-0.5, 0, 0.5].forEach(x => { mk(G_CYL, '#ffffff', [0.24, 0.03, 0.24], [x, 0.28, 0.85], g); mk(G_CYL, '#a8744f', [0.03, 0.28, 0.03], [x, 0.14, 0.85], g); }); return g; },
+    shop: o => { const g = house({ w: 72, roof: o.roof || '#ff9f7a', awn: o.awn || '#7fc8f8', sign: o.sign }); mk(G_BOX, '#c9975f', [1.1, 0.2, 0.3], [0, 0.1, 0.8], g); [-0.36, -0.12, 0.12, 0.36].forEach((x, i) => mk(G_SPH, CONF[i], [0.14, 0.14, 0.14], [x, 0.26, 0.8], g)); return g; },
+    pintxobar: o => { const g = house({ w: 68, roof: '#e8916b', timber: '#c9475d', sign: o.sign || 'Bar', awn: '#6fbf73' }); [-0.36, -0.12, 0.12, 0.36].forEach((x, i) => { mk(G_CYL, '#ffffff', [0.14, 0.02, 0.14], [x, 0.3, 0.72], g); mk(G_SPH, CONF[i], [0.08, 0.08, 0.08], [x, 0.34, 0.72], g); }); mk(G_BOX, '#c9975f', [1.2, 0.28, 0.2], [0, 0.14, 0.72], g); return g; },
+    winery: o => { const g = house({ w: 96, roof: '#e89a6a', wall: '#f5e3c2', sign: o.sign || 'BODEGA' }); [-0.6, 0, 0.6].forEach(x => { const b = mk(G_CYL, '#a8744f', [0.34, 0.44, 0.34], [x, 0.22, 1.05], g); b.rotation.z = Math.PI / 2; }); return g; },
+    brewery: o => { const g = house({ w: 88, roof: '#c86a4a', timber: '#8a5a3a', sign: o.sign || 'Brauerei' }); const k = mk(G_CYL, '#a8744f', [0.4, 0.5, 0.4], [-1.1, 0.25, 0.7], g); k.rotation.z = Math.PI / 2; return g; },
+    station: () => house({ w: 118, roof: '#8fcfb0', sign: 'GARE' }),
+    cheesefarm: () => { const g = house({ w: 76, roof: '#ff9f7a', timber: '#c9475d' }); [[-1.2, 0.9], [-0.7, 1.2], [1.1, 1]].forEach(([x, z]) => g.add(sheep(x, z))); mk(G_CYL, '#ffd166', [0.3, 0.14, 0.3], [0.9, 0.07, 0.5], g); return g; },
+    monastery: () => { const g = house({ w: 110, roof: '#e89a6a', wall: '#f3e2c0' }); mk(G_BOX, '#f3e2c0', [0.6, 1.8, 0.6], [1.1, 0.9, -0.2], g); mk(G_PYR, '#e89a6a', [0.62, 0.5, 0.62], [1.1, 2.05, -0.2], g).rotation.y = Math.PI / 4; mk(G_SPH, '#ffd166', [0.14, 0.14, 0.14], [1.1, 1.5, 0.12], g); return g; },
+    church: o => { const g = new THREE.Group(); if (o.rock) mk(G_SPH, '#d9c69a', [2.4, 0.9, 1.8], [0, 0, 0], g); mk(G_BOX, '#fff4e2', [1.2, 0.8, 0.8], [0, 0.4, 0], g); mk(G_PRISM, '#ff9f7a', [1.3, 0.55, 0.95], [0, 0.95, 0], g); mk(G_BOX, '#fff4e2', [0.36, 1.5, 0.36], [0, 0.75, 0.32], g); mk(G_PYR, '#ff9f7a', [0.42, 0.45, 0.42], [0, 1.72, 0.32], g).rotation.y = Math.PI / 4; mk(G_SPH, '#ffd166', [0.12, 0.12, 0.05], [0, 1.25, 0.51], g); mk(G_BOX, '#a8744f', [0.24, 0.4, 0.04], [0, 0.2, 0.51], g); g.userData.h = 2; return g; },
+    cathedral: () => { const g = new THREE.Group(); mk(G_BOX, '#efe2c6', [2.2, 1.1, 1.1], [0, 0.55, 0], g); mk(G_PRISM, '#9fb0bf', [2.3, 0.6, 1.2], [0, 1.25, 0], g); [-0.8, 0.8].forEach(x => { mk(G_BOX, '#efe2c6', [0.44, 2.3, 0.44], [x, 1.15, 0.4], g); mk(G_PYR, '#9fb0bf', [0.52, 0.9, 0.52], [x, 2.75, 0.4], g).rotation.y = Math.PI / 4; }); mk(G_CYL, '#bfe6f5', [0.4, 0.04, 0.4], [0, 0.8, 0.56], g).rotation.x = Math.PI / 2; g.userData.h = 3.2; return g; },
+    lighthouse: o => { const g = new THREE.Group(), s = o.s || 1; for (let i = 0; i < 5; i++) mk(G_CYL, i % 2 ? '#ff7a8a' : '#ffffff', [(0.5 - i * 0.04) * s, 0.36 * s, (0.5 - i * 0.04) * s], [0, (0.18 + i * 0.36) * s, 0], g); mk(G_CYL, '#ffe79a', [0.34 * s, 0.3 * s, 0.34 * s], [0, 1.95 * s, 0], g, { glow: true }); mk(G_CONE, '#ff7a8a', [0.44 * s, 0.3 * s, 0.44 * s], [0, 2.25 * s, 0], g);
+      const beam = live(grp(g, 0, 1.95 * s, 0)); mk(G_CONE, '#fff4b0', [0.6 * s, 2.4 * s, 0.25 * s], [0, 0, 1.2 * s], beam, { glow: true, alpha: 0.35 }).rotation.x = Math.PI / 2; g.userData.spin = beam; g.userData.h = 2.4 * s; return g; },
+    tower: o => { const g = new THREE.Group(), r = (o.r || 20) / TILE, h = (o.h || 56) / TILE * 1.3; mk(G_CYL, '#e6d6b4', [r * 2, h, r * 2], [0, h / 2, 0], g); for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; mk(G_BOX, '#e6d6b4', [0.14, 0.18, 0.14], [Math.cos(a) * r * 0.9, h + 0.09, Math.sin(a) * r * 0.9], g); } if (o.spire) mk(G_CONE, '#9fb0bf', [r * 2.1, 0.9, r * 2.1], [0, h + 0.45, 0], g); mk(G_BOX, '#a8744f', [0.2, 0.34, 0.04], [0, 0.17, r], g, { noShadow: true }); g.userData.h = h + 0.3; return g; },
+    eiffel: () => { const g = new THREE.Group(), c = '#b07a54'; [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => { const l = mk(G_BOX, c, [0.14, 1.6, 0.14], [a * 0.42, 0.72, b * 0.42], g); l.rotation.z = -a * 0.32; l.rotation.x = b * 0.32; }); mk(G_BOX, c, [1, 0.1, 1], [0, 1.4, 0], g); mk(G_CYL, c, [0.32, 1.5, 0.32], [0, 2.15, 0], g); mk(G_BOX, c, [0.5, 0.08, 0.5], [0, 2.4, 0], g); mk(G_CONE, c, [0.2, 1.2, 0.2], [0, 3.4, 0], g); mk(G_SPH, '#ffd166', [0.1, 0.1, 0.1], [0, 4.05, 0], g, { glow: true }); g.userData.h = 4.1; return g; },
+    pyramid: () => { const g = new THREE.Group(); mk(G_PYR, '#bfe6f5', [1.8, 1.3, 1.8], [0, 0.65, 0], g, { alpha: 0.85 }).rotation.y = Math.PI / 4; g.userData.h = 1.3; return g; },
+    market: o => { const g = new THREE.Group(); mk(G_BOX, '#fff4e2', [3.2, 0.9, 1.6], [0, 0.45, 0], g); const r = mk(G_CYL, o.roof || '#6fc2b0', [1.6, 3.4, 1.8], [0, 0.9, 0], g); r.rotation.z = Math.PI / 2; r.scale.set(0.9, 3.4, 1.4); [-1.1, -0.37, 0.37, 1.1].forEach(x => mk(G_BOX, '#bfe6f5', [0.5, 0.6, 0.04], [x, 0.36, 0.81], g, { noShadow: true })); const l = label(o.sign || 'Les Halles', 1.3); l.position.set(0, 1.55, 0.75); g.add(l); [-1, -0.35, 0.35, 1].forEach((x, i) => mk(G_BOX, CONF[i], [0.5, 0.18, 0.3], [x, 0.09, 1.15], g)); g.userData.h = 1.9; return g; },
+    dune: o => { const g = new THREE.Group(), s = (o.s || 1) * 1.4; mk(G_SPH, '#f3d48a', [4 * s, 1.8 * s, 2.6 * s], [0, 0, 0], g); mk(G_CYL, '#d9a44a', [0.02, 0.6, 0.02], [0, 0.95 * s, 0], g); mk(G_BOX, '#ff7a8a', [0.3, 0.18, 0.02], [0.15, 1.2 * s, 0], g); g.userData.h = 1.3 * s; return g; },
+    surfbeach: () => { const g = new THREE.Group(); ['#ffd166', '#ff7a8a', '#7fc8f8'].forEach((c, i) => { const b = mk(G_SPH, c, [0.24, 1.3, 0.08], [-0.6 + i * 0.6, 0.62, 0], g); b.rotation.z = (i - 1) * 0.2; }); mk(G_BOX, '#c9975f', [2, 0.12, 0.3], [0, 0.06, 0.4], g); g.userData.h = 1.4; return g; },
+    ferris: () => { const g = new THREE.Group(); [-0.5, 0.5].forEach(x => { const l = mk(G_BOX, '#b9a3ff', [0.08, 1.6, 0.08], [x * 0.6, 0.8, 0], g); l.rotation.z = x * 0.5; }); const w = live(grp(g, 0, 1.55, 0.1)); mk(G_TOR, '#ff7a8a', [2.4, 2.4, 2.4], [0, 0, 0], w); for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; mk(G_BOX, CONF[i % 5], [0.22, 0.2, 0.16], [Math.cos(a) * 1.2, Math.sin(a) * 1.2, 0], w); } g.userData.wheel = w; g.userData.h = 2.9; return g; },
+    hermitage: () => { const g = new THREE.Group(); mk(G_SPH, '#b3a58c', [3, 1.6, 2.4], [0, 0, 0], g); for (let i = 0; i < 8; i++) mk(G_BOX, '#f5e3c2', [0.4, 0.08, 0.3], [-2.6 + i * 0.32, 0.1 + i * 0.09, 0.6 - i * 0.05], g); mk(G_BOX, '#fff4e2', [0.8, 0.5, 0.5], [0.2, 0.95, 0], g); mk(G_PRISM, '#ff9f7a', [0.9, 0.35, 0.6], [0.2, 1.3, 0], g); mk(G_BOX, '#fff4e2', [0.2, 0.4, 0.2], [0.5, 1.4, 0.2], g); mk(G_SPH, '#ffd166', [0.12, 0.12, 0.12], [0.5, 1.45, 0.31], g); g.userData.h = 1.7; return g; },
+    transporter: () => { const g = new THREE.Group(), c = '#e0566e'; [-1.8, 1.8].forEach(x => { [-0.3, 0.3].forEach(z => { const l = mk(G_BOX, c, [0.1, 2.8, 0.1], [x, 1.4, z], g); }); }); mk(G_BOX, c, [4, 0.16, 0.7], [0, 2.8, 0], g); const gd = live(grp(g, -1.2, 0, 0)); mk(G_BOX, '#cfd6de', [0.03, 2.6, 0.03], [0, 1.5, 0], gd); mk(G_BOX, '#fff4e2', [0.9, 0.24, 0.5], [0, 0.2, 0], gd); g.userData.gondola = gd; g.userData.h = 3; return g; },
+    guggenheim: () => { const g = new THREE.Group(); [[0, 0.7, 0, 1.6], [-1, 0.5, 0.2, 1.1], [0.9, 0.6, -0.1, 1.2], [0.3, 1.2, -0.3, 0.9]].forEach(([x, y, z, s]) => { const p = mk(G_SPH, '#d6dde3', [s * 1.6, s, s], [x, y, z], g); p.rotation.z = x * 0.4; }); mk(G_BOX, '#bfe6f5', [0.9, 0.5, 0.05], [-0.2, 0.3, 0.85], g, { noShadow: true }); g.userData.h = 2; return g; },
+    puppy: () => { const g = new THREE.Group(); mk(G_SPH, '#86cf6c', [1, 1.1, 0.8], [0, 0.55, 0], g); mk(G_SPH, '#86cf6c', [0.7, 0.62, 0.62], [0, 1.3, 0.1], g); [-0.28, 0.28].forEach(x => mk(G_SPH, '#86cf6c', [0.22, 0.4, 0.14], [x, 1.35, 0], g)); for (let i = 0; i < 22; i++) mk(G_SPH, CONF[i % 5], [0.1, 0.1, 0.1], [Math.cos(i * 1.7) * 0.45, 0.3 + hsh(i, 2) * 1.2, Math.sin(i * 1.7) * 0.36 + 0.2], g, { noShadow: true }); [-0.12, 0.12].forEach(x => mk(G_SPH, INK, [0.06, 0.06, 0.04], [x, 1.35, 0.4], g, { noShadow: true })); g.userData.h = 1.7; return g; },
+    barrels: () => { const g = new THREE.Group(); [[-0.3, 0], [0.3, 0], [0, 0.36]].forEach(([x, y]) => { const b = mk(G_CYL, '#a8744f', [0.34, 0.5, 0.34], [x, 0.18 + y, 0], g); b.rotation.z = Math.PI / 2; }); g.userData.h = 0.8; return g; },
+    kupela: () => { const g = new THREE.Group(); mk(G_CYL, '#a8744f', [1, 1.4, 1], [0, 0.7, 0], g); [0.3, 0.7, 1.1].forEach(y => mk(G_CYL, '#6b4a32', [1.02, 0.06, 1.02], [0, y, 0], g)); mk(G_CYL, '#ffd166', [0.1, 0.16, 0.1], [0, 0.5, 0.5], g).rotation.x = Math.PI / 2; g.userData.h = 1.5; return g; },
+    grill: o => { const g = new THREE.Group(); mk(G_BOX, '#5a5a66', [1.3, 0.5, 0.6], [0, 0.25, 0], g); for (let i = 0; i < 3; i++) mk(G_SPH, o.fish ? '#cfd8dc' : '#b0643a', [0.3, 0.08, 0.12], [-0.4 + i * 0.4, 0.52, 0], g); const sm = live(grp(g, 0, 0.8, 0)); for (let i = 0; i < 3; i++) mk(G_SPH, '#f4efe6', [0.22, 0.22, 0.22], [-0.2 + i * 0.2, i * 0.22, 0], sm, { noShadow: true, alpha: 0.7 }); g.userData.smoke = sm; g.userData.h = 1.4; return g; },
+    fronton: () => { const g = new THREE.Group(); mk(G_BOX, '#f0e4c8', [2.2, 1.6, 0.3], [0, 0.8, -0.5], g); mk(G_BOX, '#e0566e', [2.2, 0.1, 0.32], [0, 0.4, -0.5], g); mk(G_BOX, '#e8d6b0', [2.2, 0.04, 1.4], [0, 0.02, 0.2], g); mk(G_SPH, '#ffffff', [0.12, 0.12, 0.12], [0.2, 0.5, 0.3], g); g.userData.h = 1.7; return g; },
+    oak: () => { const g = makeTree(null, 0, 0, 1.5, '#5faf5a'); mk(G_BOX, '#e6d6b4', [1.6, 0.14, 0.3], [0, 0.07, 0.9], g); g.userData.h = 2; return g; },
+    stadium: () => { const g = new THREE.Group(); mk(G_CYL, '#e8e2d6', [3.4, 0.6, 2.4], [0, 0.3, 0], g); mk(G_CYL, '#7cc576', [2.6, 0.62, 1.7], [0, 0.31, 0], g); mk(G_BOX, '#ffffff', [0.04, 0.64, 1.6], [0, 0.31, 0], g, { noShadow: true }); mk(G_TOR, '#e0566e', [3.4, 2.4, 2.4], [0, 0.62, 0], g).rotation.x = Math.PI / 2; g.userData.h = 0.9; return g; },
+    combs: () => { const g = new THREE.Group(); mk(G_SPH, '#b3a58c', [2, 0.8, 1.4], [0, 0, 0], g); [-0.4, 0.4].forEach(x => { mk(G_BOX, '#8a5a3a', [0.14, 0.9, 0.14], [x, 0.7, 0], g); mk(G_BOX, '#8a5a3a', [0.5, 0.12, 0.14], [x - 0.2, 1.1, 0], g); }); g.userData.h = 1.3; return g; },
+    christ: () => { const g = new THREE.Group(); mk(G_SPH, '#8fcf7a', [2.2, 1.4, 2], [0, 0, 0], g); mk(G_BOX, '#e6d6b4', [0.4, 0.4, 0.4], [0, 0.85, 0], g); mk(G_BOX, '#fffaf0', [0.14, 0.9, 0.14], [0, 1.45, 0], g); mk(G_BOX, '#fffaf0', [0.6, 0.12, 0.12], [0, 1.65, 0], g); g.userData.h = 2; return g; },
+    island: o => { const g = new THREE.Group(), s = (o.rx || 50) / 50; mk(G_SPH, '#8fcf7a', [2.2 * s, 0.6, 1.5 * s], [0, 0, 0], g); makeTree(g, -0.3 * s, 0, 0.7); makeTree(g, 0.4 * s, 0.2, 0.6); g.userData.h = 1; return g; },
+    boat: o => { const g = new THREE.Group(); mk(G_BOX, hexOf(o.col || '#ff7a8a'), [1, 0.28, 0.42], [0, 0.14, 0], g); mk(G_BOX, '#fff4e2', [0.36, 0.26, 0.3], [-0.1, 0.4, 0], g); g.rotation.y = -(o.rot || 0) * Math.PI / 180; g.userData.bob = true; g.userData.h = 0.6; return g; },
+    car: o => { const g = new THREE.Group(); mk(G_BOX, '#ff8a7a', [1.2, 0.36, 0.62], [0, 0.3, 0], g); mk(G_BOX, '#ff8a7a', [0.7, 0.3, 0.58], [-0.08, 0.6, 0], g); mk(G_BOX, '#bfe6f5', [0.72, 0.22, 0.6], [-0.08, 0.61, 0], g, { noShadow: true }); mk(G_BOX, '#ffd166', [0.3, 0.14, 0.4], [-0.1, 0.83, 0], g); mk(G_BOX, '#7cc576', [0.26, 0.12, 0.36], [0.2, 0.82, 0], g); [-0.4, 0.4].forEach(x => [-0.32, 0.32].forEach(z => { const w = mk(G_CYL, '#4a3b52', [0.26, 0.12, 0.26], [x, 0.13, z], g); w.rotation.x = Math.PI / 2; })); mk(G_SPH, '#fff4b0', [0.08, 0.08, 0.05], [0.6, 0.35, 0.2], g, { glow: true }); g.rotation.y = ((o.rot ?? -90) + 90) * Math.PI / 180; g.userData.h = 1; return g; },
+    stall: o => { const g = new THREE.Group(); mk(G_BOX, '#c9975f', [1, 0.44, 0.5], [0, 0.22, 0], g); [-0.45, 0.45].forEach(x => mk(G_CYL, '#a8744f', [0.05, 0.95, 0.05], [x, 0.5, -0.2], g)); const a = mk(G_BOX, hexOf(o.awn || '#ff7a8a'), [1.2, 0.06, 0.7], [0, 0.98, 0], g); a.rotation.x = 0.25; (o.goods || CONF).slice(0, 3).forEach((c, i) => mk(G_SPH, hexOf(c), [0.2, 0.2, 0.2], [-0.3 + i * 0.3, 0.52, 0.05], g)); g.userData.h = 1.1; return g; },
+    board: o => { const g = new THREE.Group(); [-0.35, 0.35].forEach(x => mk(G_CYL, '#a8744f', [0.06, 0.8, 0.06], [x, 0.4, 0], g)); mk(G_BOX, '#fffaf0', [0.95, 0.55, 0.06], [0, 0.85, 0], g); mk(G_SPH, '#7fc8f8', [0.18, 0.18, 0.04], [-0.26, 0.88, 0.04], g, { noShadow: true }); [0.95, 0.8].forEach(y => mk(G_BOX, '#e2c49a', [0.4, 0.05, 0.02], [0.12, y, 0.04], g, { noShadow: true })); mk(G_PRISM, hexOf(o.col || '#ff7a8a'), [1.05, 0.2, 0.2], [0, 1.2, 0], g); g.userData.h = 1.3; return g; },
+    camera: () => { const g = new THREE.Group(); [-1, 0, 1].forEach(k => { const l = mk(G_CYL, '#a8744f', [0.04, 0.8, 0.04], [k * 0.14, 0.38, k ? 0 : -0.14], g); l.rotation.z = k * 0.2; }); mk(G_BOX, '#5a4637', [0.5, 0.32, 0.26], [0, 0.9, 0], g); mk(G_CYL, '#bfe6f5', [0.2, 0.08, 0.2], [0, 0.9, 0.16], g).rotation.x = Math.PI / 2; mk(G_SPH, '#ffd166', [0.07, 0.07, 0.07], [0.18, 1.08, 0], g, { glow: true }); g.userData.h = 1.1; return g; },
+    telescope: () => { const g = new THREE.Group(); mk(G_CYL, '#a8744f', [0.06, 0.7, 0.06], [0, 0.35, 0], g); const t = mk(G_CYL, '#ffd166', [0.16, 0.7, 0.16], [0, 0.8, 0.1], g); t.rotation.x = 1.2; g.userData.h = 1; return g; },
+    sign: o => { const g = new THREE.Group(); mk(G_CYL, '#a8744f', [0.08, 1.2, 0.08], [0, 0.6, 0], g); if (o.a) { const a = label(o.a, 0.9); a.position.set(0.3, 1.05, 0.05); g.add(a); } if (o.b) { const b = label(o.b, 0.9); b.position.set(-0.3, 0.78, 0.05); g.add(b); } g.userData.h = 1.3; return g; },
+    mirror: () => { const g = new THREE.Group(); mk(G_BOX, '#bfe6f5', [5, 0.04, 1.4], [0, 0.02, 0], g, { alpha: 0.9 }); g.userData.h = 0.4; return g; },
+    bench: () => { const g = new THREE.Group(); mk(G_BOX, '#c9975f', [0.9, 0.08, 0.3], [0, 0.32, 0], g); mk(G_BOX, '#c9975f', [0.9, 0.24, 0.06], [0, 0.5, -0.13], g); [-0.35, 0.35].forEach(x => mk(G_BOX, '#a8744f', [0.06, 0.3, 0.26], [x, 0.15, 0], g)); return g; },
+    rathaus: () => { const g = new THREE.Group(); mk(G_BOX, '#cfc6b4', [3.4, 0.5, 1.2], [0, 0.25, 0], g); [-1.1, -0.36, 0.36, 1.1].forEach(x => mk(G_CYL, '#8fd3f0', [0.5, 0.06, 0.5], [x, 0.02, 0.62], g, { noShadow: true })); mk(G_BOX, '#ffe0a8', [1.8, 1, 1], [0, 1, 0], g); mk(G_PRISM, '#ff9f7a', [1.95, 0.55, 1.15], [0, 1.72, 0], g); mk(G_BOX, '#ffe0a8', [0.4, 1.1, 0.4], [0, 2.3, 0.3], g); mk(G_PYR, '#6fc2b0', [0.5, 0.5, 0.5], [0, 3.1, 0.3], g).rotation.y = Math.PI / 4; [-0.55, -0.18, 0.18, 0.55].forEach(x => mk(G_BOX, '#bfe6f5', [0.2, 0.22, 0.03], [x, 1.1, 0.51], g, { noShadow: true })); mk(G_BOX, '#ffb3c7', [1.8, 0.04, 0.02], [0, 0.82, 0.51], g, { noShadow: true }); g.userData.h = 3.3; return g; },
+    cobbaRock: () => { const g = new THREE.Group(); mk(G_SPH, '#c8bca6', [1, 0.5, 0.8], [0, 0.1, 0], g); const c = live(grp(g, 0, 0.45, 0)); mk(G_SPH, '#ffe08a', [0.7, 0.36, 0.6], [0, 0.1, 0], c); const lid = mk(G_SPH, '#ffd166', [0.72, 0.4, 0.62], [0, 0.22, -0.02], c); [-0.14, 0.14].forEach(x => { mk(G_SPH, '#ffffff', [0.16, 0.18, 0.08], [x, 0.36, 0.26], c, { noShadow: true }); mk(G_SPH, INK, [0.07, 0.08, 0.04], [x, 0.35, 0.3], c, { noShadow: true }); }); mk(G_SPH, '#ff9fb2', [0.2, 0.05, 0.05], [0, 0.16, 0.3], c, { noShadow: true }); mk(G_CYL, '#8c7a5c', [0.4, 0.08, 0.4], [0, 0.46, -0.02], c); g.userData.clam = c; g.userData.h = 1; return g; },
+    cabane: o => { const g = house({ w: 72, roof: o.col || '#7cc576', wall: '#fffaf0' }); [-0.4, 0.4].forEach(x => [-0.3, 0.3].forEach(z => mk(G_CYL, '#a8744f', [0.08, 0.5, 0.08], [x, -0.15, z], g))); const f = live(grp(g, 0.7, 1.4, 0)); mk(G_CYL, '#a8744f', [0.03, 0.5, 0.03], [0, 0, 0], f); mk(G_BOX, o.col || '#7cc576', [0.3, 0.18, 0.02], [0.15, 0.18, 0], f); g.userData.flag = f; return g; },
+    terrace: () => { const g = new THREE.Group(); mk(G_CYL, '#ffffff', [0.8, 0.06, 0.8], [0, 0.4, 0], g); mk(G_CYL, '#a8744f', [0.06, 0.4, 0.06], [0, 0.2, 0], g); for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; mk(G_SPH, '#c9d2c4', [0.14, 0.06, 0.1], [Math.cos(a) * 0.24, 0.45, Math.sin(a) * 0.24], g); } mk(G_CYL, '#a8744f', [0.03, 1.1, 0.03], [0, 0.95, 0], g); mk(G_CONE, '#ff7a8a', [1.3, 0.4, 1.3], [0, 1.5, 0], g); g.userData.h = 1.7; return g; },
+    carrelet: () => { const g = new THREE.Group(); [-0.3, 0.3].forEach(x => [-0.3, 0.3].forEach(z => mk(G_CYL, '#a8744f', [0.07, 1, 0.07], [x, 0.1, z], g))); mk(G_BOX, '#fffaf0', [0.8, 0.6, 0.7], [0, 0.9, 0], g); mk(G_PRISM, '#7fc8f8', [0.9, 0.4, 0.8], [0, 1.35, 0], g); const arm = mk(G_BOX, '#a8744f', [1.6, 0.06, 0.06], [-1, 1.1, 0], g); arm.rotation.z = -0.35; const net = live(grp(g, -1.8, 0.8, 0)); mk(G_BOX, '#fffaf0', [0.9, 0.02, 0.9], [0, 0, 0], net, { alpha: 0.6 }); [-0.45, 0.45].forEach(x => mk(G_BOX, '#8a7a66', [0.02, 0.5, 0.02], [x, 0.25, 0], net)); g.userData.net = net; g.userData.h = 1.6; return g; },
+    barge: () => { const g = new THREE.Group(); mk(G_BOX, '#6fae9a', [1.2, 0.2, 0.5], [0, 0.1, 0], g); mk(G_BOX, '#c9975f', [0.5, 0.18, 0.36], [-0.2, 0.28, 0], g); mk(G_SPH, '#f2c9a6', [0.16, 0.16, 0.16], [0.35, 0.36, 0], g); return g; },
+    whale: () => { const g = new THREE.Group(); mk(G_SPH, '#6f8fa8', [1.2, 0.5, 0.6], [0, 0, 0], g); mk(G_CONE, '#6f8fa8', [0.4, 0.4, 0.1], [-0.7, 0.2, 0], g).rotation.z = 1; return g; },
+  };
+  function sheep(x, z) { const g = new THREE.Group(); g.position.set(x, 0, z); [[-0.12, 0.28], [0, 0.34], [0.12, 0.28], [-0.06, 0.22], [0.06, 0.22]].forEach(([a, b]) => mk(G_SPH, '#fdfaf2', [0.22, 0.2, 0.22], [a, b, 0], g)); mk(G_SPH, '#4a3b52', [0.14, 0.16, 0.14], [0.24, 0.32, 0], g); [-0.08, 0.08].forEach(a => mk(G_CYL, '#4a3b52', [0.04, 0.16, 0.04], [a, 0.08, 0], g)); return g; }
+  function critter(kind) {
+    const g = new THREE.Group();
+    if (kind === 'sheep') { g.add(sheep(0, 0)); return g; }
+    if (kind === 'cat') { mk(G_SPH, '#ff9f7a', [0.36, 0.24, 0.2], [0, 0.14, 0], g); mk(G_SPH, '#ff9f7a', [0.2, 0.18, 0.18], [0.18, 0.28, 0], g); return g; }
+    const c = kind === 'pigeon' ? '#9aa3ad' : '#ffffff';
+    mk(G_SPH, c, [0.24, 0.2, 0.34], [0, 0.22, 0], g); mk(G_SPH, c, [0.16, 0.16, 0.16], [0, 0.34, 0.16], g); mk(G_CONE, '#ffd166', [0.06, 0.12, 0.06], [0, 0.33, 0.28], g).rotation.x = Math.PI / 2;
+    const wl = live(grp(g, -0.1, 0.26, 0)), wr = live(grp(g, 0.1, 0.26, 0));
+    mk(G_SPH, kind === 'pigeon' ? '#7d8791' : '#d6dde3', [0.34, 0.05, 0.2], [-0.16, 0, 0], wl); mk(G_SPH, kind === 'pigeon' ? '#7d8791' : '#d6dde3', [0.34, 0.05, 0.2], [0.16, 0, 0], wr);
+    g.userData.wings = [wl, wr]; return g;
+  }
+  // POI markers: star (mini-game), coin (eat), gem (shop), "!" (info/photo)
+  function marker(type) {
+    const g = new THREE.Group();
+    if (type === 'mini') mk(G_STAR, '#ff7aa8', [0.5, 0.5, 0.5], [0, 0, 0], g);
+    else if (type === 'eat') { const c = mk(G_CYL, '#ffd166', [0.38, 0.08, 0.38], [0, 0, 0], g); c.rotation.x = Math.PI / 2; mk(G_CYL, '#ffe79a', [0.26, 0.09, 0.26], [0, 0, 0.005], g, { noShadow: true }).rotation.x = Math.PI / 2; }
+    else if (type === 'shop') mk(geo('oct', () => new THREE.OctahedronGeometry(0.5)), '#7fc8f8', [0.4, 0.5, 0.4], [0, 0, 0], g);
+    else { mk(G_BOX, '#ffb347', [0.12, 0.3, 0.12], [0, 0.08, 0], g); mk(G_SPH, '#ffb347', [0.13, 0.13, 0.13], [0, -0.17, 0], g); }
+    return g;
+  }
+
+  /* ---- scene build from the 2D scene config ---- */
+  const GROUND = { sand: ['#f7e3b5', '#f2dba6'], grass: ['#a8e08b', '#9bd67c'], stone: ['#efe6d6', '#e6dcc9'], city: ['#efe6d6', '#e8ddca'], soil: ['#ecd39c', '#e3c78c'] };
+  const EDGE = { sand: '#f2dba6', grass: '#8fd16a', stone: '#e0d5c0', city: '#e0d5c0', soil: '#e3c78c' };
+  const inPoly = (x, y, pts) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+  const distSeg = (x, y, pts) => { let best = 1e9; for (let i = 1; i < pts.length; i++) { const [ax, ay] = pts[i - 1], [bx, by] = pts[i]; const t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2 || 1))); best = Math.min(best, Math.hypot(x - ax - t * (bx - ax), y - ay - t * (by - ay))); } return best; };
+  let S3 = null; // current 3D scene state
+  function build(sc, stopId) {
+    init();
+    // clear previous
+    world.children.slice().forEach(c => world.remove(c)); OWNED.forEach(g => g.dispose()); OWNED = []; FX.clear();
+    const cols = Math.ceil(sc.w / TILE), rows = Math.ceil(sc.h / TILE);
+    const kind = sc.ground || 'sand', gc = GROUND[kind] || GROUND.sand;
+    const grid = []; // 0 ground, 1 water, 2 bridge, 3 road, 4 path, 5 beach, 6 street
+    for (let r = 0; r < rows; r++) { grid.push([]); for (let c = 0; c < cols; c++) {
+      const x = (c + 0.5) * TILE, y = (r + 0.5) * TILE; let t = 0;
+      if ((sc.water || []).some(w => inPoly(x, y, w.pts))) t = 1;
+      if ((sc.beach || []).some(b => inPoly(x, y, b.pts)) && t !== 1) t = 5;
+      (sc.roads || []).forEach(rd => { if (t !== 1 && distSeg(x, y, rd.pts) < (rd.w || 36) / 2 + 4) t = rd.kind === 'path' ? 4 : rd.kind === 'street' ? 6 : 3; });
+      if ([...(sc.bridges || []), ...(sc.walk || [])].some(b => x >= b.x - 6 && x <= b.x + b.w + 6 && y >= b.y - 6 && y <= b.y + b.h + 6)) t = 2;
+      grid[r].push(t);
+    } }
+    const cx = cols / 2, cz = rows / 2;
+    makeIslandBase(world, cols, rows, EDGE[kind] || '#f2dba6', cx - 0.0, cz - 0.0).position.set(cx, 0, cz);
+    fitSun(cx, cz, Math.max(cols, rows) * 0.7);
+    // floor tiles: instanced checker, sunk translucent water, raised planks
+    const fg = geo('tile', () => { const g = new THREE.BoxGeometry(1, 0.2, 1); g.translate(0, -0.1, 0); return g; });
+    const count = cols * rows;
+    const floor = new THREE.InstancedMesh(fg, new THREE.MeshToonMaterial({ color: '#ffffff', gradientMap: TOON }), count);
+    const water = new THREE.InstancedMesh(fg, new THREE.MeshToonMaterial({ color: '#ffffff', gradientMap: TOON, transparent: true, opacity: 0.85 }), count);
+    floor.receiveShadow = water.receiveShadow = true;
+    const dm = new THREE.Object3D(), col = new THREE.Color(); let nf = 0, nw = 0; const waterTiles = [];
+    const TC = { 3: ['#d9d3c6', '#d2cbbd'], 4: ['#f0d9a4', '#ead198'], 5: ['#f9ecc4', '#f5e5b6'], 6: ['#e4dccb', '#dcd3c0'] };
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const t = grid[r][c], x = c + 0.5, z = r + 0.5;
+      if (t === 1 || t === 2) { dm.position.set(x, -0.05, z); dm.updateMatrix(); water.setMatrixAt(nw, dm.matrix); water.setColorAt(nw++, col.set((c + r) % 2 ? '#8fd3f0' : '#9fdcf5')); waterTiles.push([x, z]); }
+      if (t === 1) continue;
+      dm.position.set(x, t === 2 ? 0.08 : 0, z); dm.updateMatrix(); floor.setMatrixAt(nf, dm.matrix);
+      floor.setColorAt(nf++, col.set(t === 2 ? ((c + r) % 2 ? '#d9a877' : '#cf9d6c') : TC[t] ? TC[t][(c + r) % 2] : gc[(c + r) % 2]));
+    }
+    floor.count = nf; water.count = nw; world.add(floor); if (nw) world.add(water);
+    OWNED.push(floor.material, water.material);
+    // edge flowers + clouds under the island, like v2
+    for (let i = 0; i < 30; i++) { const t = hsh(i, 9, stopId.length) * (2 * (cols + rows)); let x, z; if (t < cols) { x = t; z = rows + 0.05; } else if (t < cols + rows) { x = cols + 0.05; z = t - cols; } else if (t < 2 * cols + rows) { x = t - cols - rows; z = -0.05; } else { x = -0.05; z = t - 2 * cols - rows; } makeFlower(world, x, z, CONF[i % 5]); }
+    const clouds = []; for (let i = 0; i < 8; i++) clouds.push(makeCloud(world, -10 + i * 6, -4.5 + hsh(i, 1) * 1.5, -4 + hsh(i, 2) * (rows + 8), 1.2 + hsh(i, 3) * 1.2));
+    const P = v => [v[0] / TILE, v[1] / TILE];
+    const anims = { spin: [], wheels: [], smoke: [], bob: [], flags: [], clams: [], gondolas: [] };
+    const reg = o => { const u = o.userData; if (u.spin) anims.spin.push(u.spin); if (u.wheel) anims.wheels.push(u.wheel); if (u.smoke) anims.smoke.push(u.smoke); if (u.bob) anims.bob.push(o); if (u.flag) anims.flags.push(u.flag); if (u.clam) anims.clams.push(u.clam); if (u.gondola) anims.gondolas.push(u.gondola); };
+    const place = (o, x, y) => { const [X, Z] = P([x, y]); o.position.set(X, grid[Math.min(rows - 1, Math.floor(y / TILE))]?.[Math.min(cols - 1, Math.floor(x / TILE))] === 2 ? 0.08 : 0, Z); world.add(o); reg(o); return o; };
+    // houses (skipping any that sit on a place of interest, same rule as 2D)
+    (sc.houses || []).filter(([x, y]) => !(sc.pois || []).some(p => { const ax = p.art ? (p.art[1] ?? p.x) : p.x, ay = p.art ? (p.art[2] ?? p.y) : p.y; return Math.abs(ax - x) < 80 && ay - y < 115 && ay - y > -60; }))
+      .forEach(([x, y, o]) => mergeStatic(place(house(o || {}), x, y + 10)));
+    (sc.trees || []).forEach(([x, y, k, s = 1]) => { const t = k === 'pine' ? makePine(null, 0, 0, s * 1.1) : k === 'plane' ? makeTree(null, 0, 0, s * 1.2, '#6cbf55') : makeFruitTree(null, 0, 0, s); mergeStatic(place(t, x, y)); });
+    (sc.vines || []).forEach(v => { for (let yy = v.y; yy < v.y + v.h; yy += 32) { const row = new THREE.Group(); for (let xx = v.x; xx < v.x + v.w; xx += 20) { mk(G_SPH, (xx / 20) % 2 ? '#6fbf5f' : '#86cf6c', [0.55, 0.5, 0.4], [(xx - v.x) / TILE, 0.35, 0], row); if (hsh(xx, yy) > 0.5) mk(G_SPH, '#8a4a8a', [0.12, 0.16, 0.12], [(xx - v.x) / TILE, 0.18, 0.2], row, { noShadow: true }); } mk(G_CYL, '#a8744f', [0.05, 0.5, 0.05], [0, 0.25, 0], row); place(mergeStatic(row), v.x, yy); } });
+    // scatter: flowers, bushes, rocks, lanterns, benches (same placement rules as the 2D scatter)
+    scatter(sc).forEach(([k, x, y]) => {
+      let o = new THREE.Group();
+      if (k === 'flowers') { for (let i = 0; i < 3; i++) makeFlower(o, (i - 1) * 0.18, (i % 2) * 0.12, CONF[(x + i) % 5 | 0]); }
+      else if (k === 'bush') { mk(G_SPH, '#7cc576', [0.6, 0.45, 0.5], [0, 0.22, 0], o); mk(G_SPH, '#86cf6c', [0.4, 0.34, 0.4], [0.22, 0.32, 0.05], o); }
+      else if (k === 'rock') mk(G_SPH, '#cfc6b4', [0.5, 0.3, 0.4], [0, 0.1, 0], o);
+      else if (k === 'lantern') { mk(G_CYL, '#a8744f', [0.06, 1, 0.06], [0, 0.5, 0], o); mk(G_BOX, '#ffe79a', [0.2, 0.26, 0.2], [0, 1.1, 0], o, { glow: true }); mk(G_PYR, '#a8744f', [0.3, 0.16, 0.3], [0, 1.3, 0], o).rotation.y = Math.PI / 4; }
+      else if (k === 'bench') o = B3.bench({});
+      else if (k === 'shells') { mk(G_SPH, '#ffb3c7', [0.2, 0.08, 0.16], [0, 0.04, 0], o); mk(G_SPH, '#fffaf0', [0.14, 0.08, 0.12], [0.2, 0.04, 0.1], o); }
+      else if (k === 'fruitTree') o = makeFruitTree(null, 0, 0, 0.8);
+      else if (k === 'stump') mk(G_CYL, '#a8744f', [0.4, 0.3, 0.4], [0, 0.15, 0], o);
+      else { mk(G_CONE, '#5fae63', [0.1, 0.3, 0.1], [-0.08, 0.15, 0], o); mk(G_CONE, '#5fae63', [0.1, 0.36, 0.1], [0.08, 0.18, 0], o); }
+      mergeStatic(place(o, x, y));
+    });
+    // scene extras (towers, boats, island...) keyed by stop
+    (DECO[stopId] || (() => []))().forEach(([name, x, y, o]) => { const obj = B3[name](o || {}); place(obj, x, y); if (!Object.keys(obj.userData).some(k => ['spin', 'wheel', 'smoke', 'bob', 'flag', 'clam', 'gondola', 'net'].includes(k))) mergeStatic(obj); });
+    // places of interest
+    const pois = {};
+    (sc.pois || []).forEach(p => {
+      const [name, ax, ay, o] = p.art || [];
+      let obj = null;
+      if (name && B3[name]) { obj = B3[name](o || {}); place(obj, ax ?? p.x, (ay ?? p.y - 30) + 12); }
+      const ring = mk(G_TOR, '#ffd166', [(p.r || 42) / TILE * 1.4, (p.r || 42) / TILE * 1.4, 1], [p.x / TILE, 0.04, p.y / TILE], world, { noShadow: true, glow: true, alpha: 0.55 });
+      ring.rotation.x = Math.PI / 2; ring.visible = false;
+      const h = obj ? (obj.userData.h || new THREE.Box3().setFromObject(obj).max.y) : 1;
+      const mkr = ['leave', 'cobba'].includes(p.type) ? null : marker(p.type);
+      if (mkr) { mkr.position.set((ax ?? p.x) / TILE, h + 0.55, ((ay ?? p.y - 30) + 12) / TILE); world.add(mkr); }
+      pois[p.id] = { obj, ring, mkr, baseY: h + 0.55 };
+      if (obj && !Object.keys(obj.userData).some(k => ['spin', 'wheel', 'smoke', 'bob', 'flag', 'clam', 'gondola', 'net'].includes(k))) mergeStatic(obj);
+    });
+    // critters
+    const crit = {}; (sc.critters || []).forEach(c => { const o = critter(c.kind); world.add(o); crit[c.id] = o; });
+    // the four Cobs
+    const people = {}; ['paulo', 'annette', 'huw', 'romy'].forEach(id => { const p = makePerson(LOOKS[id]); p.scale.setScalar(1.15); world.add(p); people[id] = p; });
+    setSky(STOP[stopId].region);
+    S3 = { cols, rows, grid, pois, crit, people, clouds, anims, waterTiles, t: 0 };
+    return S3;
+  }
+  function scatter(sc) {
+    let seed = [...(sc.sub || 'x')].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) >>> 0; return seed / 4294967296; };
+    const blocked = (x, y) => (sc.water || []).some(wt => inPoly(x, y, wt.pts) || wt.pts.some(p => Math.hypot(p[0] - x, p[1] - y) < 30))
+      || (sc.pois || []).some(p => Math.hypot(p.x - x, p.y - y) < 90 || (p.art && Math.hypot((p.art[1] ?? p.x) - x, (p.art[2] ?? p.y) - y) < 80))
+      || (sc.houses || []).some(([hx, hy]) => Math.abs(hx - x) < 70 && y - hy < 50 && hy - y < 90)
+      || (sc.roads || []).some(r => distSeg(x, y, r.pts) < (r.w || 36) / 2 + 16)
+      || [...(sc.bridges || []), ...(sc.walk || [])].some(b => x > b.x - 20 && x < b.x + b.w + 20 && y > b.y - 20 && y < b.y + b.h + 20)
+      || Math.hypot(sc.start.x - x, sc.start.y - y) < 70;
+    const kinds = sc.ground === 'grass' ? ['flowers', 'flowers', 'bush', 'rock', 'weeds', 'stump', 'fruitTree'] : sc.ground === 'sand' ? ['shells', 'shells', 'rock', 'weeds', 'bush'] : sc.ground === 'soil' ? ['weeds', 'rock', 'bush', 'flowers'] : ['lantern', 'bench', 'flowers', 'bush', 'lantern'];
+    const out = [];
+    for (let n = 0, tries = 0; n < 18 && tries < 240; tries++) { const x = 30 + rnd() * (sc.w - 60), y = 40 + rnd() * (sc.h - 70); if (blocked(x, y)) continue; out.push([kinds[Math.floor(rnd() * kinds.length)], x, y]); n++; }
+    return out;
+  }
+  // extra set pieces per stop (replaces the 2D "deco" drawings)
+  const DECO = {
+    larochelle: () => [['tower', 200, 318, { r: 26, h: 66 }], ['tower', 400, 318, { r: 21, h: 58 }], ['boat', 230, 420, { col: '#ff7a8a' }], ['boat', 300, 470, { col: '#7fc8f8' }], ['boat', 370, 430, { col: '#ffd166' }]],
+    capbreton: () => [['boat', 90, 220, { col: '#ffd166' }], ['boat', 140, 400, { col: '#ff7a8a' }]],
+    sjdl: () => [['boat', 190, 700, { col: '#7fc8f8' }], ['boat', 300, 750, { col: '#ff7a8a' }], ['boat', 410, 710, { col: '#ffd166' }]],
+    sanseb: () => [['island', 300, 250, { rx: 40 }]],
+    ezcaray: () => [],
+    royan: () => [['barge', 110, 800], ['lighthouse', 60, 868, { s: 0.55 }], ['sign', 470, 330, { a: 'Brouage', b: 'Talmont' }], ['cabane', 72, 180, { col: '#7cc576' }], ['cabane', 72, 290, { col: '#ffd166' }], ['cabane', 72, 400, { col: '#7fc8f8' }], ['cabane', 72, 510, { col: '#ff7a8a' }], ['telescope', 212, 664], ['car', 432, 126, { rot: -90 }]],
+  };
+
+  /* ---- per-frame update + render ---- */
+  const cam = { tx: 0, tz: 0, yaw: 0, yawGoal: 0, zoom: 1 };
+  function resize() { if (!renderer || !host) return; const w = host.clientWidth, h = host.clientHeight; renderer.setSize(w, h, false); renderer.domElement.style.width = w + 'px'; renderer.domElement.style.height = h + 'px'; }
+  function frame(dt, focus) {
+    if (!S3 || !renderer) return;
+    S3.t += dt; const t = S3.t;
+    const k = 1 - Math.pow(0.001, dt);
+    cam.tx += (focus.x / TILE - cam.tx) * k; cam.tz += (focus.y / TILE - cam.tz) * k; cam.yaw += (cam.yawGoal - cam.yaw) * k * 1.4;
+    const r = 60, pitch = 0.6;
+    camera.position.set(cam.tx + r * Math.cos(pitch) * Math.sin(cam.yaw), r * Math.sin(pitch), cam.tz + r * Math.cos(pitch) * Math.cos(cam.yaw)); camera.lookAt(cam.tx, 0, cam.tz);
+    const a = host.clientWidth / Math.max(1, host.clientHeight), base = (a < 0.8 ? 13.5 : 12) / cam.zoom, s = a < 1 ? base / a * 0.62 : base;
+    camera.left = -s * a / 2; camera.right = s * a / 2; camera.top = s / 2; camera.bottom = -s / 2; camera.updateProjectionMatrix();
+    S3.clouds.forEach(c => { c.position.x += c.userData.speed * dt; if (c.position.x > S3.cols + 14) c.position.x = -14; });
+    S3.anims.spin.forEach(b => { b.rotation.y = t * 1.8; }); S3.anims.wheels.forEach(w => { w.rotation.z = t * 0.5; });
+    S3.anims.smoke.forEach(sm => sm.children.forEach((c, i) => { const f = (t * 0.6 + i / 3) % 1; c.position.y = f * 0.7; c.material.opacity = 0.7 * (1 - f); }));
+    S3.anims.bob.forEach((o, i) => { o.position.y = Math.sin(t * 1.6 + i) * 0.05; o.rotation.z = Math.sin(t * 1.2 + i) * 0.04; });
+    S3.anims.flags.forEach((f, i) => { f.rotation.y = Math.sin(t * 4 + i) * 0.4; }); S3.anims.clams.forEach(c => { c.position.y = 0.45 + Math.abs(Math.sin(t * 2)) * 0.06; });
+    S3.anims.gondolas.forEach(g => { g.position.x = Math.sin(t * 0.5) * 1.2; });
+    Object.values(S3.pois).forEach((p, i) => { if (p.mkr && p.mkr.visible) { p.mkr.position.y = p.baseY + Math.sin(t * 2.4 + i) * 0.12; p.mkr.rotation.y = t * 1.5; } if (p.ring.visible) { const sc = 1 + Math.sin(t * 2 + i) * 0.08; p.ring.scale.set(p.ring.userData.s0 * sc, p.ring.userData.s0 * sc, 1); } });
+    if (!REDUCED && S3.waterTiles.length && Math.random() < dt * 5) { const w = S3.waterTiles[Math.floor(Math.random() * S3.waterTiles.length)]; sparkle(w[0] + Math.random() - 0.5, 0.02, w[1] + Math.random() - 0.5, 2); }
+    FX.update(dt);
+    renderer.render(scene, camera);
+  }
+  function pick(clientX, clientY) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2((clientX - rect.left) / rect.width * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+    const ray = new THREE.Raycaster(); ray.setFromCamera(ndc, camera);
+    const hit = new THREE.Vector3(); ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit);
+    return { x: hit.x * TILE, y: hit.z * TILE };
+  }
+  function attach(el) {
+    init(); host = el;
+    if (renderer.domElement.parentNode !== el) el.prepend(renderer.domElement);
+    resize();
+  }
+  return { attach, build, frame, pick, resize, sparkle, confetti, cam, TILE, get S3() { return S3; }, rotate(d) { cam.yawGoal += d * Math.PI / 2; }, walkable(x, y) {
+    if (!S3) return true; const c = Math.floor(x / TILE), r = Math.floor(y / TILE);
+    if (r < 0 || c < 0 || r >= S3.rows || c >= S3.cols) return false; return S3.grid[r][c] !== 1; } };
+})();
+
+/* ---------- Royan in the tile world: same places, described as data instead of a hand-drawn SVG ---------- */
+if (D3) {
+  const R = STOP.royan.scene;
+  Object.assign(R, { custom: null, ground: 'sand', w: 600, h: 920, water: [{ pts: R_WATER }], bridges: [R_BOARDWALK, ...R_PIERS, R_CARRELET], roads: [{ pts: [[530, -10], [530, 930]], w: 60 }], ambient: null, lift: null,
+    trees: [[586, 60, 'pine'], [584, 260, 'pine'], [590, 420, 'pine'], [585, 610, 'pine'], [588, 840, 'pine'], [470, 880, 'pine'], [430, 860, 'pine']] });
+  const art = { green: ['board', 178, 182, { col: '#7cc576' }], blue: ['board', 178, 402, { col: '#7fc8f8' }], red: ['board', 178, 512, { col: '#ff7a8a' }], cabane: ['terrace', 178, 262],
+    board: ['board', 262, 330, { col: '#4a5a52' }], scope: ['telescope', 212, 652], carrelet: ['carrelet', 262, 812], talmont: ['church', 410, 760, { rock: true }], brouage: ['sign', 470, 320, { a: 'Brouage', b: 'Talmont' }], cobba: ['cobbaRock', 312, 566], car: ['car', 432, 126, { rot: -90 }] };
+  R.pois.forEach(p => { if (art[p.id]) p.art = art[p.id]; });
+  const carrelet = R.pois.find(p => p.id === 'carrelet');
+  carrelet.run = p => {
+    EX.busy = true; showPrompt(null);
+    const got = pick(['a grey mullet', 'a bucket of shrimp', 'a small sole', 'one (1) sock', 'a very surprised crab', 'seaweed, mostly']);
+    Snd.splash();
+    const net = D3.S3 && D3.S3.pois.carrelet && D3.S3.pois.carrelet.obj && D3.S3.pois.carrelet.obj.userData.net;
+    const done = () => { EX.busy = false; EX.near = null; const first = !isDone(p.id); markDone(p.id); award(first ? 1 : 0, null, `Caught ${got}${first ? ' · +1 star' : ''}`);
+      say(got === 'one (1) sock' ? 'A sock. Somewhere, someone is walking lopsided.' : 'Carrelets are old Charente fishing huts on stilts. Few round here survived the 1999 storm, so go gently.', 3400); drawMarks(); };
+    if (net) gsap.timeline({ onComplete: done }).to(net.position, { y: -0.3, duration: 0.8, ease: 'power2.in' }).to({}, { duration: 1.2 }).to(net.position, { y: 0.8, duration: 0.9, ease: 'back.out(1.6)' });
+    else setTimeout(done, 1500);
+  };
+}
+
+/* ---------- explore overrides: same rules, 3D rendering ---------- */
+if (D3) {
+  const TILE3 = D3.TILE;
+  var enterExplore = function () {
+    STOPID = S.order[S.idx]; const d = STOP[STOPID]; SCN = d.scene;
+    (SCN.pois || []).forEach(p => { if (!p.art && p.type !== 'custom') p.art = defaultArt(p); });
+    mapAction(''); S.phase = 'explore'; save(); show('explore'); Snd.playRegion(MUSIC[d.region]);
+    $('#exBar').innerHTML = exPlate(d.name, SCN.sub, `<small style="color:var(--ink-2)">Day ${S.day} · ${dayLabel()}</small>`);
+    SCN.w = SCN.w || 600; SCN.h = SCN.h || 900;
+    $('#exWrap').style.display = 'none';
+    D3.attach($('#exView'));
+    const s3 = D3.build(SCN, STOPID);
+    const start = S.exPos[STOPID] || { x: SCN.start.x, y: Math.min(SCN.start.y, SCN.h - 230) };
+    EX = { lead: { ...start }, trail: [], tokens: [], near: null, busy: false, cam: { x: 0, y: 0, s: 1 }, t: 0, w: SCN.w, h: SCN.h, last: performance.now() };
+    for (let i = 0; i < 60; i++) EX.trail.push({ x: start.x, y: start.y + i * 2.4 });
+    ['annette', 'paulo', 'huw', 'romy'].forEach(id => EX.tokens.push({ id, obj: s3.people[id], pos: { x: start.x, y: start.y }, face: 0 }));
+    D3.cam.tx = start.x / TILE3; D3.cam.tz = start.y / TILE3;
+    drawMarks(); poiIdle();
+    (SCN.critters || []).forEach(c => critterWander(c));
+    gsap.ticker.add(exTick);
+    $('#exView').onpointerdown = exTap;
+    $('#exPrompt').innerHTML = '';
+    if (!S.done[dkey('_hello')]) { markDone('_hello'); say(d.hello || 'Tap to walk. Tap a place to visit it.', 5200); if (S.idx === 0) setTimeout(() => STOPID === 'paris' && !$('#explore').hidden && say('Tip: every floating star, coin or “!” is something to do. Rotate the island with the arrows.', 4200), 5600); }
+    else say(pick(SCN.back || ['Where to next?', 'Plenty left to see.', 'The car’s waiting when you are.']), 2600);
+  };
+  var exWalkable = function (x, y) {
+    if (x < 4 || y < 4 || x > EX.w - 4 || y > EX.h - 4) return false;
+    return D3.walkable(x, y);
+  };
+  var exTick = function () {
+    if (!EX) return;
+    const now = performance.now(), dt = Math.min(0.05, (now - EX.last) / 1000); EX.last = now;
+    EX.t += 1;
+    const L = EX.lead, last = EX.trail[0];
+    const moving = Math.hypot(L.x - last.x, L.y - last.y) > 0.5;
+    if (moving) { EX.trail.unshift({ x: L.x, y: L.y }); if (EX.trail.length > 140) EX.trail.pop(); }
+    EX.idle = moving ? 0 : (EX.idle || 0) + 1;
+    const HUDDLE = [[0, 0], [-26, 14], [26, 14], [0, 28]];
+    EX.tokens.forEach((tk, i) => {
+      const tr = EX.trail[Math.min(EX.trail.length - 1, i * 14)];
+      const tgt = i === 0 ? L : EX.idle > 18 ? { x: L.x + HUDDLE[i][0], y: L.y + HUDDLE[i][1] } : tr;
+      const k = i === 0 ? 1 : EX.idle > 18 ? 0.12 : 0.35;
+      const was = { ...tk.pos }; tk.pos.x += (tgt.x - tk.pos.x) * k; tk.pos.y += (tgt.y - tk.pos.y) * k;
+      const dx = tk.pos.x - was.x, dy = tk.pos.y - was.y, step = Math.hypot(dx, dy) > 0.25;
+      if (step) tk.face = Math.atan2(dx, dy); else if (EX.idle > 14) tk.face += (Math.atan2(Math.sin(D3.cam.yaw), Math.cos(D3.cam.yaw)) - tk.face) * 0.08;
+      const o = tk.obj, u = o.userData; o.position.x = tk.pos.x / TILE3; o.position.z = tk.pos.y / TILE3;
+      const cur = o.rotation.y; let diff = tk.face - cur; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); o.rotation.y = cur + diff * 0.25;
+      o.position.y = D3.S3 && D3.S3.grid[Math.floor(tk.pos.y / TILE3)]?.[Math.floor(tk.pos.x / TILE3)] === 2 ? 0.08 : 0;
+      if (step) u.walk += dt * 12; const sw = step ? Math.sin(u.walk) : 0;
+      u.legL.rotation.x = sw * 0.6; u.legR.rotation.x = -sw * 0.6; u.armL.rotation.x = -sw * 0.5; u.armR.rotation.x = sw * 0.5;
+      u.body.position.y = step ? Math.abs(Math.sin(u.walk)) * 0.05 : Math.sin(EX.t * 0.05 + i) * 0.01;
+    });
+    D3.frame(dt, L);
+    if (EX.t % 3) return;
+    let near = null, nd = 1e9;
+    allPois().forEach(p => { const pp = poiPos(p); if (!pp) return; const dd = Math.hypot(pp.x - L.x, pp.y - L.y); if (dd < (p.r || 42) && dd < nd) { near = p; nd = dd; } });
+    if (near !== EX.near && !EX.busy) { EX.near = near; showPrompt(near); poiFocus(near); }
+  };
+  var exTap = function (e) {
+    if (!EX || EX.busy || e.target.closest('#exPrompt,#exRot,#exBar')) return;
+    const { x, y } = D3.pick(e.clientX, e.clientY);
+    const hit = allPois().find(p => {
+      const pp = poiPos(p); if (!pp) return false;
+      if (Math.hypot(pp.x - x, pp.y - y) < 40) return true;
+      if (p.art) { const ax = p.art[1] ?? p.x, ay = (p.art[2] ?? p.y - 30) + 12; return Math.hypot(ax - x, ay - y) < 52; }
+      return false;
+    });
+    if (hit) { const pp = poiPos(hit); tapRing(pp.x, pp.y, C.gold); walkTo(pp.x + (EX.lead.x > pp.x ? 16 : -16), pp.y + 10, () => interact(hit)); return; }
+    tapRing(x, y, exWalkable(x, y) ? '#ffffff' : C.sea); walkTo(x, y);
+  };
+  var tapRing = function (x, y) { D3.sparkle(x / TILE3, 0.08, y / TILE3, 6); };
+  var drawMarks = function () {
+    const s3 = D3.S3; if (!s3 || !SCN) return;
+    (SCN.pois || []).forEach(p => { const q = s3.pois[p.id]; if (!q) return; const done = isDone(p.id); if (q.mkr) q.mkr.visible = !done; if (q.ring.visible && done) q.ring.visible = false; });
+  };
+  var poiIdle = function () {
+    const s3 = D3.S3; if (!s3) return;
+    (SCN.pois || []).forEach(p => { const q = s3.pois[p.id]; if (!q || p.type === 'leave' || p.type === 'cobba') return; q.ring.userData.s0 = q.ring.scale.x; q.ring.visible = !isDone(p.id) && !REDUCED; });
+  };
+  var poiFocus = function (p) {
+    const s3 = D3.S3; if (!s3 || !p || p.type === 'critter') return; const q = s3.pois[p.id]; if (!q || !q.obj) return;
+    gsap.fromTo(q.obj.scale, { x: 1.12, y: 0.88, z: 1.12 }, { x: 1, y: 1, z: 1, duration: 0.6, ease: 'elastic.out(1,.4)' });
+  };
+  var poiDoneFx = function (id) {
+    const s3 = D3.S3; if (!s3) return; const q = s3.pois[id]; if (!q) return;
+    const m = q.mkr || q.obj; const pos = m ? m.position : { x: 0, y: 1, z: 0 };
+    D3.confetti(pos.x, (q.baseY || 1.2), pos.z, 50); D3.sparkle(pos.x, q.baseY || 1.2, pos.z, 20);
+    if (q.mkr) gsap.to(q.mkr.scale, { x: 0, y: 0, z: 0, duration: 0.4, ease: 'back.in(2)', onComplete: () => { q.mkr.visible = false; q.mkr.scale.setScalar(1); } });
+    q.ring.visible = false;
+  };
+  var poiPos = function (p) {
+    if (p.type === 'critter') { const o = D3.S3 && D3.S3.crit[p.id]; return o && o.visible ? { x: o.position.x * TILE3, y: o.position.z * TILE3 } : null; }
+    return p;
+  };
+  var critterWander = function (c) {
+    const o = D3.S3 && D3.S3.crit[c.id]; if (!o) return;
+    if (isDone(c.id)) { o.visible = false; return; }
+    const [x0, y0, x1, y1] = c.area;
+    o.position.set(rand(x0, x1) / TILE3, 0, rand(y0, y1) / TILE3);
+    const hop = () => { if (!EX || isDone(c.id) || $('#explore').hidden) return; const tx = rand(x0, x1) / TILE3, tz = rand(y0, y1) / TILE3; o.rotation.y = Math.atan2(tx - o.position.x, tz - o.position.z);
+      gsap.to(o.position, { x: tx, z: tz, duration: rand(1.2, 2.4), ease: 'power1.inOut', onComplete: () => gsap.delayedCall(rand(0.6, 2), hop) }); };
+    gsap.delayedCall(rand(0.3, 1.2), hop);
+    (o.userData.wings || []).forEach((w, i) => gsap.to(w.rotation, { z: i ? -0.5 : 0.5, duration: 0.25, yoyo: true, repeat: -1 }));
+  };
+  var shoo = function (c) {
+    markDone(c.id); const o = D3.S3 && D3.S3.crit[c.id]; Snd.thunk('A3'); buzz([20, 30, 20]);
+    if (o) { gsap.killTweensOf(o.position); gsap.to(o.position, { x: o.position.x - 6, y: 6, z: o.position.z - 5, duration: 1.6, ease: 'power2.in', onComplete: () => { o.visible = false; } }); }
+    award(1, null, c.done || 'Shooed · +1 star'); if (c.line) say(c.line, 2800); EX.near = null; showPrompt(null);
+  };
+  var leaveExplore = function () {
+    gsap.ticker.remove(exTick); $('#exView').onpointerdown = null;
+    if (EX) { S.exPos[STOPID] = { x: EX.lead.x, y: EX.lead.y }; save(); }
+    if (D3.S3) Object.values(D3.S3.crit).forEach(o => gsap.killTweensOf(o.position));
+  };
+  addEventListener('resize', () => D3.resize());
+  // rotate buttons, like the diorama in Annette's Big Day
+  const rot = document.createElement('div'); rot.id = 'exRot';
+  rot.innerHTML = '<button class="icon-btn" data-d="-1" aria-label="Rotate left">⟲</button><button class="icon-btn" data-d="1" aria-label="Rotate right">⟳</button>';
+  rot.addEventListener('pointerdown', e => { const b = e.target.closest('button'); if (!b) return; e.stopPropagation(); D3.rotate(+b.dataset.d); Snd.blip(); });
+  document.addEventListener('DOMContentLoaded', () => {});
+  setTimeout(() => $('#exView') && $('#exView').appendChild(rot), 0);
+  addEventListener('keydown', e => { if ($('#explore').hidden) return; if (e.key === 'q' || e.key === 'Q') D3.rotate(-1); if (e.key === 'e' || e.key === 'E') D3.rotate(1); });
 }
 /* ================= FLOW: arrive, explore, leave, drive, repeat ================= */
 const MUSIC = { france: 'france', basque: 'basque', rioja: 'basque', germany: 'germany' };
