@@ -3609,6 +3609,7 @@ const D3 = (() => {
     FX.init(scene);
   }
   const SKIES = { france: ['#bfe6ff', '#ffe3c4'], basque: ['#b8e4ff', '#e6f7e0'], rioja: ['#ffd9a8', '#ffeccc'], germany: ['#c9d8ff', '#f3e6ff'] };
+  function skyColors(top, bot) { const c = skyCanvas.getContext('2d'), g = c.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, top); g.addColorStop(1, bot); c.fillStyle = g; c.fillRect(0, 0, 4, 256); skyTex.needsUpdate = true; }
   function setSky(region) {
     const [top, bot] = SKIES[region] || SKIES.france, c = skyCanvas.getContext('2d'), g = c.createLinearGradient(0, 0, 0, 256);
     g.addColorStop(0, top); g.addColorStop(1, bot); c.fillStyle = g; c.fillRect(0, 0, 4, 256); skyTex.needsUpdate = true;
@@ -3905,15 +3906,15 @@ const D3 = (() => {
   };
 
   /* ---- per-frame update + render ---- */
-  const cam = { tx: 0, tz: 0, yaw: 0, yawGoal: 0, zoom: 1 };
+  const cam = { tx: 0, tz: 0, yaw: 0, yawGoal: 0, zoom: 1, pitch: 0.6, focus: null, follow: null, ty: 0 };
   function resize() { if (!renderer || !host) return; const w = host.clientWidth, h = host.clientHeight; renderer.setSize(w, h, false); renderer.domElement.style.width = w + 'px'; renderer.domElement.style.height = h + 'px'; }
   function frame(dt, focus) {
     if (!S3 || !renderer) return;
     S3.t += dt; const t = S3.t;
     const k = 1 - Math.pow(0.001, dt);
-    cam.tx += (focus.x / TILE - cam.tx) * k; cam.tz += (focus.y / TILE - cam.tz) * k; cam.yaw += (cam.yawGoal - cam.yaw) * k * 1.4;
-    const r = 60, pitch = 0.6;
-    camera.position.set(cam.tx + r * Math.cos(pitch) * Math.sin(cam.yaw), r * Math.sin(pitch), cam.tz + r * Math.cos(pitch) * Math.cos(cam.yaw)); camera.lookAt(cam.tx, 0, cam.tz);
+    const fo = cam.focus || focus, kf = cam.follow || k; cam.tx += (fo.x / TILE - cam.tx) * kf; cam.tz += (fo.y / TILE - cam.tz) * kf; cam.yaw += (cam.yawGoal - cam.yaw) * k * 1.4;
+    const r = 60, pitch = cam.pitch;
+    camera.position.set(cam.tx + r * Math.cos(pitch) * Math.sin(cam.yaw), cam.ty + r * Math.sin(pitch), cam.tz + r * Math.cos(pitch) * Math.cos(cam.yaw)); camera.lookAt(cam.tx, cam.ty, cam.tz);
     const a = host.clientWidth / Math.max(1, host.clientHeight), base = (a < 0.8 ? 13.5 : 12) / cam.zoom, s = a < 1 ? base / a * 0.62 : base;
     camera.left = -s * a / 2; camera.right = s * a / 2; camera.top = s / 2; camera.bottom = -s / 2; camera.updateProjectionMatrix();
     S3.clouds.forEach(c => { c.position.x += c.userData.speed * dt; if (c.position.x > S3.cols + 14) c.position.x = -14; });
@@ -3940,7 +3941,7 @@ const D3 = (() => {
     if (renderer.domElement.parentNode !== el) el.prepend(renderer.domElement);
     resize();
   }
-  const _ = { B3, mk, grp, M, geo, G_BOX, G_SPH, G_CYL, G_CONE, G_PYR, G_TOR, G_PRISM, G_STAR, makePerson, makeTree, makePine, makeFlower, mergeStatic, label, house, live, hsh, CONF, INK, get world() { return world; }, get S3() { return S3; } };
+  const _ = { skyColors, SKIES, get sun() { return sun; }, get hemi() { return hemi; }, B3, mk, grp, M, geo, G_BOX, G_SPH, G_CYL, G_CONE, G_PYR, G_TOR, G_PRISM, G_STAR, makePerson, makeTree, makePine, makeFlower, mergeStatic, label, house, live, hsh, CONF, INK, get world() { return world; }, get S3() { return S3; } };
   const HOOKS = { pre: [], build: [], frame: [] };
   return { _, HOOKS, attach, build, frame, pick, resize, sparkle, confetti, cam, TILE, get S3() { return S3; }, rotate(d) { cam.yawGoal += d * Math.PI / 2; }, walkable(x, y) {
     if (!S3) return true; const c = Math.floor(x / TILE), r = Math.floor(y / TILE);
@@ -4187,7 +4188,8 @@ if (typeof D3 !== 'undefined' && D3) (() => {
   const O = Object.assign({}, B3);
   B3.eiffel = () => {
     const g = new THREE.Group(), c = '#a8744f', c2 = '#8a5a3a';
-    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => { for (let i = 0; i < 5; i++) { const t = i / 5, x = a * (0.62 - t * 0.42), z = b * (0.62 - t * 0.42); const l = mk(G_BOX, i % 2 ? c : c2, [0.14, 0.34, 0.14], [x, 0.17 + i * 0.3, z], g); l.rotation.z = -a * 0.3; l.rotation.x = b * 0.3; } });
+    const beam = (p0, p1, th, col) => { const v = new THREE.Vector3(p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]), L = v.length(), m = mk(G_BOX, col, [th, L, th], [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, (p0[2] + p1[2]) / 2], g); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.normalize()); return m; };
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => { const f = [a * 0.72, 0, b * 0.72], t = [a * 0.36, 1.5, b * 0.36]; beam(f, t, 0.2, c); beam([f[0] - a * 0.08, 0, f[2]], [t[0], 1.5, t[2] - b * 0.06], 0.07, c2); for (let k = 1; k < 4; k++) { const y = k * 0.36, s = 0.72 - y * 0.24; beam([a * s, y, -b * s * 0.2 + b * s], [a * s, y + 0.34, b * s * 0.2], 0.04, c2); } });
     [[0, 0.62], [0, -0.62], [0.62, 0], [-0.62, 0]].forEach(([x, z]) => { const h = mk(G_HALF, c, [1.1, 0.9, 1], [x * 0.9, 0.05, z * 0.9], g); h.rotation.y = x ? Math.PI / 2 : 0; });
     for (let lvl = 0; lvl < 2; lvl++) { const y = [1.5, 2.6][lvl], w = [1.05, 0.6][lvl]; mk(G_BOX, c2, [w, 0.1, w], [0, y, 0], g); for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; mk(G_BOX, '#ffe79a', [0.04, 0.04, 0.04], [Math.cos(a) * w * 0.5, y + 0.08, Math.sin(a) * w * 0.5], g, { glow: true }); } }
     for (let i = 0; i < 6; i++) { const t = i / 6; mk(G_BOX, i % 2 ? c : c2, [0.34 - t * 0.2, 0.2, 0.34 - t * 0.2], [0, 1.6 + i * 0.18, 0], g); }
@@ -4380,6 +4382,148 @@ if (typeof D3 !== 'undefined' && D3) (() => {
       else { u.legL.rotation.x = u.legR.rotation.x = 0; u.body.position.y = 0; }
     });
   });
+})();
+/* ================= 10-SECOND POI TOURS ================= */
+// First time you reach a place, a short cinematic plays before its card opens: letterbox bars,
+// the camera swoops and orbits the landmark, golden-hour light, gulls, and an effect that fits
+// the place (camera flashes, fireworks, steam, sparkles, floating facts). Tap to skip.
+// The card also gets a small "Replay tour" button.
+if (typeof D3 !== 'undefined' && D3) (() => {
+  const TOUR_SECS = 10, TILE = D3.TILE, TAU = Math.PI * 2;
+  const { mk, grp, G_SPH, G_CONE } = D3._;
+  let T = null; // the running tour
+  const SUNSET = { france: ['#ffb38a', '#ffe0b0'], basque: ['#ffa98f', '#ffe3c0'], rioja: ['#ff9f7a', '#ffd9a0'], germany: ['#c9a0d8', '#ffd0b0'] };
+  const TYPE_FX = { photo: 'flash', info: 'facts', mini: 'fireworks', eat: 'steam', shop: 'coins' };
+  const TOURABLE = p => !window.__cobsNoTour && p && ['photo', 'info', 'mini', 'eat', 'shop'].includes(p.type) && p.art;
+
+  // DOM: letterbox bars, caption, progress, skip hint, photo flash
+  const layer = document.createElement('div'); layer.id = 'tourLayer'; layer.hidden = true;
+  layer.innerHTML = `<div class="tBar tTop"><span class="tEyebrow"></span></div><div class="tFlash"></div><div class="tFacts"></div>
+    <div class="tBar tBot"><div class="tTitle"></div><div class="tSub"></div><div class="tProg"><i></i></div><div class="tSkip">Tap to skip</div></div>`;
+  const css = document.createElement('style');
+  css.textContent = `#tourLayer{position:absolute;inset:0;z-index:70;pointer-events:auto;cursor:pointer}
+  #tourLayer .tBar{position:absolute;left:0;right:0;background:#2b2230;color:#fff8e7;transform:translateY(0)}
+  #tourLayer .tTop{top:0;height:13%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px}
+  #tourLayer .tBot{bottom:0;min-height:20%;padding:14px 20px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
+  #tourLayer .tEyebrow{font:600 12px Fredoka,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#ffd166}
+  #tourLayer .tTitle{font:700 clamp(24px,7vw,34px)/1.05 Fredoka,sans-serif;text-wrap:balance}
+  #tourLayer .tSub{font:500 20px/1.15 Caveat,cursive;color:#f4d9c6;max-width:460px}
+  #tourLayer .tProg{width:min(320px,70%);height:5px;border-radius:999px;background:rgba(255,248,231,.2);overflow:hidden;margin-top:6px}
+  #tourLayer .tProg i{display:block;height:100%;width:0;background:#ffd166;border-radius:999px}
+  #tourLayer .tSkip{font:600 11px Nunito,sans-serif;color:rgba(255,248,231,.55);letter-spacing:.08em;text-transform:uppercase}
+  #tourLayer .tFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+  #tourLayer .tFacts{position:absolute;left:0;right:0;top:16%;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 18px}
+  #tourLayer .tFact{background:rgba(255,248,236,.95);color:#5a4637;border-radius:999px;padding:7px 14px;font:700 14px/1.25 Nunito,sans-serif;box-shadow:0 4px 0 #e6c99b;max-width:92%;text-align:center}
+  .tourReplay{display:inline-flex;align-items:center;gap:6px;border:none;background:#2b2230;color:#fff8e7;border-radius:999px;padding:5px 12px;font:600 12px Fredoka,sans-serif;letter-spacing:.06em;cursor:pointer;margin:0 0 6px}
+  body.touring #exBar,body.touring #exPrompt,body.touring #exRot,body.touring #cobba,body.touring #mute{opacity:0;pointer-events:none;transition:opacity .3s}`;
+  document.head.appendChild(css);
+  setTimeout(() => { const v = $('#exView'); if (v) v.appendChild(layer); }, 0);
+
+  function facts(p) {
+    const sent = (p.text || '').split(/(?<=[.!?])\s+/).filter(s => s.length > 12 && s.length < 140);
+    return sent.slice(0, 3);
+  }
+  // gulls that glide across the shot
+  function gulls(n) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const g = grp(D3._.world), wl = grp(g, -0.08, 0, 0), wr = grp(g, 0.08, 0, 0);
+      mk(G_SPH, '#ffffff', [0.18, 0.14, 0.3], [0, 0, 0], g, { noShadow: true });
+      mk(G_SPH, '#e4e9ed', [0.4, 0.04, 0.16], [-0.2, 0, 0], wl, { noShadow: true }); mk(G_SPH, '#e4e9ed', [0.4, 0.04, 0.16], [0.2, 0, 0], wr, { noShadow: true });
+      mk(G_CONE, '#ffd166', [0.05, 0.1, 0.05], [0, 0, 0.18], g, { noShadow: true }).rotation.x = Math.PI / 2;
+      out.push({ g, wl, wr, ph: i * 1.7 });
+    }
+    return out;
+  }
+  const lerp = (a, b, t) => a + (b - a) * t;
+  function mixHex(a, b, t) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(lerp(v, B[i], t)).toString(16).padStart(2, '0')).join(''); }
+
+  function playTour(p, done) {
+    const s3 = D3.S3, q = s3 && s3.pois[p.id];
+    if (!q || !q.obj) { done && done(); return; }
+    const region = STOP[STOPID].region, [top0, bot0] = D3._.SKIES[region] || D3._.SKIES.france, [top1, bot1] = SUNSET[region] || SUNSET.france;
+    const ax = q.obj.position.x, az = q.obj.position.z, h = q.baseY || 2;
+    const cam = D3.cam, keep = { yaw: cam.yawGoal, zoom: cam.zoom, pitch: cam.pitch };
+    const fx = TYPE_FX[p.type] || 'sparkle', list = facts(p);
+    layer.querySelector('.tEyebrow').textContent = `${STOP[STOPID].short || STOP[STOPID].name} · ${p.eyebrow || { photo: 'Photo spot', info: 'Local sight', mini: 'Mini-game', eat: 'Eat', shop: 'Shop' }[p.type]}`;
+    layer.querySelector('.tTitle').textContent = p.title || p.cfg?.title || p.verb;
+    layer.querySelector('.tSub').textContent = p.cap ? `“${p.cap}”` : p.cfg?.titleName ? `Earn the title: ${p.cfg.titleName}` : (p.annette || '');
+    layer.querySelector('.tFacts').innerHTML = '';
+    const prog = layer.querySelector('.tProg i'); prog.style.width = '0';
+    layer.hidden = false; document.body.classList.add('touring');
+    EX.busy = true; showPrompt(null); hush && hush();
+    gsap.fromTo(layer.querySelector('.tTop'), { yPercent: -100 }, { yPercent: 0, duration: 0.6, ease: 'power3.out' });
+    gsap.fromTo(layer.querySelector('.tBot'), { yPercent: 100 }, { yPercent: 0, duration: 0.6, ease: 'power3.out' });
+    gsap.from([layer.querySelector('.tTitle'), layer.querySelector('.tSub')], { y: 20, opacity: 0, stagger: 0.15, duration: 0.7, delay: 0.4, ease: 'back.out(1.8)' });
+    Snd.fanfare(); buzz(20);
+    const birds = gulls(3);
+    const st = { t: 0 };
+    cam.focus = { x: ax * TILE, y: az * TILE }; cam.follow = 0.06;
+    T = { p, birds, tl: null, skip: null };
+    const tl = gsap.timeline({ onComplete: () => finish(true) });
+    T.tl = tl;
+    // camera: push in, low sweeping orbit, lift back out
+    tl.to(cam, { zoom: 2.2 - Math.min(0.7, h * 0.12), pitch: 0.34, ty: h * 0.45, duration: 3.2, ease: 'power2.inOut' }, 0)
+      .fromTo(cam, { yawGoal: keep.yaw - Math.PI * 0.38 }, { yawGoal: keep.yaw + Math.PI * 0.38, duration: TOUR_SECS, ease: 'sine.inOut', immediateRender: true }, 0)
+      .to(cam, { zoom: 1.7, pitch: 0.5, duration: 3, ease: 'sine.inOut' }, 6.4)
+      .to(st, { t: 1, duration: TOUR_SECS, ease: 'none', onUpdate: () => {
+        prog.style.width = (st.t * 100) + '%';
+        const golden = Math.sin(st.t * Math.PI); D3._.skyColors(mixHex(top0, top1, golden), mixHex(bot0, bot1, golden));
+        D3._.sun.color.set(mixHex('#fff1dc', '#ffc890', golden));
+        birds.forEach((b, i) => { const k = (st.t * 1.2 + i * 0.3) % 1; b.g.position.set(ax - 6 + k * 12, h + 1.4 + Math.sin(k * TAU + i) * 0.5, az - 1.5 + i * 1.2); b.g.rotation.y = Math.PI / 2; const f = Math.sin((st.t * 60) + b.ph) * 0.5; b.wl.rotation.z = f; b.wr.rotation.z = -f; });
+      } }, 0);
+    // the landmark wakes up
+    tl.fromTo(q.obj.scale, { x: 0.86, y: 0.86, z: 0.86 }, { x: 1, y: 1, z: 1, duration: 1.2, ease: 'elastic.out(1,.45)' }, 0.5)
+      .call(() => D3.sparkle(ax, h * 0.7, az, 30), null, 0.7);
+    // place-specific moments
+    if (fx === 'flash') [2.5, 4.2, 6.1, 7.6].forEach((tt, i) => tl.call(() => { Snd.crack(); buzz(12); gsap.fromTo(layer.querySelector('.tFlash'), { opacity: 0.85 }, { opacity: 0, duration: 0.45 }); D3.sparkle(ax + (i % 2 ? 1 : -1), 1.3, az + 1, 10); }, null, tt));
+    if (fx === 'fireworks') [2.2, 3.4, 4.6, 6.2, 7.4, 8.4].forEach((tt, i) => tl.call(() => { D3.confetti(ax + Math.sin(i * 2) * 1.6, h + 1.6 + (i % 2), az + Math.cos(i * 2) * 0.8, 45); Snd.pop(['C6', 'E6', 'G6'][i % 3]); }, null, tt));
+    if (fx === 'steam' || fx === 'coins' || fx === 'sparkle') for (let tt = 1.6; tt < 9; tt += 0.55) tl.call(() => D3.sparkle(ax + (Math.random() - 0.5) * 2.4, fx === 'steam' ? 0.8 + Math.random() : h * 0.5 + Math.random() * h * 0.6, az + 0.6 + Math.random() * 0.8, fx === 'coins' ? 8 : 5), null, tt);
+    if (fx === 'coins') [3, 6].forEach(tt => tl.call(() => { D3.confetti(ax, h, az, 30); Snd.pop('E6'); }, null, tt));
+    if (fx === 'steam') tl.call(() => Snd.bell(), null, 2.4);
+    if (list.length || fx === 'facts') (list.length ? list : [p.text || '']).slice(0, 3).forEach((txt, i) => tl.call(() => {
+      const f = document.createElement('div'); f.className = 'tFact'; f.textContent = txt; layer.querySelector('.tFacts').appendChild(f);
+      gsap.fromTo(f, { y: -18, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: 0.55, ease: 'back.out(2)' }); Snd.blip();
+    }, null, 1.6 + i * 2.6));
+    tl.call(() => { D3.confetti(ax, h + 0.6, az, 36); Snd.fanfare(); }, null, 9.1);
+    function finish(natural) {
+      if (!T) return;
+      const cur = T; T = null;
+      cur.tl.kill();
+      cur.birds.forEach(b => b.g.parent && b.g.parent.remove(b.g));
+      D3._.skyColors(top0, bot0); D3._.sun.color.set('#fff1dc');
+      gsap.to(cam, { zoom: keep.zoom, pitch: keep.pitch, ty: 0, yawGoal: Math.round(cam.yawGoal / (Math.PI / 2)) * (Math.PI / 2), duration: 0.8, ease: 'power2.inOut', onComplete: () => { cam.focus = null; cam.follow = null; } });
+      gsap.to(layer.querySelector('.tTop'), { yPercent: -100, duration: 0.45, ease: 'power2.in' });
+      gsap.to(layer.querySelector('.tBot'), { yPercent: 100, duration: 0.45, ease: 'power2.in', onComplete: () => { layer.hidden = true; document.body.classList.remove('touring'); } });
+      q.obj.scale.set(1, 1, 1);
+      if (!natural) Snd.blip();
+      setTimeout(() => { if (EX) EX.busy = false; done && done(); }, 480);
+    }
+    T.skip = () => finish(false);
+  }
+  layer.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); if (T && T.skip) T.skip(); });
+
+  // first visit to a place plays its tour, then opens the card as normal
+  const baseInteract = interact;
+  interact = function (p) {
+    if (!EX || EX.busy || T) return;
+    const key = '_tour:' + (p && p.id);
+    if (TOURABLE(p) && !isDone(key) && !REDUCED) { markDone(key); playTour(p, () => baseInteract(p)); return; }
+    baseInteract(p);
+  };
+  // a replay button on the cards that have a tour
+  const baseModal = modal;
+  modal = function (html, o) {
+    const sh = baseModal(html, o);
+    const p = EX && EX.near;
+    if (TOURABLE(p) && !$('#explore').hidden && document.querySelector('#veilHost .sheet') === sh) {
+      const b = document.createElement('button'); b.className = 'tourReplay'; b.textContent = '▶ Replay 10-second tour';
+      b.onclick = async e => { e.stopPropagation(); await closeModal(); EX.busy = false; playTour(p, () => baseInteract(p)); };
+      sh.insertBefore(b, sh.firstChild);
+    }
+    return sh;
+  };
+  window.__cobsTour = { play: id => { const p = SCN && SCN.pois.find(q => q.id === id); if (p) { EX.busy = false; playTour(p); } }, get running() { return !!T; } };
 })();
 /* ================= FLOW: arrive, explore, leave, drive, repeat ================= */
 const MUSIC = { france: 'france', basque: 'basque', rioja: 'basque', germany: 'germany' };
