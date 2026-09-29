@@ -3797,6 +3797,7 @@ const D3 = (() => {
     init();
     // clear previous
     world.children.slice().forEach(c => world.remove(c)); OWNED.forEach(g => g.dispose()); OWNED = []; FX.clear();
+    HOOKS.pre && HOOKS.pre.forEach(f => f(stopId));
     const cols = Math.ceil(sc.w / TILE), rows = Math.ceil(sc.h / TILE);
     const kind = sc.ground || 'sand', gc = GROUND[kind] || GROUND.sand;
     const grid = []; // 0 ground, 1 water, 2 bridge, 3 road, 4 path, 5 beach, 6 street
@@ -3873,6 +3874,7 @@ const D3 = (() => {
     // critters
     const crit = {}; (sc.critters || []).forEach(c => { const o = critter(c.kind); world.add(o); crit[c.id] = o; });
     // the four Cobs
+    HOOKS.build.forEach(f => f({ sc, stopId, place, grid, cols, rows, anims }));
     const people = {}; ['paulo', 'annette', 'huw', 'romy'].forEach(id => { const p = makePerson(LOOKS[id]); p.scale.setScalar(1.15); world.add(p); people[id] = p; });
     setSky(STOP[stopId].region);
     S3 = { cols, rows, grid, pois, crit, people, clouds, anims, waterTiles, t: 0 };
@@ -3922,6 +3924,7 @@ const D3 = (() => {
     S3.anims.gondolas.forEach(g => { g.position.x = Math.sin(t * 0.5) * 1.2; });
     Object.values(S3.pois).forEach((p, i) => { if (p.mkr && p.mkr.visible) { p.mkr.position.y = p.baseY + Math.sin(t * 2.4 + i) * 0.12; p.mkr.rotation.y = t * 1.5; } if (p.ring.visible) { const sc = 1 + Math.sin(t * 2 + i) * 0.08; p.ring.scale.set(p.ring.userData.s0 * sc, p.ring.userData.s0 * sc, 1); } });
     if (!REDUCED && S3.waterTiles.length && Math.random() < dt * 5) { const w = S3.waterTiles[Math.floor(Math.random() * S3.waterTiles.length)]; sparkle(w[0] + Math.random() - 0.5, 0.02, w[1] + Math.random() - 0.5, 2); }
+    HOOKS.frame.forEach(f => f(dt, t));
     FX.update(dt);
     renderer.render(scene, camera);
   }
@@ -3937,7 +3940,9 @@ const D3 = (() => {
     if (renderer.domElement.parentNode !== el) el.prepend(renderer.domElement);
     resize();
   }
-  return { attach, build, frame, pick, resize, sparkle, confetti, cam, TILE, get S3() { return S3; }, rotate(d) { cam.yawGoal += d * Math.PI / 2; }, walkable(x, y) {
+  const _ = { B3, mk, grp, M, geo, G_BOX, G_SPH, G_CYL, G_CONE, G_PYR, G_TOR, G_PRISM, G_STAR, makePerson, makeTree, makePine, makeFlower, mergeStatic, label, house, live, hsh, CONF, INK, get world() { return world; }, get S3() { return S3; } };
+  const HOOKS = { pre: [], build: [], frame: [] };
+  return { _, HOOKS, attach, build, frame, pick, resize, sparkle, confetti, cam, TILE, get S3() { return S3; }, rotate(d) { cam.yawGoal += d * Math.PI / 2; }, walkable(x, y) {
     if (!S3) return true; const c = Math.floor(x / TILE), r = Math.floor(y / TILE);
     if (r < 0 || c < 0 || r >= S3.rows || c >= S3.cols) return false; return S3.grid[r][c] !== 1; } };
 })();
@@ -4086,6 +4091,296 @@ if (D3) {
   setTimeout(() => $('#exView') && $('#exView').appendChild(rot), 0);
   addEventListener('keydown', e => { if ($('#explore').hidden) return; if (e.key === 'q' || e.key === 'Q') D3.rotate(-1); if (e.key === 'e' || e.key === 'E') D3.rotate(1); });
 }
+/* ================= HOLIDAY DETAIL LAYER ================= */
+// Richer landmarks, and life around every place: café tables with diners, tourists taking photos,
+// tour guides, shoppers, strolling locals, flags, bunting, boats, swimmers and surfers.
+if (typeof D3 !== 'undefined' && D3) (() => {
+  const { B3, mk, grp, geo, G_BOX, G_SPH, G_CYL, G_CONE, G_PYR, G_TOR, G_PRISM, makePerson, makeTree, makeFlower, mergeStatic, label, live, hsh, CONF, INK } = D3._;
+  const TAU = Math.PI * 2, TILE = D3.TILE;
+  const G_HALF = geo('halfTor', () => new THREE.TorusGeometry(0.5, 0.07, 8, 16, Math.PI));
+  const G_OCT = geo('oct8', () => new THREE.CylinderGeometry(0.5, 0.5, 1, 8));
+  let ANIM = [];                       // per-scene animated bits, reset every build
+  const reg = (kind, obj, extra) => { ANIM.push({ kind, obj, ...(extra || {}) }); return obj; };
+  D3.HOOKS.pre.push(() => { ANIM = []; });
+
+  /* ---------- small props ---------- */
+  const FLAGS = {
+    france: [['#3f6fd8', '#ffffff', '#e8505b'], 'v'], basque: [['#d8434b'], 'ikurrina'], rioja: [['#d8434b', '#ffd166', '#d8434b'], 'h'], germany: [['#e8505b', '#ffffff'], 'h'],
+    bayonne: [['#7fc8f8', '#ffffff'], 'h'], bavaria: [['#7fc8f8', '#ffffff'], 'check'],
+  };
+  function flag(parent, x, z, kind, h = 1.8) {
+    const g = grp(parent, x, 0, z);
+    mk(G_CYL, '#e8e2d6', [0.05, h, 0.05], [0, h / 2, 0], g); mk(G_SPH, '#ffd166', [0.09, 0.09, 0.09], [0, h + 0.03, 0], g);
+    const cloth = live(grp(g, 0, h - 0.24, 0));
+    const [cols, style] = FLAGS[kind] || FLAGS.france, W = 0.62, H = 0.4;
+    if (style === 'v') cols.forEach((c, i) => mk(G_BOX, c, [W / 3, H, 0.02], [W / 6 + i * W / 3, 0, 0], cloth, { noShadow: true }));
+    else if (style === 'h') cols.forEach((c, i) => mk(G_BOX, c, [W, H / cols.length, 0.02], [W / 2, H / 2 - H / cols.length * (i + 0.5), 0], cloth, { noShadow: true }));
+    else if (style === 'check') for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) mk(G_BOX, (i + j) % 2 ? '#ffffff' : '#7fc8f8', [W / 4, H / 3, 0.02], [W / 8 + i * W / 4, H / 3 - j * H / 3, 0], cloth, { noShadow: true });
+    else { mk(G_BOX, '#d8434b', [W, H, 0.02], [W / 2, 0, 0], cloth, { noShadow: true }); [0.58, -0.58].forEach(r => { const a = mk(G_BOX, '#3f9a57', [0.7, 0.06, 0.025], [W / 2, 0, 0.005], cloth, { noShadow: true }); a.rotation.z = r; }); mk(G_BOX, '#ffffff', [W, 0.06, 0.03], [W / 2, 0, 0.01], cloth, { noShadow: true }); mk(G_BOX, '#ffffff', [0.06, H, 0.03], [W / 2, 0, 0.01], cloth, { noShadow: true }); }
+    reg('flag', cloth); return g;
+  }
+  function bunting(parent, x0, z0, x1, z1, y = 1.7) {
+    const g = grp(parent), n = Math.max(5, Math.round(Math.hypot(x1 - x0, z1 - z0) / 0.34));
+    [[x0, z0], [x1, z1]].forEach(([x, z]) => mk(G_CYL, '#c9a27e', [0.05, y, 0.05], [x, y / 2, z], g));
+    for (let i = 0; i <= n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t, sag = Math.sin(t * Math.PI) * 0.28;
+      if (i < n) { const f = mk(G_CONE, CONF[i % 5], [0.16, 0.2, 0.03], [x, y - sag - 0.12, z], g, { noShadow: true }); f.rotation.z = Math.PI; f.rotation.y = Math.atan2(x1 - x0, z1 - z0) + Math.PI / 2; }
+      if (i) mk(G_BOX, '#ffffff', [0.02, 0.02, 0.02], [x, y - sag, z], g, { noShadow: true }); }
+    return g;
+  }
+  function parasol(parent, x, z, c1 = '#ff7a8a', c2 = '#ffffff') {
+    const g = grp(parent, x, 0, z); mk(G_CYL, '#e8e2d6', [0.04, 1.3, 0.04], [0, 0.65, 0], g);
+    mk(G_CONE, c1, [1.3, 0.36, 1.3], [0, 1.34, 0], g); mk(G_CONE, c2, [0.7, 0.2, 0.7], [0, 1.44, 0], g);
+    for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; mk(G_SPH, i % 2 ? c1 : c2, [0.13, 0.08, 0.13], [Math.cos(a) * 0.62, 1.15, Math.sin(a) * 0.62], g, { noShadow: true }); }
+    mk(G_SPH, c2, [0.08, 0.08, 0.08], [0, 1.54, 0], g); return g;
+  }
+  function cafeTable(parent, x, z, cloth = '#ffffff') {
+    const g = grp(parent, x, 0, z);
+    mk(G_CYL, cloth, [0.55, 0.05, 0.55], [0, 0.46, 0], g); mk(G_CYL, '#6b5443', [0.05, 0.44, 0.05], [0, 0.22, 0], g);
+    mk(G_CYL, '#fffaf0', [0.1, 0.07, 0.1], [0.12, 0.52, 0.05], g); mk(G_CYL, '#c9475d', [0.04, 0.16, 0.04], [-0.12, 0.56, -0.05], g); mk(G_SPH, '#ffd166', [0.05, 0.05, 0.05], [-0.12, 0.66, -0.05], g, { glow: true });
+    [[-0.42, 0], [0.42, 0]].forEach(([cx, cz]) => { mk(G_BOX, '#c9975f', [0.26, 0.04, 0.26], [cx, 0.28, cz], g); mk(G_BOX, '#c9975f', [0.26, 0.3, 0.04], [cx + Math.sign(cx) * 0.12, 0.43, cz], g).rotation.y = Math.PI / 2; [-0.1, 0.1].forEach(k => mk(G_CYL, '#6b5443', [0.03, 0.28, 0.03], [cx + k, 0.14, cz], g)); });
+    return g;
+  }
+  function crate(parent, x, z, fruit) { const g = grp(parent, x, 0, z); mk(G_BOX, '#c9975f', [0.5, 0.26, 0.36], [0, 0.13, 0], g); for (let i = 0; i < 6; i++) mk(G_SPH, fruit || CONF[i % 5], [0.12, 0.12, 0.12], [-0.16 + (i % 3) * 0.16, 0.3, -0.08 + Math.floor(i / 3) * 0.16], g, { noShadow: true }); return g; }
+  function lamp(parent, x, z) { const g = grp(parent, x, 0, z); mk(G_CYL, '#4a5a66', [0.06, 1.6, 0.06], [0, 0.8, 0], g); mk(G_BOX, '#4a5a66', [0.3, 0.04, 0.04], [0.12, 1.55, 0], g); reg('glow', mk(G_SPH, '#ffe79a', [0.18, 0.2, 0.18], [0.26, 1.45, 0], g, { glow: true })); return g; }
+  function planter(parent, x, z) { const g = grp(parent, x, 0, z); mk(G_BOX, '#e8916b', [0.5, 0.22, 0.24], [0, 0.11, 0], g); for (let i = 0; i < 4; i++) mk(G_SPH, CONF[i], [0.12, 0.12, 0.12], [-0.18 + i * 0.12, 0.28, 0], g, { noShadow: true }); mk(G_SPH, '#6fbf5f', [0.46, 0.12, 0.2], [0, 0.22, 0], g); return g; }
+  function suitcases(parent, x, z) { const g = grp(parent, x, 0, z); [['#7fc8f8', 0.34, 0.46], ['#ff7a8a', 0.3, 0.38], ['#ffd166', 0.26, 0.3]].forEach(([c, w, h], i) => { mk(G_BOX, c, [w, h, 0.18], [-0.34 + i * 0.34, h / 2, 0], g); mk(G_BOX, '#6b5443', [0.12, 0.04, 0.04], [-0.34 + i * 0.34, h + 0.03, 0], g); }); return g; }
+  function bike(parent, x, z, col = '#7fc8f8') { const g = grp(parent, x, 0, z); [-0.28, 0.28].forEach(k => { const w = mk(G_TOR, '#4a3b52', [0.36, 0.36, 0.36], [k, 0.2, 0], g); }); mk(G_BOX, col, [0.56, 0.05, 0.05], [0, 0.28, 0], g).rotation.z = 0.2; mk(G_BOX, col, [0.05, 0.3, 0.05], [0.18, 0.36, 0], g); mk(G_BOX, '#6b5443', [0.14, 0.04, 0.08], [-0.08, 0.42, 0], g); mk(G_BOX, '#c9975f', [0.22, 0.14, 0.18], [0.36, 0.44, 0], g); return g; }
+  function sailboat(parent, x, z, col) { const g = grp(parent, x, 0, z); mk(G_BOX, col || '#ffffff', [1.1, 0.24, 0.4], [0, 0.08, 0], g); mk(G_BOX, '#3f6fb0', [1.1, 0.06, 0.41], [0, 0.18, 0], g); mk(G_CYL, '#a8744f', [0.04, 1.4, 0.04], [0.05, 0.9, 0], g); const s = mk(G_CONE, '#fffaf0', [0.7, 1.2, 0.04], [-0.2, 0.9, 0], g); s.scale.set(0.9, 1.2, 0.04); reg('bob', g); return g; }
+  function fishingBoat(parent, x, z, col) { const g = grp(parent, x, 0, z); mk(G_BOX, col || '#e8505b', [1.2, 0.3, 0.46], [0, 0.1, 0], g); mk(G_BOX, '#ffffff', [1.22, 0.06, 0.47], [0, 0.22, 0], g); mk(G_BOX, '#fffaf0', [0.34, 0.34, 0.32], [0.26, 0.4, 0], g); mk(G_BOX, '#3f6fb0', [0.36, 0.06, 0.34], [0.26, 0.59, 0], g); mk(G_CYL, '#a8744f', [0.03, 0.9, 0.03], [-0.3, 0.65, 0], g); mk(G_BOX, '#e8d6b0', [0.3, 0.16, 0.26], [-0.34, 0.3, 0], g); reg('bob', g); return g; }
+
+  /* ---------- people: locals and tourists with holiday props ---------- */
+  const SKINS = ['#f9d1b0', '#f2c9a6', '#e0ac7e', '#b57848', '#8a5a3a', '#f7d6b8'], HAIRS = ['#2a1d12', '#6b4a32', '#f5d271', '#a8744f', '#d8d0c8', '#8a3a2a'];
+  const TOPS = ['#ff7a8a', '#7fc8f8', '#ffd166', '#7cc576', '#b9a3ff', '#ffffff', '#ffa94d', '#3f6fb0'], BOTS = ['#3f6fb0', '#5a5566', '#e8d6b0', '#7f93b3', '#4a3b52'];
+  function npc(seed, prop, pose) {
+    const r = k => hsh(seed, k, 77);
+    const look = { skin: SKINS[Math.floor(r(1) * 6)], hair: HAIRS[Math.floor(r(2) * 6)], hairStyle: ['fluffy', 'bob', 'long', 'short'][Math.floor(r(3) * 4)], top: TOPS[Math.floor(r(4) * 8)], bottom: BOTS[Math.floor(r(5) * 5)], eye: '#4a3b52', lashes: r(6) > 0.5 };
+    const p = makePerson(look), u = p.userData;
+    p.scale.setScalar(0.95 + r(7) * 0.15);
+    const hand = u.armR;
+    const hat = r(8);
+    if (hat < 0.18) { mk(G_CYL, '#e8d6b0', [0.62, 0.04, 0.62], [0, 0.22, 0], u.head); mk(G_CYL, '#e8d6b0', [0.34, 0.18, 0.34], [0, 0.3, 0], u.head); mk(G_CYL, '#e8505b', [0.35, 0.05, 0.35], [0, 0.25, 0], u.head); }
+    else if (hat < 0.3) { mk(G_SPH, '#4a3b52', [0.5, 0.14, 0.5], [0.04, 0.27, 0], u.head); mk(G_CYL, '#4a3b52', [0.03, 0.06, 0.03], [0.04, 0.35, 0], u.head); } // beret
+    else if (hat < 0.4) { [-1, 1].forEach(s => mk(G_SPH, '#2a2a33', [0.13, 0.08, 0.05], [s * 0.09, 0.0, 0.24], u.head, { noShadow: true })); } // sunnies
+    const P = {
+      camera: () => { const c = grp(hand, 0, -0.2, 0.1); mk(G_BOX, '#4a3b52', [0.16, 0.11, 0.08], [0, 0, 0], c); mk(G_CYL, '#bfe6f5', [0.06, 0.06, 0.06], [0, 0, 0.05], c).rotation.x = Math.PI / 2; },
+      icecream: () => { const c = grp(hand, 0, -0.2, 0.06); mk(G_CONE, '#e0ac7e', [0.08, 0.16, 0.08], [0, 0, 0], c).rotation.x = Math.PI; mk(G_SPH, CONF[Math.floor(r(9) * 5)], [0.1, 0.1, 0.1], [0, 0.1, 0], c); },
+      baguette: () => { const c = mk(G_CYL, '#e0a860', [0.06, 0.6, 0.06], [0, -0.1, 0.08], hand); c.rotation.x = 0.6; },
+      bags: () => { [0, 1].forEach(i => mk(G_BOX, [CONF[i], '#ffffff'][i], [0.16, 0.2, 0.08], [0, -0.28, 0.03 + i * 0.06], hand)); mk(G_TOR, '#6b5443', [0.1, 0.1, 0.1], [0, -0.17, 0.05], hand); },
+      stein: () => { mk(G_CYL, '#ffd166', [0.12, 0.16, 0.12], [0, -0.22, 0.06], hand); mk(G_CYL, '#ffffff', [0.13, 0.04, 0.13], [0, -0.13, 0.06], hand); },
+      wine: () => { mk(G_CYL, '#fdfaf2', [0.02, 0.1, 0.02], [0, -0.22, 0.06], hand, { alpha: 0.8 }); mk(G_SPH, '#8a1d34', [0.07, 0.07, 0.07], [0, -0.15, 0.06], hand); },
+      surfboard: () => { const b = mk(G_SPH, CONF[Math.floor(r(9) * 5)], [0.18, 1.1, 0.05], [0.12, 0.35, -0.02], p); b.rotation.z = 0.2; },
+      flag: () => { mk(G_CYL, '#e8e2d6', [0.03, 0.8, 0.03], [0, 0.2, 0.05], hand); mk(G_BOX, '#ff7a8a', [0.24, 0.16, 0.02], [0.12, 0.54, 0.05], hand); }, // tour guide
+      tray: () => { mk(G_CYL, '#d6dde3', [0.36, 0.02, 0.36], [0, -0.15, 0.1], hand); mk(G_CYL, '#fdfaf2', [0.06, 0.12, 0.06], [0.05, -0.08, 0.1], hand); mk(G_BOX, '#ffffff', [0.3, 0.26, 0.02], [0, 0.35, 0.15], u.body); }, // waiter (+apron)
+      map: () => { const m = mk(G_BOX, '#fff4c9', [0.3, 0.22, 0.01], [0.02, -0.2, 0.14], hand); m.rotation.x = -0.8; },
+      backpack: () => { mk(G_BOX, CONF[Math.floor(r(9) * 5)], [0.26, 0.3, 0.14], [0, 0.42, -0.18], u.body); },
+    };
+    if (prop && P[prop]) P[prop]();
+    if (r(10) > 0.7 && prop !== 'backpack') P.backpack();
+    u.pose = pose || 'idle'; u.seed = seed;
+    if (pose === 'sit') { u.legL.rotation.x = u.legR.rotation.x = -1.4; u.body.position.y = -0.14; }
+    if (pose === 'photo') { u.armR.rotation.x = -2.4; u.armL.rotation.x = -2.2; u.armR.rotation.z = 0.25; }
+    mergeStatic(u.body);
+    return p;
+  }
+
+  /* ---------- richer landmarks ---------- */
+  const O = Object.assign({}, B3);
+  B3.eiffel = () => {
+    const g = new THREE.Group(), c = '#a8744f', c2 = '#8a5a3a';
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => { for (let i = 0; i < 5; i++) { const t = i / 5, x = a * (0.62 - t * 0.42), z = b * (0.62 - t * 0.42); const l = mk(G_BOX, i % 2 ? c : c2, [0.14, 0.34, 0.14], [x, 0.17 + i * 0.3, z], g); l.rotation.z = -a * 0.3; l.rotation.x = b * 0.3; } });
+    [[0, 0.62], [0, -0.62], [0.62, 0], [-0.62, 0]].forEach(([x, z]) => { const h = mk(G_HALF, c, [1.1, 0.9, 1], [x * 0.9, 0.05, z * 0.9], g); h.rotation.y = x ? Math.PI / 2 : 0; });
+    for (let lvl = 0; lvl < 2; lvl++) { const y = [1.5, 2.6][lvl], w = [1.05, 0.6][lvl]; mk(G_BOX, c2, [w, 0.1, w], [0, y, 0], g); for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; mk(G_BOX, '#ffe79a', [0.04, 0.04, 0.04], [Math.cos(a) * w * 0.5, y + 0.08, Math.sin(a) * w * 0.5], g, { glow: true }); } }
+    for (let i = 0; i < 6; i++) { const t = i / 6; mk(G_BOX, i % 2 ? c : c2, [0.34 - t * 0.2, 0.2, 0.34 - t * 0.2], [0, 1.6 + i * 0.18, 0], g); }
+    for (let i = 0; i < 6; i++) { const t = i / 6; mk(G_BOX, i % 2 ? c : c2, [0.2 - t * 0.12, 0.26, 0.2 - t * 0.12], [0, 2.72 + i * 0.24, 0], g); }
+    mk(G_CYL, '#6b5443', [0.04, 0.5, 0.04], [0, 4.4, 0], g); const tip = live(mk(G_SPH, '#ffe79a', [0.12, 0.12, 0.12], [0, 4.66, 0], g, { glow: true })); reg('twinkle', tip);
+    g.userData.h = 4.7; g.userData.spin = null; return g;
+  };
+  B3.pyramid = () => {
+    const g = new THREE.Group();
+    mk(G_BOX, '#e8dcc6', [3.4, 0.08, 3.4], [0, 0.04, 0], g);
+    const p = mk(G_PYR, '#c9ecf7', [2, 1.5, 2], [0, 0.83, 0], g, { alpha: 0.82 }); p.rotation.y = Math.PI / 4;
+    for (let i = 0; i < 4; i++) { const e = mk(G_BOX, '#8a9aa6', [0.03, 1.8, 0.03], [0, 0.83, 0], g); e.rotation.y = Math.PI / 4 + i * Math.PI / 2; e.rotation.z = 0.74; e.position.set(Math.cos(i * Math.PI / 2) * 0.35, 0.83, Math.sin(i * Math.PI / 2) * 0.35); }
+    [[-1.3, 1.2], [1.3, 1.2], [0, -1.4]].forEach(([x, z]) => { mk(G_BOX, '#e8dcc6', [0.9, 0.12, 0.6], [x, 0.1, z], g); mk(G_BOX, '#8fd3f0', [0.8, 0.02, 0.5], [x, 0.17, z], g, { alpha: 0.9 }); const j = live(grp(g, x, 0.18, z)); mk(G_CYL, '#dff6ff', [0.06, 0.5, 0.06], [0, 0.25, 0], j, { glow: true, alpha: 0.7 }); reg('jet', j); });
+    g.userData.h = 1.7; return g;
+  };
+  B3.tower = o => {
+    const g = new THREE.Group(), r = (o.r || 20) / TILE * 1.1, h = (o.h || 56) / TILE * 1.45, stone = '#e6d6b4', dark = '#d4c09a';
+    mk(G_OCT, stone, [r * 2, h, r * 2], [0, h / 2, 0], g);
+    for (let y = 0.35; y < h - 0.2; y += 0.45) mk(G_OCT, dark, [r * 2.02, 0.04, r * 2.02], [0, y, 0], g, { noShadow: true });
+    mk(G_OCT, stone, [r * 2.35, 0.2, r * 2.35], [0, h + 0.05, 0], g);
+    for (let i = 0; i < 10; i++) { const a = i / 10 * TAU; mk(G_BOX, stone, [0.16, 0.2, 0.16], [Math.cos(a) * r * 1.12, h + 0.25, Math.sin(a) * r * 1.12], g); }
+    [0.25, 0.55, 0.8].forEach(t => mk(G_BOX, '#6b5443', [0.06, 0.2, 0.03], [0, h * t, r + 0.01], g, { noShadow: true }));
+    mk(G_PRISM, '#a8744f', [0.3, 0.46, 0.06], [0, 0.23, r + 0.02], g); mk(G_BOX, '#6b5443', [0.24, 0.36, 0.04], [0, 0.18, r + 0.02], g, { noShadow: true });
+    if (o.spire) mk(G_CONE, '#9fb0bf', [r * 2.1, 0.9, r * 2.1], [0, h + 0.6, 0], g);
+    else flag(g, 0, 0, 'france', 0).position.set(0, h + 0.1, 0);
+    g.userData.h = h + (o.spire ? 1.1 : 1.6); return g;
+  };
+  B3.lighthouse = o => {
+    const g = O.lighthouse(o), s = o.s || 1;
+    mk(G_TOR, '#4a5a66', [0.95 * s, 0.95 * s, 0.6], [0, 1.78 * s, 0], g).rotation.x = Math.PI / 2;
+    for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; mk(G_BOX, '#4a5a66', [0.02, 0.18 * s, 0.02], [Math.cos(a) * 0.47 * s, 1.87 * s, Math.sin(a) * 0.47 * s], g); }
+    [0.6, 1.1, 1.5].forEach(y => mk(G_BOX, '#bfe6f5', [0.1 * s, 0.14 * s, 0.04], [0, y * s, (0.46 - y * 0.07) * s], g, { noShadow: true }));
+    const hut = grp(g, 0.55 * s, 0, 0); mk(G_BOX, '#ffffff', [0.5 * s, 0.4 * s, 0.5 * s], [0, 0.2 * s, 0], hut); mk(G_PRISM, '#ff7a8a', [0.56 * s, 0.24 * s, 0.56 * s], [0, 0.5 * s, 0], hut);
+    return g;
+  };
+  B3.cathedral = () => {
+    const g = O.cathedral({});
+    const rose = grp(g, 0, 1.25, 0.58); mk(G_CYL, '#bfe6f5', [0.46, 0.04, 0.46], [0, 0, 0], rose).rotation.x = Math.PI / 2; mk(G_TOR, '#c9b894', [0.46, 0.46, 0.4], [0, 0, 0.02], rose); for (let i = 0; i < 8; i++) { const sp = mk(G_BOX, '#c9b894', [0.02, 0.44, 0.02], [0, 0, 0.03], rose); sp.rotation.z = i / 8 * Math.PI; } [0, 1, 2, 3].forEach(i => mk(G_SPH, ['#ff7a8a', '#7fc8f8', '#ffd166', '#b9a3ff'][i], [0.08, 0.08, 0.02], [Math.cos(i * 1.57) * 0.12, Math.sin(i * 1.57) * 0.12, 0.03], rose, { noShadow: true }));
+    [-0.55, 0, 0.55].forEach(x => { mk(G_PRISM, '#efe2c6', [0.34, 0.5, 0.08], [x, 0.62, 0.57], g); mk(G_BOX, '#6b5443', [0.24, 0.42, 0.04], [x, 0.21, 0.57], g, { noShadow: true }); });
+    [-1.15, 1.15].forEach(x => [-0.3, 0.3].forEach(z => mk(G_BOX, '#e0d0b0', [0.14, 0.9, 0.2], [x, 0.45, z], g)));
+    [-0.8, 0.8].forEach(x => { mk(G_BOX, '#ffd166', [0.03, 0.26, 0.03], [x, 3.33, 0.4], g); mk(G_BOX, '#ffd166', [0.14, 0.03, 0.03], [x, 3.38, 0.4], g); });
+    mk(G_BOX, '#c9b894', [2.6, 0.06, 1.3], [0, 0.03, 0.3], g);
+    g.userData.h = 3.5; return g;
+  };
+  B3.church = o => {
+    const g = O.church(o);
+    const bell = live(grp(g, 0, 1.45, 0.34)); mk(G_CONE, '#ffd166', [0.16, 0.16, 0.16], [0, -0.06, 0], bell); reg('bell', bell);
+    mk(G_BOX, '#ffd166', [0.03, 0.22, 0.03], [0, 2.02, 0.32], g); mk(G_BOX, '#ffd166', [0.12, 0.03, 0.03], [0, 2.07, 0.32], g);
+    if (o.rock) { [[-0.9, 0.4], [0.9, 0.3], [-0.6, -0.5]].forEach(([x, z]) => { mk(G_CYL, '#6fbf5f', [0.04, 0.4, 0.04], [x, 0.55, z], g); [0.66, 0.76, 0.86].forEach(y => mk(G_SPH, '#ffb3c7', [0.1, 0.08, 0.1], [x, y, z], g, { noShadow: true })); }); }
+    return g;
+  };
+  B3.rathaus = () => {
+    const g = O.rathaus({});
+    const tw = grp(g, 1.3, 0, -0.1); mk(G_BOX, '#fffaf0', [0.9, 1.2, 0.8], [0, 1.1, 0], tw); for (let i = 0; i < 5; i++) mk(G_BOX, '#8a5a3a', [0.04, 1.2, 0.02], [-0.4 + i * 0.2, 1.1, 0.41], tw, { noShadow: true }); [0.6, 1.1, 1.6].forEach(y => mk(G_BOX, '#8a5a3a', [0.92, 0.04, 0.02], [0, y, 0.41], tw, { noShadow: true })); mk(G_PRISM, '#e8505b', [1, 0.5, 0.9], [0, 1.95, 0], tw);
+    [[-0.5, 1.4], [0.5, 1.4], [0, 0.75]].forEach(([x, y]) => { mk(G_BOX, '#9fd3a8', [0.34, 0.26, 0.02], [x, y, 0.52], g, { noShadow: true }); mk(G_SPH, '#ffb3c7', [0.1, 0.06, 0.02], [x, y + 0.04, 0.53], g, { noShadow: true }); });
+    mk(G_BOX, '#ffe0a8', [0.8, 0.06, 0.3], [0, 1.55, 0.6], g); for (let i = 0; i < 6; i++) mk(G_SPH, CONF[i % 5], [0.08, 0.08, 0.08], [-0.3 + i * 0.12, 1.62, 0.7], g, { noShadow: true });
+    g.userData.h = 3.4; return g;
+  };
+  B3.guggenheim = () => {
+    const g = new THREE.Group(), ti = ['#d6dde3', '#c3ccd4', '#e4e9ed'];
+    [[0, 0.9, 0, 1.7, 0.2], [-1.2, 0.6, 0.3, 1.2, -0.5], [1.1, 0.75, -0.2, 1.3, 0.7], [0.4, 1.5, -0.3, 1, 1.2], [-0.5, 1.35, -0.4, 0.9, -1], [1.7, 0.45, 0.5, 0.9, 0.4]].forEach(([x, y, z, s, r], i) => { const p = mk(G_SPH, ti[i % 3], [s * 1.7, s, s * 1.1], [x, y, z], g); p.rotation.set(r * 0.4, r, x * 0.4); for (let k = 0; k < 3; k++) { const sc = mk(G_SPH, '#ffffff', [s * 1.2, 0.03, 0.06], [x, y + s * 0.2 - k * 0.2, z + s * 0.45], g, { noShadow: true, alpha: 0.35 }); sc.rotation.z = x * 0.4; } });
+    mk(G_BOX, '#bfe6f5', [1.2, 0.9, 0.05], [-0.1, 0.45, 1.05], g, { alpha: 0.85 }); for (let i = 0; i < 5; i++) mk(G_BOX, '#8a9aa6', [0.02, 0.9, 0.06], [-0.6 + i * 0.25, 0.45, 1.07], g, { noShadow: true });
+    mk(G_BOX, '#8fd3f0', [4, 0.03, 1], [0, 0.02, 1.8], g, { alpha: 0.9 });
+    const fog = live(grp(g, -1, 0.1, 1.8)); for (let i = 0; i < 5; i++) mk(G_SPH, '#ffffff', [0.5, 0.2, 0.4], [i * 0.5, 0, 0], fog, { noShadow: true, alpha: 0.5 }); reg('fog', fog);
+    g.userData.h = 2.3; return g;
+  };
+  B3.hermitage = () => {
+    const g = O.hermitage({});
+    for (let i = 0; i < 14; i++) { const x = -2.4 + i * 0.2, y = 0.08 + i * 0.06, z = 0.55 - Math.abs(Math.sin(i * 0.9)) * 0.3; mk(G_BOX, '#f5e3c2', [0.24, 0.05, 0.26], [x, y, z], g); if (i % 2) mk(G_CYL, '#a8744f', [0.02, 0.2, 0.02], [x, y + 0.1, z + 0.16], g); }
+    const bell = live(grp(g, 0.5, 1.46, 0.32)); mk(G_CONE, '#ffd166', [0.16, 0.16, 0.16], [0, -0.05, 0], bell); reg('bell', bell);
+    mk(G_BOX, '#ffd166', [0.03, 0.24, 0.03], [0.2, 1.62, 0], g); mk(G_BOX, '#ffd166', [0.12, 0.03, 0.03], [0.2, 1.68, 0], g);
+    [[-1.6, 1.2], [1.4, 1.1], [-0.4, 1.4]].forEach(([x, z]) => reg('splash', live(grp(g, x, 0.05, z)), { phase: x }));
+    return g;
+  };
+  B3.ferris = () => {
+    const g = O.ferris({}), w = g.userData.wheel;
+    for (let i = 0; i < 16; i++) { const a = i / 16 * TAU; mk(G_SPH, CONF[i % 5], [0.05, 0.05, 0.05], [Math.cos(a) * 1.2, Math.sin(a) * 1.2, 0.05], w, { glow: true }); }
+    const booth = grp(g, 1.3, 0, 0.3); mk(G_BOX, '#fff4e2', [0.5, 0.5, 0.4], [0, 0.25, 0], booth); mk(G_PRISM, '#ff7a8a', [0.56, 0.24, 0.46], [0, 0.6, 0], booth); mk(G_BOX, '#ffd166', [0.3, 0.12, 0.02], [0, 0.4, 0.21], booth, { noShadow: true });
+    return g;
+  };
+  B3.market = o => { const g = O.market(o); for (let i = 0; i < 7; i++) { mk(G_CYL, '#e8e2d6', [0.01, 0.2, 0.01], [-1.2 + i * 0.4, 1.02, 0.95], g, { noShadow: true }); mk(G_SPH, ['#c4574a', '#ffd166', '#c8331f', '#86cf6c'][i % 4], [0.12, 0.2, 0.12], [-1.2 + i * 0.4, 0.86, 0.95], g); } [-1.2, 1.2].forEach((x, i) => crate(g, x, 1.5, ['#e8505b', '#ffd166'][i])); return g; };
+  B3.winery = o => { const g = O.winery(o); for (let r = 0; r < 2; r++) for (let i = 0; i < 6; i++) { mk(G_SPH, i % 2 ? '#6fbf5f' : '#86cf6c', [0.34, 0.34, 0.28], [-1.4 + i * 0.56, 0.2, -1 - r * 0.5], g); mk(G_SPH, '#8a4a8a', [0.08, 0.1, 0.08], [-1.4 + i * 0.56, 0.12, -0.82 - r * 0.5], g, { noShadow: true }); } const cart = grp(g, 1.5, 0, 0.9); mk(G_BOX, '#c9975f', [0.5, 0.26, 0.36], [0, 0.26, 0], cart); [-0.18, 0.18].forEach(z => { const wh = mk(G_CYL, '#6b5443', [0.24, 0.05, 0.24], [0, 0.12, z], cart); wh.rotation.x = Math.PI / 2; }); for (let i = 0; i < 5; i++) mk(G_SPH, '#8a4a8a', [0.12, 0.12, 0.12], [-0.14 + (i % 3) * 0.14, 0.44, -0.07 + Math.floor(i / 3) * 0.14], cart); return g; };
+  B3.brewery = o => { const g = O.brewery(o); [[-0.7, 1.3], [0.7, 1.3]].forEach(([x, z]) => { const t = grp(g, x, 0, z); mk(G_BOX, '#c9975f', [0.9, 0.06, 0.34], [0, 0.4, 0], t); [-0.3, 0.3].forEach(k => mk(G_BOX, '#a8744f', [0.06, 0.4, 0.3], [k, 0.2, 0], t)); [-0.3, 0.3].forEach(zz => mk(G_BOX, '#c9975f', [0.9, 0.05, 0.16], [0, 0.24, zz * 1.1], t)); [-0.25, 0.1, 0.3].forEach(k => { mk(G_CYL, '#ffd166', [0.08, 0.13, 0.08], [k, 0.5, 0], t); mk(G_CYL, '#ffffff', [0.085, 0.04, 0.085], [k, 0.57, 0], t); }); mk(G_SPH, '#c9975f', [0.14, 0.1, 0.1], [-0.05, 0.47, 0.08], t); }); return g; };
+  B3.dune = o => { const g = O.dune(o); [[-1.8, 1.2], [1.6, 1.3]].forEach(([x, z], i) => parasol(g, x, z, ['#ff7a8a', '#7fc8f8'][i])); mk(G_BOX, '#8fd3f0', [6, 0.03, 0.8], [0, 0.01, 2.2], g, { alpha: 0.9 }); return g; };
+  B3.surfbeach = o => { const g = O.surfbeach(o); const lg = grp(g, 1.4, 0, -0.2); [-0.2, 0.2].forEach(x => [-0.2, 0.2].forEach(z => mk(G_CYL, '#a8744f', [0.05, 0.9, 0.05], [x, 0.45, z], lg))); mk(G_BOX, '#fff4e2', [0.6, 0.4, 0.5], [0, 1.1, 0], lg); mk(G_PRISM, '#e8505b', [0.66, 0.22, 0.56], [0, 1.4, 0], lg); flag(lg, 0.3, 0, 'bayonne', 1.8); [-1.6, -1].forEach((x, i) => parasol(g, x, 1, ['#ffd166', '#7cc576'][i])); return g; };
+  B3.stadium = () => { const g = O.stadium({}); const n = 70, cr = new THREE.InstancedMesh(G_SPH, D3._.M('#ffffff'), n), m = new THREE.Object3D(), c = new THREE.Color(); for (let i = 0; i < n; i++) { const a = i / n * TAU; m.position.set(Math.cos(a) * 1.55, 0.72 + (i % 3) * 0.06, Math.sin(a) * 1.08); m.scale.setScalar(0.1); m.updateMatrix(); cr.setMatrixAt(i, m.matrix); cr.setColorAt(i, c.set(i % 3 ? '#e8505b' : '#ffffff')); } g.add(cr); [[-1.8, -1.2], [1.8, -1.2], [-1.8, 1.2], [1.8, 1.2]].forEach(([x, z]) => { mk(G_CYL, '#8a9aa6', [0.05, 1.8, 0.05], [x, 0.9, z], g); mk(G_BOX, '#ffe79a', [0.3, 0.16, 0.1], [x, 1.85, z], g, { glow: true }); }); g.userData.h = 2; return g; };
+  B3.christ = () => { const g = O.christ({}); mk(G_SPH, '#fffaf0', [0.16, 0.16, 0.16], [0, 2, 0], g); mk(G_BOX, '#d6c7a6', [1.2, 0.3, 0.8], [0.6, 1.05, -0.3], g); for (let i = 0; i < 4; i++) mk(G_BOX, '#d6c7a6', [0.12, 0.16, 0.12], [0.1 + i * 0.3, 1.26, 0.08], g); g.userData.h = 2.3; return g; };
+  B3.combs = () => { const g = O.combs({}); [[-0.9, 0.7], [0.8, 0.8]].forEach(([x, z]) => reg('splash', live(grp(g, x, 0.1, z)), { phase: x })); return g; };
+  B3.kupela = () => { const g = O.kupela({}); const st = live(grp(g, 0, 0.5, 0.56)); for (let i = 0; i < 6; i++) mk(G_SPH, '#f2d67a', [0.06, 0.1, 0.06], [0, 0, 0], st, { noShadow: true, alpha: 0.9 }); reg('stream', st); mk(G_CYL, '#fdfaf2', [0.1, 0.18, 0.1], [0, 0.09, 1.1], g, { alpha: 0.8 }); return g; };
+  B3.cheesefarm = () => { const g = O.cheesefarm({}); for (let i = 0; i < 7; i++) { mk(G_BOX, '#c9975f', [0.06, 0.4, 0.06], [-1.8 + i * 0.5, 0.2, 1.6], g); if (i < 6) [0.14, 0.3].forEach(y => mk(G_BOX, '#c9975f', [0.5, 0.04, 0.03], [-1.55 + i * 0.5, y, 1.6], g)); } [0, 1, 2].forEach(i => mk(G_CYL, '#ffd166', [0.36, 0.14, 0.36], [1.5, 0.07 + i * 0.15, 0.2], g)); return g; };
+  B3.fronton = () => { const g = O.fronton({}); const ball = live(grp(g, 0, 0, 0)); mk(G_SPH, '#ffffff', [0.12, 0.12, 0.12], [0, 0, 0], ball); reg('pelota', ball); return g; };
+  B3.oak = () => { const g = O.oak({}); const hall = grp(g, 0, 0, -1.4); mk(G_BOX, '#efe2c6', [2.2, 0.9, 0.6], [0, 0.45, 0], hall); for (let i = 0; i < 6; i++) mk(G_CYL, '#fffaf0', [0.1, 0.9, 0.1], [-0.9 + i * 0.36, 0.45, 0.36], hall); mk(G_PRISM, '#b0643a', [2.3, 0.4, 0.8], [0, 1.1, 0], hall); flag(g, 1.4, -0.6, 'basque', 1.8); return g; };
+  B3.station = () => { const g = O.station(); const tr = grp(g, 0, 0, 1.5); [0, 1].forEach(i => { mk(G_BOX, i ? '#7fc8f8' : '#ff7a8a', [1.1, 0.5, 0.5], [-0.6 + i * 1.2, 0.35, 0], tr); for (let k = 0; k < 3; k++) mk(G_BOX, '#bfe6f5', [0.2, 0.16, 0.02], [-0.95 + i * 1.2 + k * 0.32, 0.44, 0.26], tr, { noShadow: true }); }); mk(G_BOX, '#8a9aa6', [2.8, 0.04, 0.1], [0, 0.02, 0.14], tr); mk(G_BOX, '#8a9aa6', [2.8, 0.04, 0.1], [0, 0.02, -0.14], tr); return g; };
+  B3.hotel = o => { const g = O.hotel(o); flag(g, -0.8, 0.9, 'france', 1.5); flag(g, 0.8, 0.9, 'basque', 1.5); mk(G_BOX, '#c9475d', [0.4, 0.02, 1], [0, 0.01, 0.9], g); return g; };
+  B3.mirror = () => { const g = O.mirror({}); const bourse = grp(g, 0, 0, -1.4); mk(G_BOX, '#f3e2c0', [4.6, 0.9, 0.7], [0, 0.45, 0], bourse); for (let i = 0; i < 11; i++) mk(G_BOX, '#bfe6f5', [0.16, 0.3, 0.02], [-2.1 + i * 0.42, 0.5, 0.36], bourse, { noShadow: true }); mk(G_PRISM, '#9fb0bf', [4.7, 0.34, 0.8], [0, 1.05, 0], bourse); for (let i = 0; i < 6; i++) { const j = live(grp(g, -2 + i * 0.8, 0.04, 0)); mk(G_SPH, '#ffffff', [0.3, 0.2, 0.3], [0, 0.1, 0], j, { noShadow: true, alpha: 0.5 }); reg('mist', j, { phase: i }); } g.userData.h = 1.4; return g; };
+  B3.transporter = () => { const g = O.transporter({}); [-1.8, 1.8].forEach(x => { for (let y = 0.3; y < 2.7; y += 0.45) mk(G_BOX, '#e0566e', [0.02, 0.5, 0.6], [x, y, 0], g).rotation.x = 0.8; }); for (let i = 0; i < 8; i++) mk(G_BOX, '#cfd6de', [0.01, 0.4, 0.01], [-1.6 + i * 0.45, 2.55, 0.34], g, { noShadow: true }); return g; };
+  B3.puppy = () => { const g = O.puppy({}); for (let i = 0; i < 24; i++) mk(G_SPH, CONF[(i + 2) % 5], [0.09, 0.09, 0.09], [Math.cos(i * 2.1) * 0.52, 0.2 + hsh(i, 5) * 1.3, Math.sin(i * 2.1) * 0.42 + 0.1], g, { noShadow: true }); mk(G_BOX, '#d6c7a6', [1.6, 0.14, 1.3], [0, 0.07, 0], g); return g; };
+  B3.monastery = () => { const g = O.monastery(); for (let i = 0; i < 5; i++) { mk(G_HALF, '#e0d0b0', [0.3, 0.3, 1], [-1.1 + i * 0.36, 0.3, 0.63], g); mk(G_CYL, '#e0d0b0', [0.06, 0.3, 0.06], [-1.28 + i * 0.36, 0.15, 0.63], g); } const bell = live(grp(g, 1.1, 1.45, 0.12)); mk(G_CONE, '#ffd166', [0.16, 0.16, 0.16], [0, -0.05, 0], bell); reg('bell', bell); return g; };
+
+  /* ---------- vignettes: life around each place, by kind ---------- */
+  const THEME = { france: ['#ff7a8a', '#ffffff'], basque: ['#e8505b', '#ffffff'], rioja: ['#c9475d', '#ffd166'], germany: ['#7fc8f8', '#ffffff'] };
+  let NPCS = [];
+  D3.HOOKS.pre.push(() => { NPCS = []; });
+  D3.HOOKS.build.push(({ sc, stopId, place, grid, cols, rows }) => {
+    const region = STOP[stopId].region, th = THEME[region] || THEME.france;
+    const land = (x, y) => { const c = Math.floor(x / TILE), r = Math.floor(y / TILE); return r >= 0 && c >= 0 && r < rows && c < cols && grid[r][c] !== 1; };
+    const clear = (x, y, own) => land(x, y) && !(sc.pois || []).some(p => p.id !== own && Math.hypot(p.x - x, p.y - y) < 44) && Math.hypot(sc.start.x - x, sc.start.y - y) > 40;
+    const put = (obj, x, y, face) => { if (face != null) obj.rotation.y = face; place(obj, x, y); return obj; };
+    const addNpc = (seed, prop, pose, x, y, face, poi, wander) => { if (!land(x, y) || NPCS.length >= 20) return; const p = npc(seed, prop, pose); put(p, x, y, face); NPCS.push({ o: p, poi, home: { x, y }, wander, t: hsh(seed, 3, 1) * 6, tgt: null }); return p; };
+    let seed = stopId.length * 97;
+    (sc.pois || []).forEach((p, pi) => {
+      if (!p.art) return;
+      const ax = p.art[1] ?? p.x, ay = (p.art[2] ?? p.y - 30) + 12;
+      const s = () => ++seed;
+      const spots = [[ax - 64, ay + 58], [ax + 64, ay + 58], [ax - 84, ay + 10], [ax + 84, ay + 10], [ax, ay + 84]].filter(([x, y]) => clear(x, y, p.id));
+      const face = (x, y) => Math.atan2(ax - x, ay - y); // face the landmark
+      if (p.type === 'eat') {
+        spots.slice(0, 2).forEach(([x, y], i) => { const o = new THREE.Group(); cafeTable(o, 0, 0, i ? th[0] : '#ffffff'); parasol(o, 0, 0, th[0], th[1]).position.y = 0.05; put(mergeStatic(o), x, y); addNpc(s(), i ? 'wine' : null, 'sit', x - 16, y, Math.PI / 2, p.id); addNpc(s(), null, 'sit', x + 16, y, -Math.PI / 2, p.id); });
+        if (spots[2]) addNpc(s(), 'tray', 'idle', spots[2][0], spots[2][1], face(...spots[2]), p.id);
+      } else if (p.type === 'shop') {
+        spots.slice(0, 2).forEach(([x, y], i) => put(crate(new THREE.Group(), 0, 0, [th[0], '#ffd166'][i]), x, y));
+        if (spots[2]) addNpc(s(), 'bags', 'idle', spots[2][0], spots[2][1], face(...spots[2]), p.id);
+        if (spots[3]) addNpc(s(), 'bags', 'idle', spots[3][0], spots[3][1], face(...spots[3]), p.id);
+      } else if (p.type === 'photo' || p.type === 'info') {
+        spots.slice(0, p.type === 'photo' ? 3 : 2).forEach(([x, y], i) => addNpc(s(), i === 0 && p.type === 'info' ? 'flag' : i === 0 ? 'camera' : ['camera', 'map', 'icecream'][i], i === 0 && p.type === 'photo' ? 'photo' : 'idle', x, y, face(x, y), p.id));
+        if (spots[3]) put(mergeStatic(D3._.B3.bench({})), spots[3][0], spots[3][1], face(...spots[3]));
+      } else if (p.type === 'mini') {
+        spots.slice(0, 3).forEach(([x, y], i) => addNpc(s(), ['icecream', 'camera', null][i], 'cheer', x, y, face(x, y), p.id));
+        if (spots[3] && spots[4]) put(bunting(new THREE.Group(), 0, 0, (spots[4][0] - spots[3][0]) / TILE, (spots[4][1] - spots[3][1]) / TILE), spots[3][0], spots[3][1]);
+      } else if (p.type === 'leave') {
+        if (spots[0]) put(suitcases(new THREE.Group(), 0, 0), spots[0][0], spots[0][1]);
+      }
+      // a flag and a flower planter at most landmarks
+      if (['photo', 'info', 'mini'].includes(p.type) && spots[4] && pi % 2 === 0) { const o = new THREE.Group(); flag(o, 0, 0, stopId === 'bayonne' ? 'bayonne' : stopId === 'bamberg' ? 'bavaria' : region, 1.7); planter(o, 0.4, 0.2); put(o, spots[4][0], spots[4][1]); }
+    });
+    // strolling locals and tourists
+    const PROPS = { france: ['baguette', 'camera', 'icecream', 'map', 'bags'], basque: ['wine', 'camera', 'icecream', 'bags', 'map'], rioja: ['wine', 'camera', 'map'], germany: ['stein', 'camera', 'map', 'bags'] }[region] || ['camera'];
+    let n = 0;
+    for (let tries = 0; tries < 80 && n < 9; tries++) {
+      const x = 40 + hsh(tries, 1, seed) * (sc.w - 80), y = 60 + hsh(tries, 2, seed) * (sc.h - 120);
+      if (!clear(x, y)) continue;
+      addNpc(++seed, PROPS[n % PROPS.length], 'walk', x, y, hsh(tries, 3) * TAU, null, true); n++; if (n >= 7) break;
+    }
+    // lamps along streets, bunting between them
+    (sc.roads || []).forEach((rd, ri) => { for (let i = 1; i < rd.pts.length; i++) { const [x0, y0] = rd.pts[i - 1], [x1, y1] = rd.pts[i], len = Math.hypot(x1 - x0, y1 - y0), off = (rd.w || 36) / 2 + 14; for (let d = 60; d < len - 30; d += 150) { const t = d / len, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, nx = -(y1 - y0) / len, ny = (x1 - x0) / len; [1, -1].forEach(k => { const lx = x + nx * off * k, ly = y + ny * off * k; if (clear(lx, ly)) put(lamp(new THREE.Group(), 0, 0), lx, ly); }); } } });
+    // water life: sailboats, fishing boats, swimmers/surfers near beaches
+    const waterSpots = []; for (let r = 1; r < rows - 1; r++) for (let c = 1; c < cols - 1; c++) if (grid[r][c] === 1 && grid[r - 1][c] === 1 && grid[r + 1][c] === 1 && grid[r][c - 1] === 1 && grid[r][c + 1] === 1) waterSpots.push([c, r]);
+    const harbour = ['larochelle', 'sjdl', 'orio', 'bermeo', 'plentzia', 'mundaka', 'royan', 'bilbao'].includes(stopId), beachy = ['capbreton', 'biarritz', 'sanseb', 'iledere', 'mundaka'].includes(stopId);
+    for (let i = 0; i < Math.min(5, waterSpots.length); i++) {
+      const [c, r] = waterSpots[Math.floor(hsh(i, 7, seed) * waterSpots.length)];
+      const kind = hsh(i, 8, seed);
+      const o = harbour && kind < 0.55 ? fishingBoat(new THREE.Group(), 0, 0, CONF[i % 5]) : kind < 0.8 || !beachy ? sailboat(new THREE.Group(), 0, 0, ['#ffffff', '#ffd166', '#7fc8f8'][i % 3]) : null;
+      if (o) { o.rotation.y = hsh(i, 9) * TAU; place(o, (c + 0.5) * TILE, (r + 0.5) * TILE); o.position.y = 0; }
+      else { const sw = grp(null); mk(G_SPH, SKINS[i % 6], [0.3, 0.3, 0.3], [0, 0.08, 0], sw); mk(G_SPH, HAIRS[i % 6], [0.32, 0.2, 0.32], [0, 0.16, -0.02], sw); mk(G_TOR, CONF[i % 5], [0.5, 0.5, 0.5], [0, 0.02, 0], sw).rotation.x = Math.PI / 2; place(sw, (c + 0.5) * TILE, (r + 0.5) * TILE); reg('bob', sw); }
+    }
+    if (beachy) { let k = 0; for (let tries = 0; tries < 60 && k < 4; tries++) { const x = 30 + hsh(tries, 4, seed) * (sc.w - 60), y = 30 + hsh(tries, 5, seed) * (sc.h - 60); const c = Math.floor(x / TILE), r = Math.floor(y / TILE); if (!land(x, y) || !(grid[r + 1] && grid[r + 1][c] === 1 || grid[r - 1] && grid[r - 1][c] === 1)) continue; if (!clear(x, y)) continue; const o = new THREE.Group(); parasol(o, 0, 0, CONF[k % 5], '#ffffff'); mk(G_BOX, CONF[(k + 2) % 5], [0.4, 0.03, 0.9], [0.4, 0.02, 0.2], o); put(mergeStatic(o), x, y); k++; } }
+    if (stopId === 'iledere') [[250, 520], [330, 540]].forEach(([x, y], i) => clear(x, y) && put(bike(new THREE.Group(), 0, 0, CONF[i]), x, y, 0.4));
+  });
+
+  /* ---------- per-frame life ---------- */
+  D3.HOOKS.frame.push((dt, t) => {
+    ANIM.forEach((a, i) => {
+      const o = a.obj;
+      if (a.kind === 'flag') { o.rotation.y = Math.sin(t * 3 + i) * 0.35; o.scale.x = 1 + Math.sin(t * 5 + i) * 0.06; }
+      else if (a.kind === 'bob') { o.position.y = Math.sin(t * 1.5 + i) * 0.05; o.rotation.z = Math.sin(t * 1.1 + i) * 0.05; }
+      else if (a.kind === 'bell') o.rotation.z = Math.sin(t * 2.2 + i) * 0.35;
+      else if (a.kind === 'jet') o.scale.y = 0.7 + Math.abs(Math.sin(t * 3 + i)) * 0.6;
+      else if (a.kind === 'mist') { const f = (Math.sin(t * 1.3 + a.phase) + 1) / 2; o.scale.set(1 + f, 0.5 + f * 1.5, 1 + f); }
+      else if (a.kind === 'twinkle') { a.s0 = a.s0 || o.scale.x; o.scale.setScalar(a.s0 * (0.8 + Math.abs(Math.sin(t * 6)) * 0.6)); }
+      else if (a.kind === 'fog') { o.position.x = -1 + Math.sin(t * 0.4) * 0.4; }
+      else if (a.kind === 'stream') o.children.forEach((c, k) => { const f = (t * 1.2 + k / 6) % 1; c.position.set(0, -f * 0.4, f * 0.55); });
+      else if (a.kind === 'pelota') { const f = (t * 0.9) % 1; o.position.set(Math.sin(t * 2.1) * 0.8, 0.12 + Math.abs(Math.sin(f * Math.PI)) * 0.9, -0.3 + Math.cos(f * Math.PI * 2) * 0.5); }
+      else if (a.kind === 'splash') { if (!o.children.length) for (let k = 0; k < 6; k++) mk(G_SPH, '#ffffff', [0.14, 0.14, 0.14], [0, 0, 0], o, { noShadow: true, alpha: 0.85 }); const f = ((t * 0.5 + a.phase) % 1.6); o.children.forEach((c, k) => { const ang = k / 6 * TAU; c.position.set(Math.cos(ang) * f * 0.5, Math.max(0, Math.sin(f * 1.9) * 0.8), Math.sin(ang) * f * 0.3); c.visible = f < 1.6; }); }
+    });
+    const near = typeof EX !== 'undefined' && EX && EX.near ? EX.near.id : null;
+    NPCS.forEach((n, i) => {
+      const u = n.o.userData; n.t += dt;
+      if (u.pose === 'sit') { u.armR.rotation.x = -0.6 + Math.sin(n.t * 1.2) * 0.3; return; }
+      if (n.poi && n.poi === near) { u.armR.rotation.x = -2.6; u.armR.rotation.z = 0.4 + Math.sin(n.t * 10) * 0.35; u.body.position.y = Math.abs(Math.sin(n.t * 5)) * 0.05; return; } // wave hello
+      if (u.pose === 'photo') { u.body.position.y = Math.sin(n.t * 2) * 0.01; if (Math.floor(n.t * 0.7) % 4 === 0 && (n.t % 1.43) < dt) D3.sparkle(n.o.position.x, 1.3, n.o.position.z, 4); return; }
+      if (u.pose === 'cheer') { const k = Math.sin(n.t * 6 + i); u.armL.rotation.x = u.armR.rotation.x = -2.4 - k * 0.3; u.body.position.y = Math.max(0, k) * 0.08; return; }
+      if (!n.wander) { u.armR.rotation.x = Math.sin(n.t * 1.1) * 0.15; u.armR.rotation.z = 0; u.body.position.y = 0; return; }
+      // stroll between nearby land spots
+      if (!n.tgt || n.t > n.until) {
+        for (let k = 0; k < 8; k++) { const a = hsh(i, Math.floor(n.t * 10) + k, 5) * TAU, d = 40 + hsh(i, k, 6) * 120, x = n.home.x + Math.cos(a) * d, y = n.home.y + Math.sin(a) * d; if (D3.walkable(x, y) && D3.walkable((x + n.o.position.x * TILE) / 2, (y + n.o.position.z * TILE) / 2)) { n.tgt = { x: x / TILE, z: y / TILE }; break; } }
+        n.until = n.t + 3 + hsh(i, 9) * 4; n.pause = 1 + hsh(i, 10) * 2;
+      }
+      const dx = n.tgt.x - n.o.position.x, dz = n.tgt.z - n.o.position.z, d = Math.hypot(dx, dz);
+      if (d > 0.05) { const sp = 0.55 * dt; n.o.position.x += dx / d * Math.min(sp, d); n.o.position.z += dz / d * Math.min(sp, d); n.o.rotation.y = Math.atan2(dx, dz); u.walk += dt * 9; const sw = Math.sin(u.walk); u.legL.rotation.x = sw * 0.5; u.legR.rotation.x = -sw * 0.5; u.armL.rotation.x = -sw * 0.4; if (u.armR.rotation.x > -1) u.armR.rotation.x = sw * 0.4; u.body.position.y = Math.abs(sw) * 0.03; }
+      else { u.legL.rotation.x = u.legR.rotation.x = 0; u.body.position.y = 0; }
+    });
+  });
+})();
 /* ================= FLOW: arrive, explore, leave, drive, repeat ================= */
 const MUSIC = { france: 'france', basque: 'basque', rioja: 'basque', germany: 'germany' };
 function mapAction(label, fn, cls = '') {
