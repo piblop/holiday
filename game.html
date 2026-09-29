@@ -1760,7 +1760,7 @@ function enterExplore() {
   show('explore');
   Snd.playRegion(MUSIC[d.region]);
   const nights = (S.nights[STOPID] || 0);
-  $('#exBar').innerHTML = exPlate(d.name, SCN.sub, `<small style="color:var(--ink-2)">Day ${S.day} · ${d.date}</small>`);
+  $('#exBar').innerHTML = exPlate(d.name, SCN.sub, `<small style="color:var(--ink-2)">Day ${S.day} · ${dayLabel()}</small>`);
   const w = SCN.w || 600, h = SCN.h || 900;
   const svg = $('#exSvg');
   svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
@@ -3149,6 +3149,7 @@ Object.assign(STOP, {
         { id: 'tupina', type: 'eat', x: 300, y: 290, verb: 'La Tupina', art: ['cafe', 300, 245, { sign: 'LA TUPINA', awn: '#6b2f22' }], eyebrow: 'Eat · the Bordeaux big lunch', title: 'La Tupina', text: 'The old-guard institution of southwest France: duck fat, open fire, shirt-straining portions.', options: [{ name: 'The big lunch, everything duck', price: 260, hunger: -50, energy: 4, stars: 2 }, { name: 'Canelés from a bakery instead', price: 18, hunger: -12, energy: 6 }] },
         { id: 'citevin', type: 'info', x: 300, y: 130, verb: 'Cité du Vin', art: ['tower', 300, 110, { r: 26, h: 60, spire: true }], mark: [300, 30], eyebrow: 'Half-day primer · ~€22', title: 'La Cité du Vin', text: 'The wine museum shaped like wine swirling in a glass. A good primer before the châteaux.', stars: 1, delta: { budget: -88 } },
         { id: 'barbour', type: 'shop', x: 300, y: 740, verb: 'Golden Triangle shops', art: ['shop', 300, 700, { sign: 'BOUTIQUE', awn: C.olive }], eyebrow: 'Shop · Triangle d’Or', title: 'Barbour hunting, France leg', text: 'Designer flagships in the Golden Triangle, Rue Sainte-Catherine for everything else. Barbour sells here through menswear stockists. October rain is exactly what a waxed jacket is for.', items: [{ name: 'Waxed Bedale jacket', note: 'Barbour, via a stockist', price: 320, icon: 'bag', line: 'Waxed cotton. Corduroy collar. I am UNSTOPPABLE.' }, { name: 'Galeries Lafayette scarf', note: 'something for the chilly nights', price: 60, icon: 'bag' }] },
+        { id: 'stemilion', type: 'photo', x: 110, y: 500, verb: 'Saint-Émilion', title: 'Saint-Émilion', text: 'The medieval wine village 40 minutes east: the “castles” fix, free to wander, with its church carved into the rock.', cap: 'Saint-Émilion', photo: { sky: ['#f6c98f', '#fbe6b8'], ground: '#c9a86a', sprite: ['church', {}, 1.3, 0, 0] } },
         { id: 'cobba', type: 'cobba', x: 200, y: 600, verb: 'Chat with Cobba', lines: ['Skip the South of France. Mad expensive, marketed well, not actually authentic. Annette said so.', 'Two nights here. Three max anywhere. I’m counting.', 'If the surf comp is on this weekend, swap Bordeaux and Hossegor. Rules are flexible, rules are firm.'] },
         { id: 'car', type: 'leave', x: 110, y: 860, verb: 'Hit the road', art: ['car', 110, 820, { rot: 0 }] },
       ],
@@ -3183,7 +3184,7 @@ Object.assign(STOP, {
     },
   },
   bayonne: {
-    name: 'Bayonne', region: 'france', ll: [43.49, -1.47], lab: [9, 3, 'start'], date: 'Fri 8 – Sat 9 Oct', nights: 2, hotel: 115, stampIcon: 'cheese', stampText: 'BAYONNE · PAYS BASQUE',
+    name: 'Bayonne', region: 'france', ll: [43.49, -1.47], lab: [9, 3, 'start'], date: 'Fri 8 Oct', nights: 1, hotel: 115, stampIcon: 'cheese', stampText: 'BAYONNE · PAYS BASQUE',
     leg: { coast: [[43.6, -1.46]], highway: [[43.58, -1.4]] },
     annette: 'The area around Bayonne: history, much better culturally to explore. Hétéroclito: book a table in advance, try sunset.',
     hello: 'Bayonne, where Basque country begins. Half-timbered streets, ham, chocolate and Annette’s favourite sunset table.',
@@ -3204,13 +3205,14 @@ Object.assign(STOP, {
           { name: 'Aged tomme', note: 'nutty, firm', price: 24, q: 4, art: CHEESE_ART }, { name: 'Sheep’s-milk yoghurt', note: 'for the road', price: 10, q: 3, art: ART(`<rect x="12" y="12" width="16" height="20" rx="3" fill="#fdf7e8" stroke="${INK}" stroke-width="2"/>`) }],
           gives: n => ({ fridge: n }), after: n => `${n} cheeses in the fridge.`, line: 'The boot now smells like a sheep farm. In the best way.' } },
         { id: 'rugby', type: 'info', x: 470, y: 150, verb: 'Rugby night', eyebrow: 'Aviron Bayonnais · check fixtures', title: 'A rugby town first', text: 'Bayonne is a rugby town before anything else. Top 14 home weekends at Jean-Dauger are a festival of blue-and-white, bandas and grilled everything. Tickets €15–45.', task: { kind: 'timing', look: 'kick', prompt: 'Kick the conversion when the aim line points straight up.' }, doneMsg: 'Conversion kicked · +1 star' },
+        { id: 'espelette', type: 'photo', x: 330, y: 770, verb: 'Espelette peppers', title: 'Espelette', text: 'The pepper village on the cheese-hills detour: façades strung with drying red peppers. Villa Arnaga, Edmond Rostand’s Basque mansion, is nearby in Cambo (about €9).', cap: 'Espelette peppers', photo: { sky: ['#bfe3ea', '#f6f0dc'], sprite: ['house', { w: 90, h: 56, roof: C.terra, timber: C.rioja }, 1.1, 0, -10] } },
         { id: 'cobba', type: 'cobba', x: 300, y: 620, verb: 'Chat with Cobba', lines: ['Bayonne, Biarritz and Saint-Jean-de-Luz are all 20 minutes apart. Very efficient of them.', 'Musée Basque is the primer on everything Basque you’re about to eat.'] },
         { id: 'car', type: 'leave', x: 520, y: 860, verb: 'Hit the road', art: ['car', 520, 820, { rot: 0 }] },
       ],
     },
   },
   biarritz: {
-    name: 'Biarritz', region: 'france', ll: [43.48, -1.56], lab: [-8, -4, 'end'], date: 'Sat 9 Oct', nights: 0, hotel: 0, stampIcon: 'lighthouse', stampText: 'BIARRITZ · CÔTE BASQUE',
+    name: 'Biarritz', region: 'france', ll: [43.48, -1.56], lab: [-8, -4, 'end'], date: 'Sat 9 Oct', nights: 1, hotel: 115, stayNote: 'The night is back at the Bayonne base, 20 minutes away.', stampIcon: 'lighthouse', stampText: 'BIARRITZ · CÔTE BASQUE',
     leg: { coast: [[43.49, -1.52]], highway: [[43.47, -1.5]] },
     annette: 'Bar Jean Biarritz: the ones on the left and right are still good. Beef txuleta: pricey but good, like fancy.',
     hello: 'Biarritz day trip. Fancy shops up front, but the real Biarritz is the market, Les Halles.',
@@ -3256,6 +3258,7 @@ Object.assign(STOP, {
         { id: 'church', type: 'info', x: 420, y: 200, verb: 'Église Saint-Jean-Baptiste', art: ['church', 420, 160], eyebrow: 'A royal wedding', title: 'Église Saint-Jean-Baptiste', text: 'Louis XIV married Maria Theresa of Spain here in 1660. Legend says the door they used was walled up afterwards so nobody else could walk through it.', task: { kind: 'tap', prompt: 'Brick up the royal door: tap each gap.', n: 6, fill: '#c9744a', bg: C.cream, svg: `<path d="M110 110 V40 q40 -40 80 0 V110Z" fill="#3a3a44" stroke="${INK}" stroke-width="3"/>${[...Array(6)].map((_, i) => `<rect class="tgt" x="${116 + (i % 3) * 23}" y="${50 + Math.floor(i / 3) * 28}" width="20" height="24" rx="2" fill="#5a5a66" stroke="${INK}" stroke-width="1.4"/>`).join('')}` }, doneMsg: 'Door walled up · +1 star' },
         { id: 'espadrilles', type: 'shop', x: 160, y: 250, verb: 'Espadrilles, made to order', eyebrow: 'Rue Gambetta', title: 'Espadrilles, stitched while you wait', text: 'Pick the sole and canvas and they’re done while you eat macarons. Also the striped Basque linen on every table.', items: [{ name: 'Espadrilles for Romy', price: 45, icon: 'bag', by: 'romy' }, { name: 'Espadrilles for Huw', price: 45, icon: 'bag', by: 'huw' }, { name: 'Tissage de Luz tablecloth', price: 80, icon: 'bag' }] },
         { id: 'socoa', type: 'photo', x: 300, y: 520, verb: 'Photograph the bay', mark: [300, 470], title: 'Ciboure and Socoa fort', text: 'Across the bay: Ravel’s birthplace and the harbour fort guarding the entrance.', cap: 'Saint-Jean-de-Luz bay', photo: { sky: ['#9fd0e0', '#f6f0dc'], sea: true, sprite: ['house', { w: 90, h: 50, roof: C.terra, timber: C.rioja }, 1.1, 0, -14] } },
+        { id: 'rhune', type: 'info', x: 300, y: 330, verb: 'La Rhune cog railway', eyebrow: 'Ascain · 20 min · ~€22 return', title: 'La Rhune summit', text: 'The Basque country’s sacred mountain. A 1924 wooden cog train rattles up to 905 m for a view from Biarritz to Spain, with wild pottok ponies on the slopes. Walkers go up in about 2.5 hours and take the train down.', task: { kind: 'mash', prompt: 'Help the little wooden train up the last steep bit.', n: 16, secs: 4, btn: 'Chug!', win: 'Summit! France on one side, Spain on the other.' }, delta: { budget: -88, energy: -4 }, doneMsg: 'La Rhune summit · +1 star' },
         { id: 'car', type: 'leave', x: 540, y: 250, verb: 'On to Spain', art: ['car', 540, 210, { rot: 0 }] },
       ],
     },
@@ -3287,6 +3290,8 @@ Object.assign(STOP, {
         { id: 'combs', type: 'photo', x: 60, y: 250, verb: 'Peine del Viento', art: ['combs', 60, 210], mark: [60, 150], title: 'Peine del Viento', text: 'Eduardo Chillida’s wind combs, bolted into the rocks at the west end of the bay.', cap: 'Wind combs', photo: { sky: ['#8fb2c8', '#dfeef0'], sea: true, sprite: ['combs', {}, 1.3, 0, -10] } },
         { id: 'urgull', type: 'photo', x: 540, y: 250, verb: 'Monte Urgull', art: ['christ', 540, 220], mark: [540, 150], title: 'Monte Urgull', text: 'The other hill: an old fort, a Christ statue and harbour views. Free.', cap: 'From Monte Urgull', photo: { sky: ['#9fd0e0', '#f6f0dc'], sea: true, sprite: ['christ', {}, 1.3, 0, 0] } },
         { id: 'loreak', type: 'shop', x: 470, y: 820, verb: 'Loreak Mendian', eyebrow: 'Shop · the Gros quarter', title: 'Loreak Mendian', text: 'San Seb’s own label: graphic knits and surf-adjacent basics, plus the independent boutiques behind Zurriola beach.', items: [{ name: 'Graphic knit', price: 120, icon: 'bag' }, { name: 'Tee', price: 50, icon: 'bag' }] },
+        { id: 'ulia', type: 'info', x: 580, y: 420, verb: 'Monte Ulia walk to Pasaia', eyebrow: 'The locals’ walk · half-day', title: 'Monte Ulia to Pasaia', text: 'From the east end of Zurriola beach over Monte Ulia to the impossibly narrow fishing port of Pasaia San Juan, about 2.5 hours. Grilled fish at the bottom, bus back. The quiet counterweight to the old-town crowds. Real Sociedad play at the Reale Arena if there’s a home game.', delta: { energy: -8, hunger: 12, budget: -120 }, stars: 1, doneMsg: 'Walked to Pasaia · +1 star' },
+        { id: 'arzak', type: 'eat', x: 300, y: 790, verb: 'Arzak (splash-out)', eyebrow: '★★★ option', title: 'Arzak', text: 'The father-and-daughter three-star that started New Basque Cuisine. The splash-out if Etxebarri doesn’t come through.', options: [{ name: 'Tasting menu for four', price: 1240, hunger: -45, energy: 10, stars: 3, line: 'New Basque Cuisine, at its source. The kitty is lying down.' }, { name: 'Just walk past and look', price: 0, hunger: 0, energy: 2, stars: 0, line: 'It looked very nice from outside.' }] },
         { id: 'cobba', type: 'cobba', x: 300, y: 500, verb: 'Chat with Cobba', lines: ['The old town is worth it but overrated: more tourists than locals. Annette’s words.', 'Txakoli in the morning is culturally acceptable here. I checked.', 'Three nights here is the maximum. House rules.'] },
         { id: 'car', type: 'leave', x: 540, y: 520, verb: 'Coast road west', art: ['car', 560, 480, { rot: 180 }] },
       ],
@@ -3317,7 +3322,7 @@ Object.assign(STOP, {
     },
   },
   mundaka: {
-    name: 'Lekeitio & Mundaka', short: 'Mundaka', region: 'basque', ll: [43.40, -2.70], lab: [4, -9, 'start'], date: 'Wed 13 – Thu 14 Oct', nights: 1, hotel: 90, stampIcon: 'surf', stampText: 'MUNDAKA · URDAIBAI',
+    name: 'Lekeitio & Mundaka', short: 'Mundaka', region: 'basque', ll: [43.40, -2.70], lab: [4, -9, 'start'], date: 'Wed 13 – Thu 14 Oct', nights: 2, hotel: 90, stampIcon: 'surf', stampText: 'MUNDAKA · URDAIBAI',
     leg: { coast: [[43.3, -2.25], [43.37, -2.5]], highway: [[43.25, -2.4]] },
     annette: 'From Lekeitio straight to Mundaka, don’t stop between. Mundaka is a beautiful town.',
     hello: 'The prettiest stretch of the drive. Mundaka: one of the best left-hand waves in the world, right off the church terrace.',
@@ -3398,8 +3403,8 @@ Object.assign(STOP, {
         { id: 'gugg', type: 'photo', x: 140, y: 330, verb: 'Guggenheim & Puppy', art: ['guggenheim', 140, 230], mark: [140, 130], title: 'Guggenheim Bilbao', text: 'Gehry’s titanium ship, with Puppy out front: a giant terrier made of flowers. About €18 inside if the weather turns.', cap: 'Puppy says hi', photo: { sky: ['#9fb8c8', '#e9eee6'], sprite: ['puppy', {}, 1.8, 0, 0] } },
         { id: 'puppy', type: 'cobba', x: 260, y: 290, art: ['puppy', 260, 260], verb: 'Chat with Cobba', lines: ['That dog is made of 38,000 flowers. I am made of shell and charm.', 'El Corte Inglés: cheese, clothes, anything else. Annette’s haul-home stop.'] },
         { id: 'txakoli', type: 'info', x: 470, y: 330, verb: 'Puerto Viejo txakoli', art: ['pintxobar', 470, 290, { sign: 'PUERTO VIEJO' }], eyebrow: 'Annette’s Bilbao order · Algorta', title: 'Txakoli from a height', text: 'The stacked white fishing quarter in Getxo. Anchovies, and txakoli poured from above your head to wake up the bubbles.', task: { kind: 'timing', look: 'pour', prompt: 'Pour when the bottle is right over the glass.' }, delta: { budget: -30, hunger: -8 }, doneMsg: 'Perfect pour · +1 star' },
-        { id: 'eci', type: 'shop', x: 150, y: 780, verb: 'El Corte Inglés', art: ['shop', 150, 740, { sign: 'EL CORTE INGLÉS', awn: '#2f6b3a' }], eyebrow: 'Annette pick · the haul home', title: 'El Corte Inglés, Gran Vía', text: 'The reliable Barbour bet in Spain, plus cheese, tins and txakoli in the food hall on the way out.', items: [{ name: 'Barbour quilted jacket', price: 180, icon: 'bag' }, { name: 'Idiazabal and Manchego', price: 40, gives: { fridge: 2 }, icon: 'fridge' }, { name: 'Txakoli, three bottles', price: 36, gives: { boot: 3 }, icon: 'boot' }] },
-        { id: 'etx', type: 'info', x: 470, y: 780, verb: 'The Etxebarri booking', art: ['sign', 470, 750, { a: 'AXPE', b: '50 min' }], eyebrow: 'Stuart pick · alarm required', title: 'Asador Etxebarri', text: 'Everything, even the ice cream, touched by wood fire. Perennial world top five. Reservations open on the 1st of the month and vanish in minutes.', task: { kind: 'mash', prompt: 'Booking opens NOW. Refresh like your lunch depends on it.', n: 20, secs: 4, btn: 'Refresh!', win: 'Booked! Sunday lunch, Axpe.', fail: 'Fully booked. Azurmendi is the backup.' }, doneMsg: 'Table booked · +1 star' },
+        { id: 'eci', type: 'shop', x: 150, y: 780, verb: 'El Corte Inglés', art: ['shop', 150, 740, { sign: 'EL CORTE INGLÉS', awn: '#2f6b3a' }], eyebrow: 'Annette pick · the haul home', title: 'El Corte Inglés, Gran Vía', text: 'The reliable Barbour bet in Spain, plus cheese, tins and txakoli in the food hall on the way out.', items: [{ name: 'Barbour quilted jacket', price: 180, icon: 'bag' }, { name: 'Burberry scarf (the Bilbao stockist)', price: 500, icon: 'bag' }, { name: 'Idiazabal and Manchego', price: 40, gives: { fridge: 2 }, icon: 'fridge' }, { name: 'Txakoli, three bottles', price: 36, gives: { boot: 3 }, icon: 'boot' }, { name: 'A txapela from a Casco Viejo hat shop', price: 45, icon: 'bag' }] },
+        { id: 'etx', type: 'info', x: 470, y: 780, verb: 'The Etxebarri booking', art: ['sign', 470, 750, { a: 'AXPE', b: '50 min' }], eyebrow: 'Stuart pick · alarm required', title: 'Asador Etxebarri', text: 'Everything, even the ice cream, touched by wood fire. Perennial world top five, 50 minutes south in Axpe, on the way to Rioja. The target is Sunday 17 October lunch. Reservations open on the 1st of the month and vanish in minutes; Azurmendi is the fallback.', task: { kind: 'mash', prompt: 'Booking opens NOW. Refresh like your lunch depends on it.', n: 20, secs: 4, btn: 'Refresh!', win: 'Booked! Sunday lunch, Axpe.', fail: 'Fully booked. Azurmendi is the backup.' }, doneMsg: 'Table booked · +1 star' },
         { id: 'sanmames', type: 'info', x: 470, y: 130, verb: 'San Mamés', art: ['stadium', 500, 100], mark: [500, 20], eyebrow: 'Football · check fixtures', title: 'Athletic Club at San Mamés', text: 'Basque players only, forever, in a stadium nicknamed “the Cathedral”. The home-game window most likely lands on this weekend. Tickets €30–80, tours about €20.', stars: 1 },
         { id: 'casco', type: 'eat', x: 300, y: 560, verb: 'Casco Viejo pintxos', eyebrow: 'The Seven Streets', title: 'Plaza Nueva pintxos', text: 'Pintxos under the arcades in the Seven Streets.', options: [{ name: 'A pintxo in every arcade', price: 70, hunger: -30, tomato: 1 }, { name: 'Ribera Market lunch', note: 'Europe’s biggest covered market', price: 55, hunger: -26 }] },
         { id: 'car', type: 'leave', x: 560, y: 860, verb: 'South into the wine', art: ['car', 560, 820, { rot: 90 }] },
@@ -3528,7 +3533,8 @@ function mapAction(label, fn, cls = '') {
   h.innerHTML = label ? `<button class="btn ${cls}">${label}</button>` : '';
   if (label) { const b = h.firstElementChild; b.onclick = () => { Snd.pop('G5'); fn(); }; gsap.from(b, { scale: 0, duration: .5, ease: 'back.out(2)' }); }
 }
-function mapPlate() { const d = here(); $('#mapPlate').innerHTML = exPlate(`Day ${S.day} · ${d.short || d.name}`, d.date); }
+function dayLabel(n = S.day) { const dt = new Date(2027, 9, n); return `${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dt.getDay()]} ${dt.getDate()} ${dt.getMonth() === 9 ? 'Oct' : 'Nov'}`; }
+function mapPlate() { const d = here(); $('#mapPlate').innerHTML = exPlate(`Day ${S.day} · ${d.short || d.name}`, `${dayLabel()}${S.day !== +((d.date.match(/\d+/) || [S.day])[0]) ? ` · plan: ${d.date}` : ''}`); }
 function prepMap() {
   show('map'); buildHud(); drawMap(); buildClouds(); renderSky(); mapPlate();
 }
@@ -3580,7 +3586,7 @@ function leaveCard(p) {
     <h2>${nextId ? (STOP[nextId].leg && STOP[nextId].leg.fly ? `Fly to ${isRochelle ? '' : ''}${STOP[nextId].short || STOP[nextId].name}?` : 'Hit the road?') : 'Home time?'}</h2>
     <p>${d.nights ? `${total} night${total === 1 ? '' : 's'} here, about €${d.hotel} a night for the four of you.` : 'A day stop: no hotel booked.'}${left ? ` ${left} thing${left === 1 ? '' : 's'} still to do here.` : ' You’ve done everything here.'}</p>
     ${!packed ? `<p class="note" style="color:var(--terra)">The boot isn’t packed! Cobba will do it himself. Badly.</p>` : ''}
-    ${isRochelle ? `<p class="note">Île de Ré is “the soft spot”: priciest and most optional. Royan has oysters too.</p>` : ''}
+    ${isRochelle ? `<p class="note">Île de Ré is “the soft spot”: priciest and most optional. Cross and tonight’s bed is on the island instead; skip it and you sleep here, then Royan has oysters too.</p>` : ''}${d.stayNote ? `<p class="note">${d.stayNote}</p>` : ''}
     <div class="choices">
       ${isRochelle ? `<button class="choice" data-go="re">${ICON.coast}<span><b>Cross to Île de Ré</b><small>Bridge toll about €8, posh island prices, a lighthouse to climb.</small><span class="tagline bad">€€€</span></span></button>
       <button class="choice" data-go="royan">${ICON.oyster}<span><b>Skip it, straight to Royan</b><small>Oysters are the point anyway.</small><span class="tagline good">saves money</span></span></button>` : `<button class="choice" data-go="go">${ICON.coast}<span><b>${nextId ? 'Let’s go' : 'Train to Frankfurt, fly home'}</b><small>${nextId ? `Next: ${STOP[nextId].name}.` : 'Fri 22 Oct: ICE to Frankfurt Airport, land in Sydney on Sunday.'}</small></span></button>`}
@@ -3594,7 +3600,7 @@ function leaveCard(p) {
       S.nights[STOPID] = extra + 1; S.day += 1;
       if (total + 1 > 3) { S.restless++; S.stars = Math.max(0, S.stars - 1); award(0, { energy: -12, budget: -d.hotel }, 'Restless Cobs · −1 star'); say('THREE NIGHTS MAX ANYWHERE. The group is restless. Annette is tapping the itinerary.', 4200); shake(10); Snd.sad(); }
       else { award(0, { energy: 15, budget: -d.hotel }, 'Another night · +15 energy'); say(pick(['A slow morning. Very continental.', 'One more night. Nobody complains.']), 3000); }
-      $('#exBar').innerHTML = exPlate(d.name, SCN.sub, `<small style="color:var(--ink-2)">Day ${S.day} · ${d.date}</small>`);
+      $('#exBar').innerHTML = exPlate(d.name, SCN.sub, `<small style="color:var(--ink-2)">Day ${S.day} · ${dayLabel()}</small>`);
       await closeModal(); EX.busy = false; EX.near = null; return;
     }
     if (isRochelle) {
@@ -3606,7 +3612,7 @@ function leaveCard(p) {
     }
     if (!packed) { S.gear = { boots: [], coats: false, umbrella: false, cooler: false }; }
     // pay for the booked nights, and bank the rest they gave
-    const n = d.nights;
+    const n = isRochelle && go === 're' ? 0 : d.nights;
     if (n) { award(0, { budget: -d.hotel * n, energy: 10 * n, hunger: 8 * n }); S.day += n; }
     await closeModal();
     leaveExplore();
