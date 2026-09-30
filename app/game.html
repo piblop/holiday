@@ -433,6 +433,12 @@ body,#app{background:var(--paper);color:var(--ink)}
 #bubble{background:#fff8ec;border:2.5px solid #efd6ae;box-shadow:0 4px 0 #e6c99b,0 10px 24px rgba(90,60,40,.18)}
 #bubble::after{content:"▼";position:absolute;right:16px;bottom:8px;font-size:11px;color:#ff7aa8}
 </style>
+<style>
+/* simpler crew screen: just the four Cobs */
+.crew-grid .cob{padding:14px 10px 12px}
+.crew-grid .cob svg.av{width:104px;height:104px}
+.cob-card ul:empty{display:none}
+</style>
 <div id="app">
  <div id="stage">
 
@@ -2136,13 +2142,12 @@ function eatCard(p) {
     <p>${p.text}</p>
     ${menuStrip(p.id)}
     ${done ? `<p class="note" style="color:var(--olive)">Eaten. Nobody can move.</p>` : `
-    <button class="ability ${known ? 'used' : ''}" id="whisper">${ICON.spread}<span><b>Huw · Menu Whisperer</b><small>${known ? 'Best value marked below, 15% off.' : 'Find the best-value option here.'}</small></span></button>
-    <div class="choices">${p.options.map((o, i) => `<button class="choice" data-i="${i}">${ICON[o.icon || 'hunger'] ? `<svg viewBox="0 0 24 24" style="width:44px;height:44px">${(ICON[o.icon] || ICON.hunger).replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '')}</svg>` : ''}<span><b>${o.name}</b><small>${o.note || ''}</small><span class="tagline">€${o.price} for four</span>${o.tomato ? `<span class="tagline good">+${o.tomato} tomato salad${o.tomato > 1 ? 's' : ''}</span>` : ''}${known && o === cheapest ? '<span class="tagline cheap">best value · 15% off</span>' : ''}</span></button>`).join('')}</div>`}
+    <div class="choices">${p.options.map((o, i) => `<button class="choice" data-i="${i}">${ICON[o.icon || 'hunger'] ? `<svg viewBox="0 0 24 24" style="width:44px;height:44px">${(ICON[o.icon] || ICON.hunger).replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '')}</svg>` : ''}<span><b>${o.name}</b><small>${o.note || ''}</small><span class="tagline">€${o.price} for four</span>${o.tomato ? `<span class="tagline good">+${o.tomato} tomato salad${o.tomato > 1 ? 's' : ''}</span>` : ''}</span></button>`).join('')}</div>`}
     <div class="row"><button class="btn ghost small" id="ok">${done ? 'Back to exploring' : 'Not hungry yet'}</button></div>`);
   sh.querySelector('#ok').onclick = backToPort;
   wireMenus(sh);
   if (done) return;
-  sh.querySelector('#whisper').onclick = () => {
+  if (false) sh.querySelector('#whisper').onclick = () => {
     if (S.used[huwKey]) return;
     S.used[huwKey] = true; save();
     const i = p.options.indexOf(cheapest), b = sh.querySelector(`[data-i="${i}"] span`);
@@ -2153,7 +2158,7 @@ function eatCard(p) {
   };
   sh.querySelectorAll('.choice').forEach(b => b.onclick = async () => {
     const o = p.options[+b.dataset.i];
-    const price = Math.round(o.price * (S.used[huwKey] && o === cheapest ? .85 : 1));
+    const price = o.price;
     markDone(p.id);
     award(o.stars ?? 1, { budget: -price, hunger: o.hunger ?? -30, energy: o.energy ?? 5 }, `${o.name} · −€${price}`);
     if (o.tomato) { bump({ tomato: o.tomato }); S.trip[STOPID].tomato = (S.trip[STOPID].tomato || 0) + o.tomato; save(); }
@@ -3537,6 +3542,35 @@ function openMenu(k) {
   layer.querySelector('#mvClose').onclick = close;
   layer.onclick = e => { if (e.target === layer) close(); };
 }
+/* ---------- the experience is the tour: mini-games become places to see, eat and shop ---------- */
+(() => {
+  const PH = (sprite, sky, sea) => ({ sky: sky || ['#f6c98f', '#fbe6b8'], sea: !!sea, sprite });
+  const SWAP = {
+    'paris:hotel': { type: 'info', verb: 'The hotel', eyebrow: 'Recovery night', title: 'Back to the hotel', text: 'One recovery night after the long flight. The boot gets packed here: big enough for everyone and their bags, no bigger. Gumboots and raincoats in, as Annette said.', delta: { energy: 10 }, stars: 1, doneMsg: 'Boot packed, gumboots in · +1 star' },
+    'iledere:phare': { type: 'photo', verb: 'Phare des Baleines', title: 'Phare des Baleines', text: '257 steps up the lighthouse at the island’s tip for the full Atlantic sweep, about €4 each. The island is dead flat and made for bikes.', cap: 'Top of the Baleines', photo: PH(['lighthouse', {}, 1.1, 0, 0], ['#9fd0e0', '#f6f0dc'], true), delta: { energy: -6, budget: -16 } },
+    'royan:cabane': { type: 'photo', verb: 'The cabane with the umbrella', title: 'Oysters on the channel', text: 'The producer’s shack Annette means: oysters shucked to order under the umbrella, a cold white, and the La Cayenne channel at your feet. Fantastic oysters, huge, fresh and flavourful.', cap: 'Marennes oysters', photo: 'royan', delta: { hunger: -10 } },
+    'bordeaux:chateaux': { type: 'shop', verb: 'Médoc château tastings', eyebrow: 'Book ahead · €15–40 each', title: 'Pick two châteaux, not five', text: 'One grand cru estate and one family grower. Most châteaux need a booked visit, and the harvest may still be running in early October.', items: [{ name: 'Grand cru estate, Pauillac', note: 'the famous one', price: 160, gives: { boot: 3 }, icon: 'boot' }, { name: 'Family grower, Margaux', note: 'harvest still running', price: 60, gives: { boot: 3 }, icon: 'boot' }, { name: 'Saint-Émilion cellar', note: 'the medieval village', price: 80, gives: { boot: 3 }, icon: 'boot' }] },
+    'bordeaux:dune': { type: 'photo', verb: 'Dune du Pilat', title: 'Dune du Pilat', text: 'Europe’s tallest sand dune, an hour west. Climb the ridge for the Banc d’Arguin panorama, then Arcachon oysters on the way back. Parking about €6.', cap: 'Top of the dune', photo: PH(['dune', {}, 0.6, 0, 10], ['#9fd0e0', '#f3dcae'], true), delta: { energy: -8, budget: -6 } },
+    'capbreton:surf': { type: 'info', verb: 'Surf La Gravière', eyebrow: 'October comp season', title: 'La Gravière', text: 'The famous heavy beach break and comp venue. If the WSL comp is on, watching from the sand is free and electric. Otherwise a beginner lesson on the mellower Capbreton side, €45–60.', delta: { energy: -6 }, stars: 1, doneMsg: 'Watched the heats · +1 star' },
+    'capbreton:mussels': { type: 'eat', verb: 'Seafood shacks', eyebrow: 'Eat · Port de Capbreton', title: 'Mussels the size of your head', text: 'Oysters between surf heats, and mussels the size of your head, on the marina.', options: [{ name: 'Mussels for four', price: 110, hunger: -35 }, { name: 'Oysters between heats', price: 70, hunger: -20, energy: 6 }] },
+    'bayonne:cheese': { type: 'shop', verb: 'Road to the cheese hills', eyebrow: 'Bidarray · Louhossoa · Cambo', title: 'Fill the fridge', text: 'Inland sheep-farm country where every farmer runs their own flock. Stop, taste, fill the boot. Carry cash.', items: [{ name: 'Agour, Hélette', note: 'Annette’s pick', price: 28, gives: { fridge: 1 }, icon: 'fridge' }, { name: 'Farm-gate Ossau-Iraty', note: 'just pull over', price: 22, gives: { fridge: 1 }, icon: 'fridge' }, { name: 'Aged tomme', note: 'nutty, firm', price: 24, gives: { fridge: 1 }, icon: 'fridge' }, { name: 'Espelette pepper jar', note: 'the red-pepper village', price: 8, icon: 'fridge' }] },
+    'biarritz:halles': { type: 'eat', verb: 'Graze Les Halles', eyebrow: 'The market · mornings till ~2pm', title: 'Les Halles de Biarritz', text: 'The real Biarritz: graze the market, then eat where the locals do around Place Sobradiel.', options: [{ name: 'Graze the stalls', price: 60, hunger: -30, tomato: 1 }, { name: 'Ham, cheese and a baguette picnic', price: 40, hunger: -25 }] },
+    'sjdl:grill': { type: 'eat', verb: 'Grillerie du Port', eyebrow: 'Last lunch in France', title: 'Grillerie du Port', text: 'Whole sardines and tuna over coals on the quay of the prettiest port in France. Macarons from Maison Adam after.', options: [{ name: 'Grilled sardines for four', price: 80, hunger: -35 }, { name: 'Grilled tuna', price: 110, hunger: -38, stars: 2 }] },
+    'sanseb:pintxos': { type: 'eat', verb: 'Pintxos crawl', eyebrow: 'Parte Vieja', title: 'Pintxos crawl', text: 'Bar Néstor for the tomato salad and tortilla (put your name down early), then Gandarias, La Cuchara de San Telmo and La Viña: one pintxo and one txakoli per bar.', options: [{ name: 'The full crawl for four', price: 160, hunger: -40, tomato: 2, stars: 2, line: 'The tomato-salad commandment is being honoured.' }, { name: 'Just Bar Néstor’s tomato salad and tortilla', price: 45, hunger: -20, tomato: 2 }] },
+    'sanseb:cider': { type: 'eat', verb: 'Mountain sagardotegi', eyebrow: 'Annette pick · call ahead', title: 'The cider house', text: 'Cod omelette, txuleta, Idiazabal with quince and walnuts, and cider caught straight from the barrel when someone shouts “Txotx!”. Ask locals, drive to the most remote one.', options: [{ name: 'The cider-house feast for four', price: 180, hunger: -45, energy: 6, stars: 2, line: 'Txotx! Nobody caught it cleanly. Everyone was happy.' }] },
+    'orio:joxemari': { type: 'eat', verb: 'Bodegón Asador Joxe Mari', eyebrow: 'Stuart’s pick · sold by weight', title: 'Bodegón Asador Joxe Mari', text: 'Whole wild fish over coals on the riverfront. Sold by weight, so confirm the price when ordering. The one big-ticket lunch.', options: [{ name: 'Whole wild turbot for four', price: 260, hunger: -45, stars: 2, line: 'Stuart was right. Stuart is nearly as right as Annette.' }, { name: 'Besugo over the coals', price: 220, hunger: -42 }] },
+    'mundaka:left': { type: 'photo', verb: 'The Mundaka left', title: 'The Mundaka left', text: 'One of the best left-hand waves on earth breaks off the church terrace when a swell is running. Flat day? SUP the Urdaibai estuary instead, €15–25.', cap: 'The Mundaka left', photo: PH(['church', {}, 1.1, 0, 0], ['#bfe3ea', '#e6f7e0'], true) },
+    'bermeo:gaztelu': { type: 'photo', verb: 'San Juan de Gaztelugatxe', title: 'San Juan de Gaztelugatxe', text: '241 steps out along the stone causeway to the hermitage. Ring the bell three times at the top and make a wish. Free, but book the timed ticket. Dragonstone, for the Game of Thrones contingent.', cap: 'Dragonstone', photo: PH(['hermitage', {}, 0.7, 0, 0], ['#9fb8c8', '#e9eee6'], true), delta: { energy: -10 } },
+    'haro:cellar': { type: 'shop', verb: 'Barrio de la Estación cellars', eyebrow: 'Book a week ahead · tastings €15–40', title: 'The Rioja cellars', text: 'The densest square kilometre of century-old wineries on earth: López de Heredia, Muga, La Rioja Alta. Tour one, taste at two more. The bottles fly to Bamberg with you, so buy what the bags can carry.', items: [{ name: 'Gran reserva', note: 'the serious one', price: 70, gives: { boot: 2 }, icon: 'boot' }, { name: 'Reserva', note: 'cellar-door price', price: 40, gives: { boot: 2 }, icon: 'boot' }, { name: 'Crianza', note: 'Tuesday wine, but good', price: 24, gives: { boot: 2 }, icon: 'boot' }, { name: 'Oaked white Rioja', note: 'the curveball', price: 30, gives: { boot: 1 }, icon: 'boot' }] },
+    'ezcaray:echaurren': { type: 'eat', verb: 'Echaurren, the long lunch', eyebrow: '★★ · Annette pick · book 2–4 weeks', title: 'Echaurren', text: 'The hectic-but-humble family two-star. The lunch takes 4–5 hours. The most excellent croquettes on the planet live in the casual Tradición room.', options: [{ name: 'Tradición room: the croquettes', price: 280, hunger: -45, stars: 2, line: 'Most excellent croquettes on the planet. Confirmed.' }, { name: 'El Portal tasting menu', price: 700, hunger: -50, energy: 8, stars: 3, line: 'Four and a half hours. Nobody regrets anything.' }] },
+    'bamberg:schlenkerla': { type: 'eat', verb: 'Schlenkerla, the final toast', eyebrow: 'The trip’s closing act', title: 'Schlenkerla', text: 'The smoked-beer mothership, pouring since 1405: Aecht Schlenkerla Märzen straight from the wooden barrel, with the Bamberger Zwiebel, a beer-braised stuffed onion. Tastes like a campfire in a good way.', options: [{ name: 'Rauchbier and the Zwiebel for four', price: 110, hunger: -40, energy: 10, stars: 3, line: 'Prost! The whole trip in one smoky gulp.' }] },
+  };
+  Object.entries(STOP).forEach(([sid, d]) => (d.scene.pois || []).forEach(p => {
+    const sw = SWAP[`${sid}:${p.id}`];
+    if (sw) { delete p.game; delete p.cfg; Object.assign(p, sw); }
+    if (p.type === 'info' && p.task) delete p.task; // no more tap-and-timing tasks: the tour and the facts are the experience
+  }));
+})();
 /* ================= 3D DIORAMA EXPLORE (Annette's Big Day v2 style) ================= */
 // Every stop is a floating toy-diorama island: checker tiles, toon shading, soft shadows,
 // chibi toy Cobs, and low-poly landmarks. Builders are lifted from Annette's Big Day v2
@@ -3831,7 +3865,7 @@ const D3 = (() => {
     floor.count = nf; water.count = nw; world.add(floor); if (nw) world.add(water);
     OWNED.push(floor.material, water.material);
     // edge flowers + clouds under the island, like v2
-    for (let i = 0; i < 30; i++) { const t = hsh(i, 9, stopId.length) * (2 * (cols + rows)); let x, z; if (t < cols) { x = t; z = rows + 0.05; } else if (t < cols + rows) { x = cols + 0.05; z = t - cols; } else if (t < 2 * cols + rows) { x = t - cols - rows; z = -0.05; } else { x = -0.05; z = t - 2 * cols - rows; } makeFlower(world, x, z, CONF[i % 5]); }
+    for (let i = 0; i < 12; i++) { const t = hsh(i, 9, stopId.length) * (2 * (cols + rows)); let x, z; if (t < cols) { x = t; z = rows + 0.05; } else if (t < cols + rows) { x = cols + 0.05; z = t - cols; } else if (t < 2 * cols + rows) { x = t - cols - rows; z = -0.05; } else { x = -0.05; z = t - 2 * cols - rows; } makeFlower(world, x, z, CONF[i % 5]); }
     const clouds = []; for (let i = 0; i < 8; i++) clouds.push(makeCloud(world, -10 + i * 6, -4.5 + hsh(i, 1) * 1.5, -4 + hsh(i, 2) * (rows + 8), 1.2 + hsh(i, 3) * 1.2));
     const P = v => [v[0] / TILE, v[1] / TILE];
     const anims = { spin: [], wheels: [], smoke: [], bob: [], flags: [], clams: [], gondolas: [] };
@@ -3892,7 +3926,7 @@ const D3 = (() => {
       || Math.hypot(sc.start.x - x, sc.start.y - y) < 70;
     const kinds = sc.ground === 'grass' ? ['flowers', 'flowers', 'bush', 'rock', 'weeds', 'stump', 'fruitTree'] : sc.ground === 'sand' ? ['shells', 'shells', 'rock', 'weeds', 'bush'] : sc.ground === 'soil' ? ['weeds', 'rock', 'bush', 'flowers'] : ['lantern', 'bench', 'flowers', 'bush', 'lantern'];
     const out = [];
-    for (let n = 0, tries = 0; n < 18 && tries < 240; tries++) { const x = 30 + rnd() * (sc.w - 60), y = 40 + rnd() * (sc.h - 70); if (blocked(x, y)) continue; out.push([kinds[Math.floor(rnd() * kinds.length)], x, y]); n++; }
+    for (let n = 0, tries = 0; n < 6 && tries < 240; tries++) { const x = 30 + rnd() * (sc.w - 60), y = 40 + rnd() * (sc.h - 70); if (blocked(x, y)) continue; out.push([kinds[Math.floor(rnd() * kinds.length)], x, y]); n++; }
     return out;
   }
   // extra set pieces per stop (replaces the 2D "deco" drawings)
@@ -4298,7 +4332,7 @@ if (typeof D3 !== 'undefined' && D3) (() => {
     const land = (x, y) => { const c = Math.floor(x / TILE), r = Math.floor(y / TILE); return r >= 0 && c >= 0 && r < rows && c < cols && grid[r][c] !== 1; };
     const clear = (x, y, own) => land(x, y) && !(sc.pois || []).some(p => p.id !== own && Math.hypot(p.x - x, p.y - y) < 44) && Math.hypot(sc.start.x - x, sc.start.y - y) > 40;
     const put = (obj, x, y, face) => { if (face != null) obj.rotation.y = face; place(obj, x, y); return obj; };
-    const addNpc = (seed, prop, pose, x, y, face, poi, wander) => { if (!land(x, y) || NPCS.length >= 20) return; const p = npc(seed, prop, pose); put(p, x, y, face); NPCS.push({ o: p, poi, home: { x, y }, wander, t: hsh(seed, 3, 1) * 6, tgt: null }); return p; };
+    const addNpc = (seed, prop, pose, x, y, face, poi, wander) => { if (!land(x, y) || NPCS.length >= 8) return; const p = npc(seed, prop, pose); put(p, x, y, face); NPCS.push({ o: p, poi, home: { x, y }, wander, t: hsh(seed, 3, 1) * 6, tgt: null }); return p; };
     let seed = stopId.length * 97;
     (sc.pois || []).forEach((p, pi) => {
       if (!p.art) return;
@@ -4307,15 +4341,12 @@ if (typeof D3 !== 'undefined' && D3) (() => {
       const spots = [[ax - 64, ay + 58], [ax + 64, ay + 58], [ax - 84, ay + 10], [ax + 84, ay + 10], [ax, ay + 84]].filter(([x, y]) => clear(x, y, p.id));
       const face = (x, y) => Math.atan2(ax - x, ay - y); // face the landmark
       if (p.type === 'eat') {
-        spots.slice(0, 2).forEach(([x, y], i) => { const o = new THREE.Group(); cafeTable(o, 0, 0, i ? th[0] : '#ffffff'); parasol(o, 0, 0, th[0], th[1]).position.y = 0.05; put(mergeStatic(o), x, y); addNpc(s(), i ? 'wine' : null, 'sit', x - 16, y, Math.PI / 2, p.id); addNpc(s(), null, 'sit', x + 16, y, -Math.PI / 2, p.id); });
-        if (spots[2]) addNpc(s(), 'tray', 'idle', spots[2][0], spots[2][1], face(...spots[2]), p.id);
+        spots.slice(0, 1).forEach(([x, y], i) => { const o = new THREE.Group(); cafeTable(o, 0, 0, i ? th[0] : '#ffffff'); parasol(o, 0, 0, th[0], th[1]).position.y = 0.05; put(mergeStatic(o), x, y); addNpc(s(), i ? 'wine' : null, 'sit', x - 16, y, Math.PI / 2, p.id); addNpc(s(), null, 'sit', x + 16, y, -Math.PI / 2, p.id); });
       } else if (p.type === 'shop') {
-        spots.slice(0, 2).forEach(([x, y], i) => put(crate(new THREE.Group(), 0, 0, [th[0], '#ffd166'][i]), x, y));
-        if (spots[2]) addNpc(s(), 'bags', 'idle', spots[2][0], spots[2][1], face(...spots[2]), p.id);
-        if (spots[3]) addNpc(s(), 'bags', 'idle', spots[3][0], spots[3][1], face(...spots[3]), p.id);
+        if (spots[0]) put(crate(new THREE.Group(), 0, 0, th[0]), spots[0][0], spots[0][1]);
+        if (spots[1]) addNpc(s(), 'bags', 'idle', spots[1][0], spots[1][1], face(...spots[1]), p.id);
       } else if (p.type === 'photo' || p.type === 'info') {
-        spots.slice(0, p.type === 'photo' ? 3 : 2).forEach(([x, y], i) => addNpc(s(), i === 0 && p.type === 'info' ? 'flag' : i === 0 ? 'camera' : ['camera', 'map', 'icecream'][i], i === 0 && p.type === 'photo' ? 'photo' : 'idle', x, y, face(x, y), p.id));
-        if (spots[3]) put(mergeStatic(D3._.B3.bench({})), spots[3][0], spots[3][1], face(...spots[3]));
+        spots.slice(0, 1).forEach(([x, y], i) => addNpc(s(), i === 0 && p.type === 'info' ? 'flag' : i === 0 ? 'camera' : ['camera', 'map', 'icecream'][i], i === 0 && p.type === 'photo' ? 'photo' : 'idle', x, y, face(x, y), p.id));
       } else if (p.type === 'mini') {
         spots.slice(0, 3).forEach(([x, y], i) => addNpc(s(), ['icecream', 'camera', null][i], 'cheer', x, y, face(x, y), p.id));
         if (spots[3] && spots[4]) put(bunting(new THREE.Group(), 0, 0, (spots[4][0] - spots[3][0]) / TILE, (spots[4][1] - spots[3][1]) / TILE), spots[3][0], spots[3][1]);
@@ -4323,7 +4354,7 @@ if (typeof D3 !== 'undefined' && D3) (() => {
         if (spots[0]) put(suitcases(new THREE.Group(), 0, 0), spots[0][0], spots[0][1]);
       }
       // a flag and a flower planter at most landmarks
-      if (['photo', 'info', 'mini'].includes(p.type) && spots[4] && pi % 2 === 0) { const o = new THREE.Group(); flag(o, 0, 0, stopId === 'bayonne' ? 'bayonne' : stopId === 'bamberg' ? 'bavaria' : region, 1.7); planter(o, 0.4, 0.2); put(o, spots[4][0], spots[4][1]); }
+      if (['photo', 'info'].includes(p.type) && spots[4] && pi % 3 === 0) { const o = new THREE.Group(); flag(o, 0, 0, stopId === 'bayonne' ? 'bayonne' : stopId === 'bamberg' ? 'bavaria' : region, 1.7); planter(o, 0.4, 0.2); put(o, spots[4][0], spots[4][1]); }
     });
     // strolling locals and tourists
     const PROPS = { france: ['baguette', 'camera', 'icecream', 'map', 'bags'], basque: ['wine', 'camera', 'icecream', 'bags', 'map'], rioja: ['wine', 'camera', 'map'], germany: ['stein', 'camera', 'map', 'bags'] }[region] || ['camera'];
@@ -4331,21 +4362,21 @@ if (typeof D3 !== 'undefined' && D3) (() => {
     for (let tries = 0; tries < 80 && n < 9; tries++) {
       const x = 40 + hsh(tries, 1, seed) * (sc.w - 80), y = 60 + hsh(tries, 2, seed) * (sc.h - 120);
       if (!clear(x, y)) continue;
-      addNpc(++seed, PROPS[n % PROPS.length], 'walk', x, y, hsh(tries, 3) * TAU, null, true); n++; if (n >= 7) break;
+      addNpc(++seed, PROPS[n % PROPS.length], 'walk', x, y, hsh(tries, 3) * TAU, null, true); n++; if (n >= 3) break;
     }
     // lamps along streets, bunting between them
-    (sc.roads || []).forEach((rd, ri) => { for (let i = 1; i < rd.pts.length; i++) { const [x0, y0] = rd.pts[i - 1], [x1, y1] = rd.pts[i], len = Math.hypot(x1 - x0, y1 - y0), off = (rd.w || 36) / 2 + 14; for (let d = 60; d < len - 30; d += 150) { const t = d / len, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, nx = -(y1 - y0) / len, ny = (x1 - x0) / len; [1, -1].forEach(k => { const lx = x + nx * off * k, ly = y + ny * off * k; if (clear(lx, ly)) put(lamp(new THREE.Group(), 0, 0), lx, ly); }); } } });
+    (sc.roads || []).forEach((rd, ri) => { for (let i = 1; i < rd.pts.length; i++) { const [x0, y0] = rd.pts[i - 1], [x1, y1] = rd.pts[i], len = Math.hypot(x1 - x0, y1 - y0), off = (rd.w || 36) / 2 + 14; for (let d = 90; d < len - 30; d += 320) { const t = d / len, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, nx = -(y1 - y0) / len, ny = (x1 - x0) / len; [1, -1].forEach(k => { const lx = x + nx * off * k, ly = y + ny * off * k; if (clear(lx, ly)) put(lamp(new THREE.Group(), 0, 0), lx, ly); }); } } });
     // water life: sailboats, fishing boats, swimmers/surfers near beaches
     const waterSpots = []; for (let r = 1; r < rows - 1; r++) for (let c = 1; c < cols - 1; c++) if (grid[r][c] === 1 && grid[r - 1][c] === 1 && grid[r + 1][c] === 1 && grid[r][c - 1] === 1 && grid[r][c + 1] === 1) waterSpots.push([c, r]);
     const harbour = ['larochelle', 'sjdl', 'orio', 'bermeo', 'plentzia', 'mundaka', 'royan', 'bilbao'].includes(stopId), beachy = ['capbreton', 'biarritz', 'sanseb', 'iledere', 'mundaka'].includes(stopId);
-    for (let i = 0; i < Math.min(5, waterSpots.length); i++) {
+    for (let i = 0; i < Math.min(2, waterSpots.length); i++) {
       const [c, r] = waterSpots[Math.floor(hsh(i, 7, seed) * waterSpots.length)];
       const kind = hsh(i, 8, seed);
       const o = harbour && kind < 0.55 ? fishingBoat(new THREE.Group(), 0, 0, CONF[i % 5]) : kind < 0.8 || !beachy ? sailboat(new THREE.Group(), 0, 0, ['#ffffff', '#ffd166', '#7fc8f8'][i % 3]) : null;
       if (o) { o.rotation.y = hsh(i, 9) * TAU; place(o, (c + 0.5) * TILE, (r + 0.5) * TILE); o.position.y = 0; }
       else { const sw = grp(null); mk(G_SPH, SKINS[i % 6], [0.3, 0.3, 0.3], [0, 0.08, 0], sw); mk(G_SPH, HAIRS[i % 6], [0.32, 0.2, 0.32], [0, 0.16, -0.02], sw); mk(G_TOR, CONF[i % 5], [0.5, 0.5, 0.5], [0, 0.02, 0], sw).rotation.x = Math.PI / 2; place(sw, (c + 0.5) * TILE, (r + 0.5) * TILE); reg('bob', sw); }
     }
-    if (beachy) { let k = 0; for (let tries = 0; tries < 60 && k < 4; tries++) { const x = 30 + hsh(tries, 4, seed) * (sc.w - 60), y = 30 + hsh(tries, 5, seed) * (sc.h - 60); const c = Math.floor(x / TILE), r = Math.floor(y / TILE); if (!land(x, y) || !(grid[r + 1] && grid[r + 1][c] === 1 || grid[r - 1] && grid[r - 1][c] === 1)) continue; if (!clear(x, y)) continue; const o = new THREE.Group(); parasol(o, 0, 0, CONF[k % 5], '#ffffff'); mk(G_BOX, CONF[(k + 2) % 5], [0.4, 0.03, 0.9], [0.4, 0.02, 0.2], o); put(mergeStatic(o), x, y); k++; } }
+    if (beachy) { let k = 0; for (let tries = 0; tries < 60 && k < 2; tries++) { const x = 30 + hsh(tries, 4, seed) * (sc.w - 60), y = 30 + hsh(tries, 5, seed) * (sc.h - 60); const c = Math.floor(x / TILE), r = Math.floor(y / TILE); if (!land(x, y) || !(grid[r + 1] && grid[r + 1][c] === 1 || grid[r - 1] && grid[r - 1][c] === 1)) continue; if (!clear(x, y)) continue; const o = new THREE.Group(); parasol(o, 0, 0, CONF[k % 5], '#ffffff'); mk(G_BOX, CONF[(k + 2) % 5], [0.4, 0.03, 0.9], [0.4, 0.02, 0.2], o); put(mergeStatic(o), x, y); k++; } }
     if (stopId === 'iledere') [[250, 520], [330, 540]].forEach(([x, y], i) => clear(x, y) && put(bike(new THREE.Group(), 0, 0, CONF[i]), x, y, 0.4));
   });
 
@@ -4615,7 +4646,8 @@ function leaveCard(p) {
     if (n) { award(0, { budget: -d.hotel * n, energy: 10 * n, hunger: 8 * n }); S.day += n; }
     await closeModal();
     leaveExplore();
-    souvenirs();
+    if (!S.stamps.includes(STOPID)) S.stamps.push(STOPID);
+    postcard();
   });
 }
 
@@ -4660,6 +4692,7 @@ function postcard() {
   p.innerHTML = `
     <div class="eyebrow display" style="letter-spacing:.14em;text-transform:uppercase;font-size:12px;color:${C.terra}">${nextId ? `Next · ${STOP[nextId].name}` : 'The last postcard'}</div>
     <h2 class="big-h">A postcard from Cobba</h2>
+    <div id="pcStamp" style="width:96px;height:96px;margin:-4px auto -30px;position:relative;z-index:2"></div>
     <div class="pc-wrap" id="pcWrap"><div class="pc" id="pc">
       <div class="pc-face pc-front">${photoArt(d.photoMain || (d.scene.pois.find(q => q.type === 'photo') || {}).photo, 300, 200, d.short || d.name)}</div>
       <div class="pc-face pc-back">
@@ -4673,6 +4706,7 @@ function postcard() {
     <p class="tapflip">Tap the postcard to flip it</p>
     <div class="row"><button class="btn" id="onward">${nextId ? `Onward to ${STOP[nextId].short || STOP[nextId].name}` : 'Open the scrapbook'}</button></div>`;
   show('postcardScreen');
+  setTimeout(() => { const h = $('#pcStamp'); if (!h) return; h.innerHTML = stampSVG(d.id).replace('class="stamp"', 'style="width:96px;height:96px"'); gsap.fromTo(h.firstChild, { scale: 2.6, opacity: 0, rotation: -30 }, { scale: 1, opacity: 1, rotation: -12, duration: .32, ease: 'power4.in', onComplete: () => { Snd.thunk('C2'); buzz(40); } }); }, 250);
   let flipped = false;
   const flip = () => { flipped = !flipped; gsap.to('#pc', { rotationY: flipped ? 180 : 0, duration: .8, ease: 'back.out(1.4)' }); Snd.pop(flipped ? 'E5' : 'C5'); };
   $('#pcWrap').onclick = flip;
@@ -4754,7 +4788,7 @@ async function drive(from, to) {
     .to('#car .wheel', { rotation: 360 * 12, duration: dur, ease: 'power1.inOut', transformOrigin: '50% 50%' }, 0)
     .add(skyTo(coast ? .82 : .55, dur), 0);
   const border = STOP[from].region === 'france' && STOP[to].region !== 'france';
-  if (border || Math.random() < .8) tl.addPause(dur * .45, () => roadEvent(tl, from, to, border));
+  if (border || Math.random() < .3) tl.addPause(dur * .45, () => roadEvent(tl, from, to, border));
   award(coast ? 2 : 0, { energy: coast ? -10 : -4, hunger: coast ? 14 : 8 });
   await new Promise(r => tl.eventCallback('onComplete', r));
   rain(false);
@@ -4794,13 +4828,12 @@ function roadEvent(tl, from, to, border) {
     <div class="eyebrow">Road event · ${STOP[from].short || STOP[from].name} to ${STOP[to].short || STOP[to].name}</div>
     <h2>${ev.title}</h2>
     <p>${ev.text}</p>
-    <div class="choices">${ev.options.map((o, i) => `<button class="choice" data-i="${i}" style="grid-template-columns:1fr"><span><b>${o.label}</b>${o.delta ? `<span class="tagline">${Object.entries(o.delta).map(([k, v]) => `${v > 0 ? '+' : ''}${k === 'budget' ? '€' + v : v + ' ' + k}`).join(' · ')}</span>` : ''}${o.stars ? '<span class="tagline good">+1 star</span>' : ''}</span></button>`).join('')}</div>
-    <button class="ability ${canA ? '' : 'used'}" id="reroll" style="margin-top:12px">${ICON.crystal}<span><b>Annette · Local Knowledge</b><small>${canA ? (ev.border ? 'Read the small print.' : 'Reroll this event.') : 'Already used on this leg.'}</small></span></button>
-    <button class="ability ${canR ? '' : 'used'}" id="silver">${ICON.energy.replace('<svg ', '<svg width="40" height="40" ')}<span><b>Romy · Silver Lining</b><small>${canR ? 'Turn it into a small win.' : 'Already used on this leg.'}</small></span></button>`, { mid: true });
+    <div class="choices">${ev.options.map((o, i) => `<button class="choice" data-i="${i}" style="grid-template-columns:1fr"><span><b>${o.label}</b>${o.delta ? `<span class="tagline">${Object.entries(o.delta).map(([k, v]) => `${v > 0 ? '+' : ''}${k === 'budget' ? '€' + v : v + ' ' + k}`).join(' · ')}</span>` : ''}${o.stars ? '<span class="tagline good">+1 star</span>' : ''}</span></button>`).join('')}</div><!--reroll style="margin-top:12px">${ICON.crystal}<span><b>Annette · Local Knowledge</b><small>${canA ? (ev.border ? 'Read the small print.' : 'Reroll this event.') : 'Already used on this leg.'}</small></span></button>
+    <button class="ability ${canR ? '' : 'used'}" id="silver">${ICON.energy.replace('<svg ', '<svg width="40" height="40" ')}<span><b>-->`, { mid: true });
   const resume = async (text) => { await closeModal(); if (text) say(text, 3400); setTimeout(() => rain(false), ev.rain ? 2200 : 0); tl.play(); };
   const apply = o => { if (o.delta) award(o.stars || 0, o.delta); else if (o.stars) award(o.stars, null); if (o.tomato) bump({ tomato: o.tomato }); };
   sh.querySelectorAll('.choice').forEach(b => b.onclick = () => { const o = ev.options[+b.dataset.i]; apply(o); resume(o.line || pick(['Onwards.', 'Right then.', 'Back on the road.'])); });
-  sh.querySelector('#reroll').onclick = () => {
+  if (false) sh.querySelector('#reroll').onclick = () => {
     if (!canA) return; S.used[legKey + ':annette'] = true; save();
     if (ev.border) { award(0, { budget: 30 }); resume('Annette read the small print: €30 off for booking early. You can’t reroll paperwork, but you can read it.'); return; }
     rain(false);
@@ -4811,7 +4844,7 @@ function roadEvent(tl, from, to, border) {
       sh.querySelector('#go').onclick = () => { apply(good); resume('Annette: one. The road: nil.'); };
     } });
   };
-  sh.querySelector('#silver').onclick = () => {
+  if (false) sh.querySelector('#silver').onclick = () => {
     if (!canR) return; S.used[legKey + ':romy'] = true; save();
     party(false); Snd.fanfare();
     if (ev.border) { award(1, { budget: -150, energy: 20 }); resume('Romy noticed the fee includes a full tank. Silver lining: road snacks.'); return; }
@@ -4839,8 +4872,7 @@ function scrapbook() {
     <div class="tape"><h3>The Cobs</h3><div class="cob-cards">${ORDER.map(id => {
       const b = Object.entries(S.players[id].best).sort((a, c) => c[1] - a[1]).slice(0, 3);
       const buys = S.souvenirs.filter(x => x.by === id).map(x => x.name);
-      return `<div class="cob-card">${avatar(id)}<b>${CREW[id].name}</b><div class="ttl">${titleFor(id)}</div><ul>${b.map(([k, v]) => `<li>${GAME_LABEL[k.split(':')[0]] || k}: <b>${v}</b></li>`).join('') || '<li>Mostly moral support</li>'}${buys.length ? `<li>Bought: ${buys.join(', ')}</li>` : ''}</ul></div>`; }).join('')}</div>
-      ${S.couple ? `<p class="note" style="text-align:center;margin:8px 0 0">Couple bonuses earned: ${S.couple}</p>` : ''}</div>
+      return `<div class="cob-card">${avatar(id)}<b>${CREW[id].name}</b>${buys.length ? `<ul><li>Bought: ${buys.join(', ')}</li></ul>` : ''}</div>`; }).join('')}</div></div>
     <div class="tape"><h3>Tomato salads eaten in Basque country</h3><div class="tomato-big">${ICON.tomato}<span>${m.tomato}</span></div><p class="note" style="text-align:center;margin:4px 0 0">${m.tomato >= 10 ? 'Annette’s commandment: honoured.' : 'Annette said as many as possible. Room for improvement.'}</p></div>
     <div class="tape"><h3>Final meters</h3><div class="meter-row"><div>Kitty<b>€${Math.round(m.budget).toLocaleString('en-AU')}</b></div><div>Energy<b>${Math.round(m.energy)}</b></div><div>Hunger<b>${Math.round(m.hunger)}</b></div><div>Fridge<b>${m.fridge} cheeses</b></div><div>Boot<b>${m.boot} bottles</b></div><div>Restless<b>${S.restless}×</b></div></div></div>
     <div class="tape"><h3>Passport</h3><div class="stamp-grid">${S.stamps.map(id => stampSVG(id, '')).join('')}</div></div>
@@ -4887,11 +4919,11 @@ function initTitle() {
   titleArt();
 }
 function crewScreen() {
-  $('#crewGrid').innerHTML = ORDER.map(id => { const c = CREW[id]; return `<div class="cob">${avatar(id)}<div class="nm">${c.name}</div><div class="role">${c.role}</div><div class="ab"><b>${c.ability}</b>${c.abilityText}</div></div>`; }).join('');
+  $('#crewGrid').innerHTML = ORDER.map(id => { const c = CREW[id]; return `<div class="cob">${avatar(id)}<div class="nm">${c.name}</div></div>`; }).join('');
   show('crew');
   gsap.from('.cob', { y: 40, rotation: () => rand(-10, 10), opacity: 0, stagger: .1, duration: .7, ease: 'back.out(1.7)' });
   gsap.from('.cob svg.av', { scale: 0, stagger: .1, duration: .8, ease: 'elastic.out(1,.45)', delay: .2 });
-  if (!$('#coupleNote')) $('#crewGrid').insertAdjacentHTML('afterend', `<p id="coupleNote" class="hand" style="text-align:center;font-size:20px;color:${C.rioja};margin:10px 0 0">Two couples: Paulo & Annette, Huw & Romy. Partners who both nail a mini-game earn a couple bonus. About 25 minutes, 17 stops.</p>`);
+  if (!$('#coupleNote')) $('#crewGrid').insertAdjacentHTML('afterend', `<p id="coupleNote" class="hand" style="text-align:center;font-size:20px;color:${C.rioja};margin:10px 0 0">Paulo & Annette, Huw & Romy. 17 stops, 1–22 October. Walk each stop, watch the places come alive, eat, shop, and move on.</p>`);
 }
 $('#btnStart').onclick = () => { Snd.init(); S = fresh(); S.order = newOrder(false); save(); crewScreen(); };
 $('#btnPileIn').onclick = () => { Snd.pop('C5'); if (!S.order) S.order = newOrder(false); startTrip(); };
