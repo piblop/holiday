@@ -4741,7 +4741,7 @@ if (typeof D3 !== 'undefined' && D3) (() => {
     MG.skip = () => mgClose(done);
     MG.plates = plates;
   }
-  const MINI = { photo: frameTheShot, info: spotDetails, eat: tasteMenu };
+  const MINI = { photo: frameTheShot }; // one easy game, at most once per stop
 
   // first visit: tour, then the place's mini-game, then its card
   const _bi = interact;
@@ -4751,7 +4751,7 @@ if (typeof D3 !== 'undefined' && D3) (() => {
     const key = '_tour:' + (p && p.id);
     if (TOURABLE(p) && !isDone(key) && !REDUCED) {
       markDone(key);
-      playTour(p, () => { const m = MINI[p.type]; if (m && D3.S3.pois[p.id] && D3.S3.pois[p.id].obj) m(p, () => baseInteract(p)); else baseInteract(p); });
+      playTour(p, () => { const m = MINI[p.type]; if (m && !isDone('_mini') && D3.S3.pois[p.id] && D3.S3.pois[p.id].obj) { markDone('_mini'); m(p, () => baseInteract(p)); } else baseInteract(p); });
       return;
     }
     baseInteract(p);
@@ -4830,7 +4830,7 @@ function leaveCard(p) {
   const d = here();
   const extra = S.nights[STOPID] || 0, total = d.nights + extra;
   const left = (SCN.pois || []).filter(q => !['leave', 'cobba'].includes(q.type) && !isDone(q.id)).length;
-  const isRochelle = STOPID === 'larochelle';
+  const isRochelle = false; // Île de Ré is on the itinerary: no choice
   const nextId = S.order[S.idx + 1];
   const packed = STOPID !== 'paris' || isDone('hotel');
   const sh = modal(`
@@ -4842,7 +4842,7 @@ function leaveCard(p) {
     <div class="choices">
       ${isRochelle ? `<button class="choice" data-go="re">${ICON.coast}<span><b>Cross to Île de Ré</b><small>Bridge toll about €8, posh island prices, a lighthouse to climb.</small><span class="tagline bad">€€€</span></span></button>
       <button class="choice" data-go="royan">${ICON.oyster}<span><b>Skip it, straight to Royan</b><small>Oysters are the point anyway.</small><span class="tagline good">saves money</span></span></button>` : `<button class="choice" data-go="go">${ICON.coast}<span><b>${nextId ? 'Let’s go' : 'Train to Frankfurt, fly home'}</b><small>${nextId ? `Next: ${STOP[nextId].name}.` : 'Fri 22 Oct: ICE to Frankfurt Airport, land in Sydney on Sunday.'}</small></span></button>`}
-      ${d.nights ? `<button class="choice" data-go="stay">${ICON.energy.replace('<svg ', '<svg width="54" height="54" ')}<span><b>Stay another night</b><small>+15 energy, −€${d.hotel}. House rule: 3 nights max anywhere.</small>${total + 1 > 3 ? '<span class="tagline bad">breaks the rule</span>' : ''}</span></button>` : ''}
+      ${false ? `<button class="choice" data-go="stay">${ICON.energy.replace('<svg ', '<svg width="54" height="54" ')}<span><b>Stay another night</b><small>+15 energy, −€${d.hotel}. House rule: 3 nights max anywhere.</small>${total + 1 > 3 ? '<span class="tagline bad">breaks the rule</span>' : ''}</span></button>` : ''}
     </div>
     <div class="row"><button class="btn ghost small" id="ok">Keep exploring</button></div>`);
   sh.querySelector('#ok').onclick = backToPort;
@@ -4864,7 +4864,7 @@ function leaveCard(p) {
     }
     if (!packed) { S.gear = { boots: [], coats: false, umbrella: false, cooler: false }; }
     // pay for the booked nights, and bank the rest they gave
-    const n = isRochelle && go === 're' ? 0 : d.nights;
+    const n = STOPID === 'larochelle' && S.order.includes('iledere') ? 0 : d.nights; // tonight's bed is on the island
     if (n) { award(0, { budget: -d.hotel * n, energy: 10 * n, hunger: 8 * n }); S.day += n; }
     await closeModal();
     leaveExplore();
@@ -4954,6 +4954,10 @@ async function goLeg() {
   await wait(30);
   Object.assign(cam, camTarget(fx, fy + 30, legScale())); applyCam();
   if (d.leg && d.leg.fly) return flyLeg(from, to);
+  S.route[to] = 'coast'; save();
+  el('path', { id: 'legCoast', d: smooth(legPts(to, 'coast')), fill: 'none', stroke: C.sea, 'stroke-width': 2.4, 'stroke-dasharray': '1 4.5', 'stroke-linecap': 'round' }, $('#legNow'));
+  el('path', { id: 'legHighway', d: smooth(legPts(to, 'highway')), fill: 'none', stroke: 'none' }, $('#legNow'));
+  return drive(from, to);
   const sh = modal(`
     <div class="eyebrow">Leg ${S.idx} · ${STOP[from].short || STOP[from].name} to ${d.short || d.name}</div>
     <h2>Coast road or highway?</h2>
@@ -4996,7 +5000,7 @@ async function drive(from, to) {
   const ink = el('path', { d: road.getAttribute('d'), fill: 'none', stroke: C.rioja, 'stroke-width': 3, 'stroke-linecap': 'round' }, $('#legNow'));
   const len = ink.getTotalLength();
   gsap.set(ink, { strokeDasharray: len, strokeDashoffset: len });
-  say(coast ? pick(['Coast road. Correct answer.', 'Coast road, not the highway. It’s the law now.', 'Small roads, big views. Annette approves.']) : pick(['The highway. Bold. Annette will hear about this.', 'Highway. Fine. I’ll just look at the barriers.']), 3000);
+  say(coast ? pick(['Coast road, as the itinerary says.', 'Coast road, not the highway. It’s the law now.', 'Small roads, big views. Annette approves.']) : pick(['The highway. Bold. Annette will hear about this.', 'Highway. Fine. I’ll just look at the barriers.']), 3000);
   const dur = Math.max(3.5, Math.min(9, len / 14)) * (coast ? 1.35 : 1);
   let lastX = mapXY(from)[0];
   const prog = { p: 0 };
@@ -5010,7 +5014,7 @@ async function drive(from, to) {
     .to('#car .wheel', { rotation: 360 * 12, duration: dur, ease: 'power1.inOut', transformOrigin: '50% 50%' }, 0)
     .add(skyTo(coast ? .82 : .55, dur), 0);
   const border = STOP[from].region === 'france' && STOP[to].region !== 'france';
-  if (border || Math.random() < .3) tl.addPause(dur * .45, () => roadEvent(tl, from, to, border));
+  if (border) tl.call(() => { bump({ budget: -150 }); say('Into Spain. The one-way car fee is paid: €150. Bienvenidos a España.', 3400); }, null, dur * .45);
   award(coast ? 2 : 0, { energy: coast ? -10 : -4, hunger: coast ? 14 : 8 });
   await new Promise(r => tl.eventCallback('onComplete', r));
   rain(false);
