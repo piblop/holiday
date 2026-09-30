@@ -206,8 +206,6 @@ button{font:inherit;color:inherit}
 .preview-flag{display:inline-block;font-family:Fredoka,sans-serif;font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;background:var(--ink);color:var(--cream);padding:3px 10px;border-radius:10px;margin-bottom:6px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-</head>
-<body>
 
 <!-- shared SVG filters: paper grain, watercolour bleed, ink wobble -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -3847,32 +3845,64 @@ const D3 = (() => {
     const cx = cols / 2, cz = rows / 2;
     makeIslandBase(world, cols, rows, EDGE[kind] || '#f2dba6', cx - 0.0, cz - 0.0).position.set(cx, 0, cz);
     fitSun(cx, cz, Math.max(cols, rows) * 0.7);
-    // floor tiles: instanced checker, sunk translucent water, raised planks
-    const fg = geo('tile', () => { const g = new THREE.BoxGeometry(1, 0.2, 1); g.translate(0, -0.1, 0); return g; });
-    const count = cols * rows;
-    const floor = new THREE.InstancedMesh(fg, new THREE.MeshToonMaterial({ color: '#ffffff', gradientMap: TOON }), count);
-    const water = new THREE.InstancedMesh(fg, new THREE.MeshToonMaterial({ color: '#ffffff', gradientMap: TOON, transparent: true, opacity: 0.85 }), count);
-    floor.receiveShadow = water.receiveShadow = true;
-    const dm = new THREE.Object3D(), col = new THREE.Color(); let nf = 0, nw = 0; const waterTiles = [];
-    const TC = { 3: ['#d9d3c6', '#d2cbbd'], 4: ['#f0d9a4', '#ead198'], 5: ['#f9ecc4', '#f5e5b6'], 6: ['#e4dccb', '#dcd3c0'] };
-    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-      const t = grid[r][c], x = c + 0.5, z = r + 0.5;
-      if (t === 1 || t === 2) { dm.position.set(x, -0.05, z); dm.updateMatrix(); water.setMatrixAt(nw, dm.matrix); water.setColorAt(nw++, col.set((c + r) % 2 ? '#8fd3f0' : '#9fdcf5')); waterTiles.push([x, z]); }
-      if (t === 1) continue;
-      dm.position.set(x, t === 2 ? 0.08 : 0, z); dm.updateMatrix(); floor.setMatrixAt(nf, dm.matrix);
-      floor.setColorAt(nf++, col.set(t === 2 ? ((c + r) % 2 ? '#d9a877' : '#cf9d6c') : TC[t] ? TC[t][(c + r) % 2] : gc[(c + r) % 2]));
-    }
-    floor.count = nf; water.count = nw; world.add(floor); if (nw) world.add(water);
-    OWNED.push(floor.material, water.material);
+    // floor: one smooth painted plane (rounded roads, soft shorelines, gentle ground variation)
+    const waterTiles = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (grid[r][c] === 1 || grid[r][c] === 2) waterTiles.push([c + 0.5, r + 0.5]);
+    const PX = Math.min(64, Math.floor(2048 / Math.max(cols, rows))), k = PX / TILE;
+    const cv = document.createElement('canvas'); cv.width = cols * PX; cv.height = rows * PX;
+    const g2 = cv.getContext('2d'); g2.scale(k, k); g2.lineJoin = g2.lineCap = 'round';
+    const W = cols * TILE, H = rows * TILE;
+    const poly = pts => { g2.beginPath(); pts.forEach(([x, y], i) => i ? g2.lineTo(x, y) : g2.moveTo(x, y)); g2.closePath(); };
+    const line = pts => { g2.beginPath(); pts.forEach(([x, y], i) => i ? g2.lineTo(x, y) : g2.moveTo(x, y)); };
+    g2.fillStyle = gc[0]; g2.fillRect(0, 0, W, H);
+    // soft ground variation: big faint blobs, then tiny speckles
+    for (let i = 0; i < 26; i++) { const x = hsh(i, 1, stopId.length) * W, y = hsh(i, 2, stopId.length) * H, rr = TILE * (1.5 + hsh(i, 3) * 3); const gr = g2.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, gc[1]); gr.addColorStop(1, gc[1] + '00'); g2.fillStyle = gr; g2.fillRect(x - rr, y - rr, rr * 2, rr * 2); }
+    g2.globalAlpha = 0.18; g2.fillStyle = '#ffffff';
+    for (let i = 0; i < 90; i++) { g2.beginPath(); g2.ellipse(hsh(i, 5, 3) * W, hsh(i, 6, 3) * H, 2 + hsh(i, 7) * 3, 1.2 + hsh(i, 8) * 1.5, 0, 0, TAU); g2.fill(); }
+    g2.globalAlpha = 1;
+    // beaches
+    g2.fillStyle = g2.strokeStyle = '#f9ecc4'; g2.lineWidth = TILE * 0.6;
+    (sc.beach || []).forEach(bb => { poly(bb.pts); g2.fill(); g2.stroke(); });
+    // water: wet-sand rim, deep fill, pale shallows, white foam line
+    (sc.water || []).forEach(w => { poly(w.pts); g2.strokeStyle = '#ecd7a8'; g2.lineWidth = TILE * 0.9; g2.stroke(); });
+    (sc.water || []).forEach(w => {
+      poly(w.pts); g2.fillStyle = '#7fcbeb'; g2.fill();
+      g2.save(); poly(w.pts); g2.clip();
+      g2.strokeStyle = '#9fdcf5'; g2.lineWidth = TILE * 1.8; g2.stroke();
+      g2.strokeStyle = '#bfe9f8'; g2.lineWidth = TILE * 0.7; g2.stroke();
+      g2.strokeStyle = 'rgba(255,255,255,.85)'; g2.lineWidth = TILE * 0.18; g2.stroke();
+      g2.globalAlpha = 0.25; g2.strokeStyle = '#ffffff'; g2.lineWidth = 2;
+      for (let i = 0; i < 40; i++) { const x = hsh(i, 11) * W, y = hsh(i, 12) * H; g2.beginPath(); g2.moveTo(x, y); g2.quadraticCurveTo(x + 6, y - 3, x + 12, y); g2.stroke(); }
+      g2.restore();
+    });
+    // roads, paths and streets: soft border then a rounded ribbon
+    const RC = { road: ['#cfc8ba', '#ddd7ca'], path: ['#e6cd92', '#f0d9a4'], street: ['#d8cfbd', '#e7dfcf'] };
+    (sc.roads || []).forEach(rd => { const c = RC[rd.kind] || RC.road, w = rd.w || 36; line(rd.pts); g2.strokeStyle = c[0]; g2.lineWidth = w + 8; g2.stroke(); line(rd.pts); g2.strokeStyle = c[1]; g2.lineWidth = w; g2.stroke();
+      if (!rd.kind || rd.kind === 'road') { line(rd.pts); g2.setLineDash([14, 16]); g2.strokeStyle = 'rgba(255,255,255,.7)'; g2.lineWidth = 2.5; g2.stroke(); g2.setLineDash([]); } });
+    // bridges and boardwalks: rounded planks
+    [...(sc.bridges || []), ...(sc.walk || [])].forEach(bb => {
+      const x = bb.x - 4, y = bb.y - 4, w = bb.w + 8, h = bb.h + 8, rr = Math.min(10, w / 2, h / 2);
+      g2.beginPath(); g2.moveTo(x + rr, y); g2.arcTo(x + w, y, x + w, y + h, rr); g2.arcTo(x + w, y + h, x, y + h, rr); g2.arcTo(x, y + h, x, y, rr); g2.arcTo(x, y, x + w, y, rr); g2.closePath();
+      g2.fillStyle = '#ecd0a8'; g2.fill(); g2.strokeStyle = '#d6b184'; g2.lineWidth = 3; g2.stroke();
+      g2.save(); g2.clip(); g2.strokeStyle = 'rgba(170,125,80,.22)'; g2.lineWidth = 1.5;
+      if (w > h) for (let xx = x + 12; xx < x + w; xx += 12) { g2.beginPath(); g2.moveTo(xx, y); g2.lineTo(xx, y + h); g2.stroke(); }
+      else for (let yy = y + 12; yy < y + h; yy += 12) { g2.beginPath(); g2.moveTo(x, yy); g2.lineTo(x + w, yy); g2.stroke(); }
+      g2.restore();
+    });
+    const ftex = new THREE.CanvasTexture(cv); ftex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    const fgeo = new THREE.PlaneGeometry(cols, rows); fgeo.rotateX(-Math.PI / 2);
+    const floor = new THREE.Mesh(fgeo, new THREE.MeshToonMaterial({ map: ftex, gradientMap: TOON }));
+    floor.position.set(cols / 2, 0, rows / 2); floor.receiveShadow = true; world.add(floor);
+    OWNED.push(floor.material, fgeo, ftex);
     // edge flowers + clouds under the island, like v2
-    for (let i = 0; i < 12; i++) { const t = hsh(i, 9, stopId.length) * (2 * (cols + rows)); let x, z; if (t < cols) { x = t; z = rows + 0.05; } else if (t < cols + rows) { x = cols + 0.05; z = t - cols; } else if (t < 2 * cols + rows) { x = t - cols - rows; z = -0.05; } else { x = -0.05; z = t - 2 * cols - rows; } makeFlower(world, x, z, CONF[i % 5]); }
+    for (let i = 0; i < 6; i++) { const t = hsh(i, 9, stopId.length) * (2 * (cols + rows)); let x, z; if (t < cols) { x = t; z = rows + 0.05; } else if (t < cols + rows) { x = cols + 0.05; z = t - cols; } else if (t < 2 * cols + rows) { x = t - cols - rows; z = -0.05; } else { x = -0.05; z = t - 2 * cols - rows; } makeFlower(world, x, z, CONF[i % 5]); }
     const clouds = []; for (let i = 0; i < 8; i++) clouds.push(makeCloud(world, -10 + i * 6, -4.5 + hsh(i, 1) * 1.5, -4 + hsh(i, 2) * (rows + 8), 1.2 + hsh(i, 3) * 1.2));
     const P = v => [v[0] / TILE, v[1] / TILE];
     const anims = { spin: [], wheels: [], smoke: [], bob: [], flags: [], clams: [], gondolas: [] };
     const reg = o => { const u = o.userData; if (u.spin) anims.spin.push(u.spin); if (u.wheel) anims.wheels.push(u.wheel); if (u.smoke) anims.smoke.push(u.smoke); if (u.bob) anims.bob.push(o); if (u.flag) anims.flags.push(u.flag); if (u.clam) anims.clams.push(u.clam); if (u.gondola) anims.gondolas.push(u.gondola); };
-    const place = (o, x, y) => { const [X, Z] = P([x, y]); o.position.set(X, grid[Math.min(rows - 1, Math.floor(y / TILE))]?.[Math.min(cols - 1, Math.floor(x / TILE))] === 2 ? 0.08 : 0, Z); world.add(o); reg(o); return o; };
+    const place = (o, x, y) => { const [X, Z] = P([x, y]); o.position.set(X, grid[Math.min(rows - 1, Math.floor(y / TILE))]?.[Math.min(cols - 1, Math.floor(x / TILE))] === 2 ? 0 : 0, Z); world.add(o); reg(o); return o; };
     // houses (skipping any that sit on a place of interest, same rule as 2D)
-    (sc.houses || []).filter(([x, y]) => !(sc.pois || []).some(p => { const ax = p.art ? (p.art[1] ?? p.x) : p.x, ay = p.art ? (p.art[2] ?? p.y) : p.y; return Math.abs(ax - x) < 80 && ay - y < 115 && ay - y > -60; }))
+    (sc.houses || []).filter(([x, y]) => !(sc.pois || []).some(p => { const ax = p.art ? (p.art[1] ?? p.x) : p.x, ay = p.art ? (p.art[2] ?? p.y) : p.y; return Math.abs(ax - x) < 130 && ay - y < 150 && ay - y > -110; })).slice(0, 4)
       .forEach(([x, y, o]) => mergeStatic(place(house(o || {}), x, y + 10)));
     (sc.trees || []).forEach(([x, y, k, s = 1]) => { const t = k === 'pine' ? makePine(null, 0, 0, s * 1.1) : k === 'plane' ? makeTree(null, 0, 0, s * 1.2, '#6cbf55') : makeFruitTree(null, 0, 0, s); mergeStatic(place(t, x, y)); });
     (sc.vines || []).forEach(v => { for (let yy = v.y; yy < v.y + v.h; yy += 32) { const row = new THREE.Group(); for (let xx = v.x; xx < v.x + v.w; xx += 20) { mk(G_SPH, (xx / 20) % 2 ? '#6fbf5f' : '#86cf6c', [0.55, 0.5, 0.4], [(xx - v.x) / TILE, 0.35, 0], row); if (hsh(xx, yy) > 0.5) mk(G_SPH, '#8a4a8a', [0.12, 0.16, 0.12], [(xx - v.x) / TILE, 0.18, 0.2], row, { noShadow: true }); } mk(G_CYL, '#a8744f', [0.05, 0.5, 0.05], [0, 0.25, 0], row); place(mergeStatic(row), v.x, yy); } });
@@ -3926,7 +3956,7 @@ const D3 = (() => {
       || Math.hypot(sc.start.x - x, sc.start.y - y) < 70;
     const kinds = sc.ground === 'grass' ? ['flowers', 'flowers', 'bush', 'rock', 'weeds', 'stump', 'fruitTree'] : sc.ground === 'sand' ? ['shells', 'shells', 'rock', 'weeds', 'bush'] : sc.ground === 'soil' ? ['weeds', 'rock', 'bush', 'flowers'] : ['lantern', 'bench', 'flowers', 'bush', 'lantern'];
     const out = [];
-    for (let n = 0, tries = 0; n < 6 && tries < 240; tries++) { const x = 30 + rnd() * (sc.w - 60), y = 40 + rnd() * (sc.h - 70); if (blocked(x, y)) continue; out.push([kinds[Math.floor(rnd() * kinds.length)], x, y]); n++; }
+    for (let n = 0, tries = 0; n < 0 && tries < 240; tries++) { const x = 30 + rnd() * (sc.w - 60), y = 40 + rnd() * (sc.h - 70); if (blocked(x, y)) continue; out.push([kinds[Math.floor(rnd() * kinds.length)], x, y]); n++; }
     return out;
   }
   // extra set pieces per stop (replaces the 2D "deco" drawings)
@@ -3975,9 +4005,11 @@ const D3 = (() => {
     if (renderer.domElement.parentNode !== el) el.prepend(renderer.domElement);
     resize();
   }
-  const _ = { skyColors, SKIES, get sun() { return sun; }, get hemi() { return hemi; }, B3, mk, grp, M, geo, G_BOX, G_SPH, G_CYL, G_CONE, G_PYR, G_TOR, G_PRISM, G_STAR, makePerson, makeTree, makePine, makeFlower, mergeStatic, label, house, live, hsh, CONF, INK, get world() { return world; }, get S3() { return S3; } };
+  const _ = { get camera() { return camera; }, get renderer() { return renderer; }, get scene() { return scene; }, FX, skyColors, SKIES, get sun() { return sun; }, get hemi() { return hemi; }, B3, mk, grp, M, geo, G_BOX, G_SPH, G_CYL, G_CONE, G_PYR, G_TOR, G_PRISM, G_STAR, makePerson, makeTree, makePine, makeFlower, mergeStatic, label, house, live, hsh, CONF, INK, get world() { return world; }, get S3() { return S3; } };
   const HOOKS = { pre: [], build: [], frame: [] };
-  return { _, HOOKS, attach, build, frame, pick, resize, sparkle, confetti, cam, TILE, get S3() { return S3; }, rotate(d) { cam.yawGoal += d * Math.PI / 2; }, walkable(x, y) {
+  function snap(w = 360) { renderer.render(scene, camera); const src = renderer.domElement, h = Math.round(w * src.height / src.width), c = document.createElement('canvas'); const side = Math.min(src.width, src.height); c.width = c.height = w; c.getContext('2d').drawImage(src, (src.width - side) / 2, (src.height - side) / 2, side, side, 0, 0, w, w); return c.toDataURL('image/jpeg', 0.72); }
+  function toScreen(x, y, z) { const v = new THREE.Vector3(x, y, z).project(camera), r = renderer.domElement.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; }
+  return { snap, toScreen, _, HOOKS, attach, build, frame, pick, resize, sparkle, confetti, cam, TILE, get S3() { return S3; }, rotate(d) { cam.yawGoal += d * Math.PI / 2; }, walkable(x, y) {
     if (!S3) return true; const c = Math.floor(x / TILE), r = Math.floor(y / TILE);
     if (r < 0 || c < 0 || r >= S3.rows || c >= S3.cols) return false; return S3.grid[r][c] !== 1; } };
 })();
@@ -4050,7 +4082,7 @@ if (D3) {
       if (step) tk.face = Math.atan2(dx, dy); else if (EX.idle > 14) tk.face += (Math.atan2(Math.sin(D3.cam.yaw), Math.cos(D3.cam.yaw)) - tk.face) * 0.08;
       const o = tk.obj, u = o.userData; o.position.x = tk.pos.x / TILE3; o.position.z = tk.pos.y / TILE3;
       const cur = o.rotation.y; let diff = tk.face - cur; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); o.rotation.y = cur + diff * 0.25;
-      o.position.y = D3.S3 && D3.S3.grid[Math.floor(tk.pos.y / TILE3)]?.[Math.floor(tk.pos.x / TILE3)] === 2 ? 0.08 : 0;
+      o.position.y = D3.S3 && D3.S3.grid[Math.floor(tk.pos.y / TILE3)]?.[Math.floor(tk.pos.x / TILE3)] === 2 ? 0 : 0;
       if (step) u.walk += dt * 12; const sw = step ? Math.sin(u.walk) : 0;
       u.legL.rotation.x = sw * 0.6; u.legR.rotation.x = -sw * 0.6; u.armL.rotation.x = -sw * 0.5; u.armR.rotation.x = sw * 0.5;
       u.body.position.y = step ? Math.abs(Math.sin(u.walk)) * 0.05 : Math.sin(EX.t * 0.05 + i) * 0.01;
@@ -4080,7 +4112,7 @@ if (D3) {
   };
   var poiIdle = function () {
     const s3 = D3.S3; if (!s3) return;
-    (SCN.pois || []).forEach(p => { const q = s3.pois[p.id]; if (!q || p.type === 'leave' || p.type === 'cobba') return; q.ring.userData.s0 = q.ring.scale.x; q.ring.visible = !isDone(p.id) && !REDUCED; });
+    (SCN.pois || []).forEach(p => { const q = s3.pois[p.id]; if (!q || p.type === 'leave' || p.type === 'cobba') return; q.ring.userData.s0 = q.ring.scale.x; q.ring.visible = false; });
   };
   var poiFocus = function (p) {
     const s3 = D3.S3; if (!s3 || !p || p.type === 'critter') return; const q = s3.pois[p.id]; if (!q || !q.obj) return;
@@ -4332,7 +4364,7 @@ if (typeof D3 !== 'undefined' && D3) (() => {
     const land = (x, y) => { const c = Math.floor(x / TILE), r = Math.floor(y / TILE); return r >= 0 && c >= 0 && r < rows && c < cols && grid[r][c] !== 1; };
     const clear = (x, y, own) => land(x, y) && !(sc.pois || []).some(p => p.id !== own && Math.hypot(p.x - x, p.y - y) < 44) && Math.hypot(sc.start.x - x, sc.start.y - y) > 40;
     const put = (obj, x, y, face) => { if (face != null) obj.rotation.y = face; place(obj, x, y); return obj; };
-    const addNpc = (seed, prop, pose, x, y, face, poi, wander) => { if (!land(x, y) || NPCS.length >= 8) return; const p = npc(seed, prop, pose); put(p, x, y, face); NPCS.push({ o: p, poi, home: { x, y }, wander, t: hsh(seed, 3, 1) * 6, tgt: null }); return p; };
+    const addNpc = (seed, prop, pose, x, y, face, poi, wander) => { if (!land(x, y) || NPCS.length >= 5) return; const p = npc(seed, prop, pose); put(p, x, y, face); NPCS.push({ o: p, poi, home: { x, y }, wander, t: hsh(seed, 3, 1) * 6, tgt: null }); return p; };
     let seed = stopId.length * 97;
     (sc.pois || []).forEach((p, pi) => {
       if (!p.art) return;
@@ -4341,20 +4373,19 @@ if (typeof D3 !== 'undefined' && D3) (() => {
       const spots = [[ax - 64, ay + 58], [ax + 64, ay + 58], [ax - 84, ay + 10], [ax + 84, ay + 10], [ax, ay + 84]].filter(([x, y]) => clear(x, y, p.id));
       const face = (x, y) => Math.atan2(ax - x, ay - y); // face the landmark
       if (p.type === 'eat') {
-        spots.slice(0, 1).forEach(([x, y], i) => { const o = new THREE.Group(); cafeTable(o, 0, 0, i ? th[0] : '#ffffff'); parasol(o, 0, 0, th[0], th[1]).position.y = 0.05; put(mergeStatic(o), x, y); addNpc(s(), i ? 'wine' : null, 'sit', x - 16, y, Math.PI / 2, p.id); addNpc(s(), null, 'sit', x + 16, y, -Math.PI / 2, p.id); });
+        spots.slice(0, 0).forEach(([x, y], i) => { const o = new THREE.Group(); cafeTable(o, 0, 0, i ? th[0] : '#ffffff'); parasol(o, 0, 0, th[0], th[1]).position.y = 0.05; put(mergeStatic(o), x, y); addNpc(s(), i ? 'wine' : null, 'sit', x - 16, y, Math.PI / 2, p.id); addNpc(s(), null, 'sit', x + 16, y, -Math.PI / 2, p.id); });
       } else if (p.type === 'shop') {
-        if (spots[0]) put(crate(new THREE.Group(), 0, 0, th[0]), spots[0][0], spots[0][1]);
-        if (spots[1]) addNpc(s(), 'bags', 'idle', spots[1][0], spots[1][1], face(...spots[1]), p.id);
+        if (false) addNpc(s(), 'bags', 'idle', spots[1][0], spots[1][1], face(...spots[1]), p.id);
       } else if (p.type === 'photo' || p.type === 'info') {
         spots.slice(0, 1).forEach(([x, y], i) => addNpc(s(), i === 0 && p.type === 'info' ? 'flag' : i === 0 ? 'camera' : ['camera', 'map', 'icecream'][i], i === 0 && p.type === 'photo' ? 'photo' : 'idle', x, y, face(x, y), p.id));
       } else if (p.type === 'mini') {
         spots.slice(0, 3).forEach(([x, y], i) => addNpc(s(), ['icecream', 'camera', null][i], 'cheer', x, y, face(x, y), p.id));
         if (spots[3] && spots[4]) put(bunting(new THREE.Group(), 0, 0, (spots[4][0] - spots[3][0]) / TILE, (spots[4][1] - spots[3][1]) / TILE), spots[3][0], spots[3][1]);
       } else if (p.type === 'leave') {
-        if (spots[0]) put(suitcases(new THREE.Group(), 0, 0), spots[0][0], spots[0][1]);
+
       }
       // a flag and a flower planter at most landmarks
-      if (['photo', 'info'].includes(p.type) && spots[4] && pi % 3 === 0) { const o = new THREE.Group(); flag(o, 0, 0, stopId === 'bayonne' ? 'bayonne' : stopId === 'bamberg' ? 'bavaria' : region, 1.7); planter(o, 0.4, 0.2); put(o, spots[4][0], spots[4][1]); }
+      if (false) { const o = new THREE.Group(); flag(o, 0, 0, stopId === 'bayonne' ? 'bayonne' : stopId === 'bamberg' ? 'bavaria' : region, 1.7); planter(o, 0.4, 0.2); put(o, spots[4][0], spots[4][1]); }
     });
     // strolling locals and tourists
     const PROPS = { france: ['baguette', 'camera', 'icecream', 'map', 'bags'], basque: ['wine', 'camera', 'icecream', 'bags', 'map'], rioja: ['wine', 'camera', 'map'], germany: ['stein', 'camera', 'map', 'bags'] }[region] || ['camera'];
@@ -4362,22 +4393,22 @@ if (typeof D3 !== 'undefined' && D3) (() => {
     for (let tries = 0; tries < 80 && n < 9; tries++) {
       const x = 40 + hsh(tries, 1, seed) * (sc.w - 80), y = 60 + hsh(tries, 2, seed) * (sc.h - 120);
       if (!clear(x, y)) continue;
-      addNpc(++seed, PROPS[n % PROPS.length], 'walk', x, y, hsh(tries, 3) * TAU, null, true); n++; if (n >= 3) break;
+      addNpc(++seed, PROPS[n % PROPS.length], 'walk', x, y, hsh(tries, 3) * TAU, null, true); n++; if (n >= 2) break;
     }
     // lamps along streets, bunting between them
-    (sc.roads || []).forEach((rd, ri) => { for (let i = 1; i < rd.pts.length; i++) { const [x0, y0] = rd.pts[i - 1], [x1, y1] = rd.pts[i], len = Math.hypot(x1 - x0, y1 - y0), off = (rd.w || 36) / 2 + 14; for (let d = 90; d < len - 30; d += 320) { const t = d / len, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, nx = -(y1 - y0) / len, ny = (x1 - x0) / len; [1, -1].forEach(k => { const lx = x + nx * off * k, ly = y + ny * off * k; if (clear(lx, ly)) put(lamp(new THREE.Group(), 0, 0), lx, ly); }); } } });
+    if (false) (sc.roads || []).forEach((rd, ri) => { for (let i = 1; i < rd.pts.length; i++) { const [x0, y0] = rd.pts[i - 1], [x1, y1] = rd.pts[i], len = Math.hypot(x1 - x0, y1 - y0), off = (rd.w || 36) / 2 + 14; for (let d = 90; d < len - 30; d += 320) { const t = d / len, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t, nx = -(y1 - y0) / len, ny = (x1 - x0) / len; [1, -1].forEach(k => { const lx = x + nx * off * k, ly = y + ny * off * k; if (clear(lx, ly)) put(lamp(new THREE.Group(), 0, 0), lx, ly); }); } } });
     // water life: sailboats, fishing boats, swimmers/surfers near beaches
     const waterSpots = []; for (let r = 1; r < rows - 1; r++) for (let c = 1; c < cols - 1; c++) if (grid[r][c] === 1 && grid[r - 1][c] === 1 && grid[r + 1][c] === 1 && grid[r][c - 1] === 1 && grid[r][c + 1] === 1) waterSpots.push([c, r]);
     const harbour = ['larochelle', 'sjdl', 'orio', 'bermeo', 'plentzia', 'mundaka', 'royan', 'bilbao'].includes(stopId), beachy = ['capbreton', 'biarritz', 'sanseb', 'iledere', 'mundaka'].includes(stopId);
-    for (let i = 0; i < Math.min(2, waterSpots.length); i++) {
+    for (let i = 0; i < Math.min(1, waterSpots.length); i++) {
       const [c, r] = waterSpots[Math.floor(hsh(i, 7, seed) * waterSpots.length)];
       const kind = hsh(i, 8, seed);
       const o = harbour && kind < 0.55 ? fishingBoat(new THREE.Group(), 0, 0, CONF[i % 5]) : kind < 0.8 || !beachy ? sailboat(new THREE.Group(), 0, 0, ['#ffffff', '#ffd166', '#7fc8f8'][i % 3]) : null;
       if (o) { o.rotation.y = hsh(i, 9) * TAU; place(o, (c + 0.5) * TILE, (r + 0.5) * TILE); o.position.y = 0; }
       else { const sw = grp(null); mk(G_SPH, SKINS[i % 6], [0.3, 0.3, 0.3], [0, 0.08, 0], sw); mk(G_SPH, HAIRS[i % 6], [0.32, 0.2, 0.32], [0, 0.16, -0.02], sw); mk(G_TOR, CONF[i % 5], [0.5, 0.5, 0.5], [0, 0.02, 0], sw).rotation.x = Math.PI / 2; place(sw, (c + 0.5) * TILE, (r + 0.5) * TILE); reg('bob', sw); }
     }
-    if (beachy) { let k = 0; for (let tries = 0; tries < 60 && k < 2; tries++) { const x = 30 + hsh(tries, 4, seed) * (sc.w - 60), y = 30 + hsh(tries, 5, seed) * (sc.h - 60); const c = Math.floor(x / TILE), r = Math.floor(y / TILE); if (!land(x, y) || !(grid[r + 1] && grid[r + 1][c] === 1 || grid[r - 1] && grid[r - 1][c] === 1)) continue; if (!clear(x, y)) continue; const o = new THREE.Group(); parasol(o, 0, 0, CONF[k % 5], '#ffffff'); mk(G_BOX, CONF[(k + 2) % 5], [0.4, 0.03, 0.9], [0.4, 0.02, 0.2], o); put(mergeStatic(o), x, y); k++; } }
-    if (stopId === 'iledere') [[250, 520], [330, 540]].forEach(([x, y], i) => clear(x, y) && put(bike(new THREE.Group(), 0, 0, CONF[i]), x, y, 0.4));
+    if (false) { let k = 0; for (let tries = 0; tries < 60 && k < 2; tries++) { const x = 30 + hsh(tries, 4, seed) * (sc.w - 60), y = 30 + hsh(tries, 5, seed) * (sc.h - 60); const c = Math.floor(x / TILE), r = Math.floor(y / TILE); if (!land(x, y) || !(grid[r + 1] && grid[r + 1][c] === 1 || grid[r - 1] && grid[r - 1][c] === 1)) continue; if (!clear(x, y)) continue; const o = new THREE.Group(); parasol(o, 0, 0, CONF[k % 5], '#ffffff'); mk(G_BOX, CONF[(k + 2) % 5], [0.4, 0.03, 0.9], [0.4, 0.02, 0.2], o); put(mergeStatic(o), x, y); k++; } }
+    if (false) [[250, 520], [330, 540]].forEach(([x, y], i) => clear(x, y) && put(bike(new THREE.Group(), 0, 0, CONF[i]), x, y, 0.4));
   });
 
   /* ---------- per-frame life ---------- */
@@ -4414,135 +4445,318 @@ if (typeof D3 !== 'undefined' && D3) (() => {
     });
   });
 })();
-/* ================= 10-SECOND POI TOURS ================= */
-// First time you reach a place, a short cinematic plays before its card opens: letterbox bars,
-// the camera swoops and orbits the landmark, golden-hour light, gulls, and an effect that fits
-// the place (camera flashes, fireworks, steam, sparkles, floating facts). Tap to skip.
-// The card also gets a small "Replay tour" button.
+/* ================= PLACE TOURS + PLACE MINI-GAMES ================= */
+// Tour (10s, three shots, like a travel-film opener):
+//   1. establishing crane: high tilt-shift "miniature" view of the whole place, tilting down
+//   2. hero dolly: low angle push-in, golden hour, the place's signature moment
+//   3. reveal orbit: foreground clouds drift past, pull back, "visited" stamp
+// Then an easy mini-game that shows the place off:
+//   photo spots → Frame the shot (your snapshot becomes the Polaroid)
+//   sights      → Spot the details (tap three sparkles on the landmark, each reveals a fact)
+//   meals       → Taste the menu (tap real dishes from the restaurant's menu as they're served)
 if (typeof D3 !== 'undefined' && D3) (() => {
   const TOUR_SECS = 10, TILE = D3.TILE, TAU = Math.PI * 2;
-  const { mk, grp, G_SPH, G_CONE } = D3._;
-  let T = null; // the running tour
+  const { mk, grp, G_SPH, G_CYL, G_STAR, label } = D3._;
+  let T = null, MG = null;
   const SUNSET = { france: ['#ffb38a', '#ffe0b0'], basque: ['#ffa98f', '#ffe3c0'], rioja: ['#ff9f7a', '#ffd9a0'], germany: ['#c9a0d8', '#ffd0b0'] };
-  const TYPE_FX = { photo: 'flash', info: 'facts', mini: 'fireworks', eat: 'steam', shop: 'coins' };
-  const TOURABLE = p => !window.__cobsNoTour && p && ['photo', 'info', 'mini', 'eat', 'shop'].includes(p.type) && p.art;
+  const DUSK = { france: ['#5b5a9a', '#f4a987'], basque: ['#4f5d98', '#f2ab8c'], rioja: ['#6a4f8a', '#f3a37a'], germany: ['#4a4f8a', '#e7a9a8'] };
+  const TOURABLE = p => !window.__cobsNoTour && p && ['photo', 'info', 'eat', 'shop'].includes(p.type) && p.art;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  function mixHex(a, b, t) { const q = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = q(a), B = q(b); return '#' + A.map((v, i) => Math.round(lerp(v, B[i], t)).toString(16).padStart(2, '0')).join(''); }
+  const facts = p => (p.text || '').split(/(?<=[.!?])\s+/).filter(s => s.length > 12 && s.length < 150);
 
-  // DOM: letterbox bars, caption, progress, skip hint, photo flash
+  /* ---------- overlay: tilt-shift blur bands, vignette, caption card, progress, drifting clouds ---------- */
   const layer = document.createElement('div'); layer.id = 'tourLayer'; layer.hidden = true;
-  layer.innerHTML = `<div class="tBar tTop"><span class="tEyebrow"></span></div><div class="tFlash"></div><div class="tFacts"></div>
-    <div class="tBar tBot"><div class="tTitle"></div><div class="tSub"></div><div class="tProg"><i></i></div><div class="tSkip">Tap to skip</div></div>`;
+  layer.innerHTML = `<div class="tsBand tsTop"></div><div class="tsBand tsBot"></div><div class="tVig"></div><div class="tFlash"></div>
+    <div class="tCloud c1"></div><div class="tCloud c2"></div>
+    <div class="tCard"><div class="tEyebrow"></div><div class="tTitle"></div><div class="tFact"></div></div>
+    <div class="tStamp"></div>
+    <div class="tFoot"><div class="tProg"><i></i></div><span>Tap to skip</span></div>`;
+  const mg = document.createElement('div'); mg.id = 'mgLayer'; mg.hidden = true;
+  mg.innerHTML = `<div class="mgCard"><div class="mgEyebrow"></div><div class="mgTitle"></div><div class="mgHint"></div><div class="mgDots"></div></div>
+    <div class="mgFrame"><i></i><i></i><i></i><i></i></div><div class="mgFlash"></div>
+    <div class="mgFoot"><button class="btn gold mgAct" hidden></button><button class="mgSkip">Skip</button></div>`;
   const css = document.createElement('style');
-  css.textContent = `#tourLayer{position:absolute;inset:0;z-index:70;pointer-events:auto;cursor:pointer}
-  #tourLayer .tBar{position:absolute;left:0;right:0;background:#2b2230;color:#fff8e7;transform:translateY(0)}
-  #tourLayer .tTop{top:0;height:13%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px}
-  #tourLayer .tBot{bottom:0;min-height:20%;padding:14px 20px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
-  #tourLayer .tEyebrow{font:600 12px Fredoka,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#ffd166}
-  #tourLayer .tTitle{font:700 clamp(24px,7vw,34px)/1.05 Fredoka,sans-serif;text-wrap:balance}
-  #tourLayer .tSub{font:500 20px/1.15 Caveat,cursive;color:#f4d9c6;max-width:460px}
-  #tourLayer .tProg{width:min(320px,70%);height:5px;border-radius:999px;background:rgba(255,248,231,.2);overflow:hidden;margin-top:6px}
-  #tourLayer .tProg i{display:block;height:100%;width:0;background:#ffd166;border-radius:999px}
-  #tourLayer .tSkip{font:600 11px Nunito,sans-serif;color:rgba(255,248,231,.55);letter-spacing:.08em;text-transform:uppercase}
-  #tourLayer .tFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
-  #tourLayer .tFacts{position:absolute;left:0;right:0;top:16%;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 18px}
-  #tourLayer .tFact{background:rgba(255,248,236,.95);color:#5a4637;border-radius:999px;padding:7px 14px;font:700 14px/1.25 Nunito,sans-serif;box-shadow:0 4px 0 #e6c99b;max-width:92%;text-align:center}
+  css.textContent = `#tourLayer,#mgLayer{position:absolute;inset:0;z-index:70;pointer-events:auto;cursor:pointer;overflow:hidden}
+  #tourLayer .tsBand{position:absolute;left:0;right:0;height:30%;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);pointer-events:none;opacity:0}
+  #tourLayer .tsTop{top:0;-webkit-mask-image:linear-gradient(#000,transparent);mask-image:linear-gradient(#000,transparent)}
+  #tourLayer .tsBot{bottom:0;-webkit-mask-image:linear-gradient(transparent,#000);mask-image:linear-gradient(transparent,#000)}
+  #tourLayer .tVig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,transparent 55%,rgba(43,34,48,.45));pointer-events:none;opacity:0}
+  #tourLayer .tFlash,#mgLayer .mgFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+  #tourLayer .tCloud{position:absolute;width:70vw;height:30vw;max-width:420px;max-height:180px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.95) 30%,rgba(255,255,255,0) 70%);filter:blur(6px);opacity:0;pointer-events:none}
+  #tourLayer .c1{top:30%;left:-80vw}#tourLayer .c2{top:52%;left:-90vw}
+  #tourLayer .tCard,#mgLayer .mgCard{position:absolute;left:14px;right:14px;top:calc(16px + env(safe-area-inset-top,0px));margin:auto;max-width:440px;background:rgba(255,248,236,.94);border-radius:24px;padding:12px 16px 14px;box-shadow:0 4px 0 #e6c99b,0 12px 30px rgba(60,40,30,.2);text-align:center;color:#5a4637}
+  #tourLayer .tEyebrow,#mgLayer .mgEyebrow{font:600 11px Fredoka,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#d08a4a}
+  #tourLayer .tTitle,#mgLayer .mgTitle{font:700 clamp(21px,6vw,28px)/1.08 Fredoka,sans-serif;margin-top:2px;text-wrap:balance;min-height:1.1em}
+  #tourLayer .tFact,#mgLayer .mgHint{font:600 14px/1.35 Nunito,sans-serif;margin-top:6px;min-height:1.35em;color:#6b5443}
+  #tourLayer .tStamp{position:absolute;left:50%;top:44%;width:150px;height:150px;margin:-75px 0 0 -75px;opacity:0;pointer-events:none}
+  #tourLayer .tFoot{position:absolute;left:0;right:0;top:calc(62% + 40px);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+  #tourLayer .tProg{width:min(220px,55%);height:5px;border-radius:999px;background:rgba(255,248,236,.55);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+  #tourLayer .tProg i{display:block;height:100%;width:0;background:#ffb347}
+  #tourLayer .tFoot span{font:700 11px Nunito,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+  #mgLayer{cursor:default}
+  #mgLayer .mgDots{display:flex;gap:6px;justify-content:center;margin-top:8px}
+  #mgLayer .mgDots b{width:12px;height:12px;border-radius:50%;background:#efd6ae}
+  #mgLayer .mgDots b.on{background:#ffb347;box-shadow:0 0 0 3px rgba(255,179,71,.3)}
+  #mgLayer .mgFrame{position:absolute;left:50%;top:45%;width:min(62vw,300px);aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+  #mgLayer .mgFrame i{position:absolute;width:34px;height:34px;border:4px solid #fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));transition:border-color .15s}
+  #mgLayer .mgFrame i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0;border-radius:10px 0 0 0}
+  #mgLayer .mgFrame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0;border-radius:0 10px 0 0}
+  #mgLayer .mgFrame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0;border-radius:0 0 0 10px}
+  #mgLayer .mgFrame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0;border-radius:0 0 10px 0}
+  #mgLayer .mgFrame.hot i{border-color:#ffd166}
+  #mgLayer .mgFoot{position:absolute;left:0;right:0;bottom:calc(104px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:10px}
+  #mgLayer .mgAct{min-width:180px}
+  #mgLayer .mgSkip{border:none;background:rgba(43,34,48,.55);color:#fff8e7;border-radius:999px;padding:5px 14px;font:700 11px Nunito,sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
   .tourReplay{display:inline-flex;align-items:center;gap:6px;border:none;background:#2b2230;color:#fff8e7;border-radius:999px;padding:5px 12px;font:600 12px Fredoka,sans-serif;letter-spacing:.06em;cursor:pointer;margin:0 0 6px}
   body.touring #exBar,body.touring #exPrompt,body.touring #exRot,body.touring #cobba,body.touring #mute{opacity:0;pointer-events:none;transition:opacity .3s}`;
   document.head.appendChild(css);
-  setTimeout(() => { const v = $('#exView'); if (v) v.appendChild(layer); }, 0);
+  setTimeout(() => { const v = $('#exView'); if (v) { v.appendChild(layer); v.appendChild(mg); } }, 0);
 
-  function facts(p) {
-    const sent = (p.text || '').split(/(?<=[.!?])\s+/).filter(s => s.length > 12 && s.length < 140);
-    return sent.slice(0, 3);
-  }
-  // gulls that glide across the shot
-  function gulls(n) {
+  /* ---------- 3D bits used by tours and mini-games ---------- */
+  function birds(n, ax, az, h, up) {
     const out = [];
     for (let i = 0; i < n; i++) {
       const g = grp(D3._.world), wl = grp(g, -0.08, 0, 0), wr = grp(g, 0.08, 0, 0);
       mk(G_SPH, '#ffffff', [0.18, 0.14, 0.3], [0, 0, 0], g, { noShadow: true });
       mk(G_SPH, '#e4e9ed', [0.4, 0.04, 0.16], [-0.2, 0, 0], wl, { noShadow: true }); mk(G_SPH, '#e4e9ed', [0.4, 0.04, 0.16], [0.2, 0, 0], wr, { noShadow: true });
-      mk(G_CONE, '#ffd166', [0.05, 0.1, 0.05], [0, 0, 0.18], g, { noShadow: true }).rotation.x = Math.PI / 2;
-      out.push({ g, wl, wr, ph: i * 1.7 });
+      g.position.set(ax + (i - n / 2) * 0.5, up ? h * 0.8 : h + 1.4, az + 0.3 * i);
+      out.push({ g, wl, wr, ph: i * 1.7, vx: (Math.random() - 0.3) * 1.6, vy: up ? 1.2 + Math.random() : 0, vz: (Math.random() - 0.5) });
     }
     return out;
   }
-  const lerp = (a, b, t) => a + (b - a) * t;
-  function mixHex(a, b, t) { const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), B = p(b); return '#' + A.map((v, i) => Math.round(lerp(v, B[i], t)).toString(16).padStart(2, '0')).join(''); }
+  function sparkleLights(q, h) { // Eiffel-style twinkle: tiny glowing points over the landmark
+    const g = grp(D3._.world), pos = q.obj.position, lights = [];
+    for (let i = 0; i < 90; i++) { const y = Math.random() * h * 0.95, r = 0.75 * (1 - y / h) + 0.08, a = Math.random() * TAU; lights.push(mk(G_SPH, '#fff6c8', [0.07, 0.07, 0.07], [pos.x + Math.cos(a) * r, y + 0.1, pos.z + Math.sin(a) * r], g, { glow: true, noShadow: true })); }
+    g.visible = false; return { g, lights };
+  }
+  const leaves = (x, y, z, n) => D3._.FX.emit(x, y, z, ['#e8913a', '#d8573f', '#f2c14e', '#b8733f'], n, 1.2, { g: 0.6, life: 2.4, lift: 0.4 });
+  const spray = (x, z) => D3._.FX.emit(x, 0.2, z, ['#ffffff', '#dff6ff'], 22, 2.6, { g: 5, life: 1, lift: 3 });
+  // signature moment per landmark kind
+  function signature(p) {
+    const art = (p.art || [])[0] || '';
+    if (art === 'eiffel') return { dusk: true, kind: 'sparkle', line: 'After dark it sparkles: 20,000 lights, for five minutes every hour.' };
+    if (art === 'lighthouse') return { dusk: true, kind: 'beam' };
+    if (['church', 'cathedral', 'hermitage', 'monastery'].includes(art)) return { kind: 'bells' };
+    if (['winery', 'barrels', 'kupela', 'cheesefarm', 'market', 'stall'].includes(art)) return { kind: 'harvest' };
+    if (['surfbeach', 'dune', 'combs', 'island', 'mirror', 'boat'].includes(art)) return { kind: 'sea' };
+    if (['cafe', 'pintxobar', 'grill', 'terrace'].includes(art) || p.type === 'eat') return { kind: 'feast' };
+    if (p.type === 'shop') return { kind: 'shop' };
+    return { kind: 'festive' };
+  }
 
+  /* ---------- the 10-second tour ---------- */
   function playTour(p, done) {
     const s3 = D3.S3, q = s3 && s3.pois[p.id];
     if (!q || !q.obj) { done && done(); return; }
-    const region = STOP[STOPID].region, [top0, bot0] = D3._.SKIES[region] || D3._.SKIES.france, [top1, bot1] = SUNSET[region] || SUNSET.france;
+    const region = STOP[STOPID].region, base = D3._.SKIES[region] || D3._.SKIES.france, gold = SUNSET[region] || SUNSET.france, dusk = DUSK[region] || DUSK.france;
     const ax = q.obj.position.x, az = q.obj.position.z, h = q.baseY || 2;
     const cam = D3.cam, keep = { yaw: cam.yawGoal, zoom: cam.zoom, pitch: cam.pitch };
-    const fx = TYPE_FX[p.type] || 'sparkle', list = facts(p);
-    layer.querySelector('.tEyebrow').textContent = `${STOP[STOPID].short || STOP[STOPID].name} · ${p.eyebrow || { photo: 'Photo spot', info: 'Local sight', mini: 'Mini-game', eat: 'Eat', shop: 'Shop' }[p.type]}`;
-    layer.querySelector('.tTitle').textContent = p.title || p.cfg?.title || p.verb;
-    layer.querySelector('.tSub').textContent = p.cap ? `“${p.cap}”` : p.cfg?.titleName ? `Earn the title: ${p.cfg.titleName}` : (p.annette || '');
-    layer.querySelector('.tFacts').innerHTML = '';
-    const prog = layer.querySelector('.tProg i'); prog.style.width = '0';
+    const sig = signature(p), lines = facts(p);
+    if (sig.line) lines.unshift(sig.line);
+    $('.tEyebrow', layer).textContent = `${STOP[STOPID].short || STOP[STOPID].name} · ${p.eyebrow || { photo: 'Photo spot', info: 'Local sight', eat: 'Eat', shop: 'Shop' }[p.type]}`;
+    $('.tTitle', layer).textContent = ''; $('.tFact', layer).textContent = '';
+    $('.tStamp', layer).innerHTML = stampSVG(STOPID).replace('class="stamp"', 'style="width:150px;height:150px"');
+    const prog = $('.tProg i', layer); prog.style.width = '0';
     layer.hidden = false; document.body.classList.add('touring');
-    EX.busy = true; showPrompt(null); hush && hush();
-    gsap.fromTo(layer.querySelector('.tTop'), { yPercent: -100 }, { yPercent: 0, duration: 0.6, ease: 'power3.out' });
-    gsap.fromTo(layer.querySelector('.tBot'), { yPercent: 100 }, { yPercent: 0, duration: 0.6, ease: 'power3.out' });
-    gsap.from([layer.querySelector('.tTitle'), layer.querySelector('.tSub')], { y: 20, opacity: 0, stagger: 0.15, duration: 0.7, delay: 0.4, ease: 'back.out(1.8)' });
-    Snd.fanfare(); buzz(20);
-    const birds = gulls(3);
-    const st = { t: 0 };
-    cam.focus = { x: ax * TILE, y: az * TILE }; cam.follow = 0.06;
-    T = { p, birds, tl: null, skip: null };
+    EX.busy = true; showPrompt(null); hush();
+    Snd.bell(); buzz(15);
+    const st = { t: 0 }, bs = birds(4, ax, az, h, sig.kind === 'bells'), lights = sig.kind === 'sparkle' ? sparkleLights(q, h) : null;
+    cam.focus = { x: ax * TILE, y: az * TILE }; cam.follow = 0.05;
+    T = { p };
+    const title = p.title || p.verb, typer = { n: 0 };
     const tl = gsap.timeline({ onComplete: () => finish(true) });
-    T.tl = tl;
-    // camera: push in, low sweeping orbit, lift back out
-    tl.to(cam, { zoom: 2.2 - Math.min(0.7, h * 0.12), pitch: 0.34, ty: h * 0.45, duration: 3.2, ease: 'power2.inOut' }, 0)
-      .fromTo(cam, { yawGoal: keep.yaw - Math.PI * 0.38 }, { yawGoal: keep.yaw + Math.PI * 0.38, duration: TOUR_SECS, ease: 'sine.inOut', immediateRender: true }, 0)
-      .to(cam, { zoom: 1.7, pitch: 0.5, duration: 3, ease: 'sine.inOut' }, 6.4)
+    const bands = ['.tsTop', '.tsBot'].map(s => $(s, layer));
+    // shot 1: establishing crane, tilt-shift miniature look
+    tl.set(cam, { zoom: 0.95, pitch: 0.95, ty: 0, yawGoal: keep.yaw - 0.35 }, 0)
+      .to([...bands, $('.tVig', layer)], { opacity: 1, duration: 1.2 }, 0)
+      .to(cam, { pitch: 0.62, yawGoal: keep.yaw - 0.15, duration: 3, ease: 'sine.inOut' }, 0)
+      .fromTo($('.tCard', layer), { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'back.out(1.8)' }, 0.2)
+      .to(typer, { n: title.length, duration: 1.1, ease: 'none', onUpdate: () => { $('.tTitle', layer).textContent = title.slice(0, Math.round(typer.n)); } }, 0.4)
+      .call(() => D3.sparkle(ax, h * 0.8, az, 24), null, 1.2)
+      // shot 2: hero dolly, low angle, golden hour, signature moment
+      .to(cam, { zoom: 2.2 - Math.min(0.7, h * 0.12), pitch: 0.3, ty: h * 0.45, yawGoal: keep.yaw + 0.2, duration: 3.6, ease: 'power2.inOut' }, 3)
+      .to(bands, { opacity: 0.35, duration: 1.2 }, 3)
+      .fromTo(q.obj.scale, { x: 0.9, y: 0.9, z: 0.9 }, { x: 1, y: 1, z: 1, duration: 1, ease: 'elastic.out(1,.45)' }, 3.2)
+      // shot 3: reveal orbit, clouds pass in front, pull back
+      .to(cam, { zoom: 1.35, pitch: 0.55, ty: h * 0.2, yawGoal: keep.yaw + 0.55, duration: 3.2, ease: 'sine.inOut' }, 6.8)
+      .to(bands, { opacity: 1, duration: 1 }, 7)
+      .fromTo($('.c1', layer), { x: 0, opacity: 0.9 }, { x: '190vw', duration: 3.4, ease: 'none' }, 6.6)
+      .fromTo($('.c2', layer), { x: 0, opacity: 0.8 }, { x: '200vw', duration: 3, ease: 'none' }, 7.2)
+      .fromTo($('.tStamp', layer), { scale: 2.4, rotation: -30, opacity: 0 }, { scale: 1, rotation: -12, opacity: 0.95, duration: 0.3, ease: 'power4.in', onComplete: () => { Snd.thunk('C2'); buzz(30); } }, 8.7)
       .to(st, { t: 1, duration: TOUR_SECS, ease: 'none', onUpdate: () => {
-        prog.style.width = (st.t * 100) + '%';
-        const golden = Math.sin(st.t * Math.PI); D3._.skyColors(mixHex(top0, top1, golden), mixHex(bot0, bot1, golden));
-        D3._.sun.color.set(mixHex('#fff1dc', '#ffc890', golden));
-        birds.forEach((b, i) => { const k = (st.t * 1.2 + i * 0.3) % 1; b.g.position.set(ax - 6 + k * 12, h + 1.4 + Math.sin(k * TAU + i) * 0.5, az - 1.5 + i * 1.2); b.g.rotation.y = Math.PI / 2; const f = Math.sin((st.t * 60) + b.ph) * 0.5; b.wl.rotation.z = f; b.wr.rotation.z = -f; });
+        const k = st.t; prog.style.width = (k * 100) + '%';
+        // light: day → golden hour → (dusk for night landmarks) → back
+        const g1 = Math.min(1, Math.max(0, (k - 0.2) / 0.3)), back = Math.max(0, (k - 0.85) / 0.15);
+        const g2 = sig.dusk ? Math.min(1, Math.max(0, (k - 0.45) / 0.2)) * (1 - back) : 0;
+        let top = mixHex(base[0], gold[0], g1 * (1 - back)), bot = mixHex(base[1], gold[1], g1 * (1 - back));
+        if (g2) { top = mixHex(top, dusk[0], g2); bot = mixHex(bot, dusk[1], g2); }
+        D3._.skyColors(top, bot); D3._.sun.color.set(mixHex('#fff1dc', sig.dusk ? '#ff9f70' : '#ffc890', g1 * (1 - back))); D3._.sun.intensity = 0.6 - g2 * 0.35; D3._.hemi.intensity = 0.55 - g2 * 0.2;
+        if (lights) { lights.g.visible = k > 0.5 && k < 0.92; if (lights.g.visible) lights.lights.forEach(l => { l.visible = Math.random() > 0.45; }); }
+        bs.forEach((b, i) => { if (b.vy) { b.g.position.x += b.vx * 0.016; b.g.position.y += b.vy * 0.016; b.g.position.z += b.vz * 0.016; } else { const f = (k * 1.3 + i * 0.25) % 1; b.g.position.set(ax - 7 + f * 14, h + 1.4 + Math.sin(f * TAU + i) * 0.4, az - 2 + i); b.g.rotation.y = Math.PI / 2; } const w = Math.sin(k * 70 + b.ph) * 0.6; b.wl.rotation.z = w; b.wr.rotation.z = -w; });
       } }, 0);
-    // the landmark wakes up
-    tl.fromTo(q.obj.scale, { x: 0.86, y: 0.86, z: 0.86 }, { x: 1, y: 1, z: 1, duration: 1.2, ease: 'elastic.out(1,.45)' }, 0.5)
-      .call(() => D3.sparkle(ax, h * 0.7, az, 30), null, 0.7);
-    // place-specific moments
-    if (fx === 'flash') [2.5, 4.2, 6.1, 7.6].forEach((tt, i) => tl.call(() => { Snd.crack(); buzz(12); gsap.fromTo(layer.querySelector('.tFlash'), { opacity: 0.85 }, { opacity: 0, duration: 0.45 }); D3.sparkle(ax + (i % 2 ? 1 : -1), 1.3, az + 1, 10); }, null, tt));
-    if (fx === 'fireworks') [2.2, 3.4, 4.6, 6.2, 7.4, 8.4].forEach((tt, i) => tl.call(() => { D3.confetti(ax + Math.sin(i * 2) * 1.6, h + 1.6 + (i % 2), az + Math.cos(i * 2) * 0.8, 45); Snd.pop(['C6', 'E6', 'G6'][i % 3]); }, null, tt));
-    if (fx === 'steam' || fx === 'coins' || fx === 'sparkle') for (let tt = 1.6; tt < 9; tt += 0.55) tl.call(() => D3.sparkle(ax + (Math.random() - 0.5) * 2.4, fx === 'steam' ? 0.8 + Math.random() : h * 0.5 + Math.random() * h * 0.6, az + 0.6 + Math.random() * 0.8, fx === 'coins' ? 8 : 5), null, tt);
-    if (fx === 'coins') [3, 6].forEach(tt => tl.call(() => { D3.confetti(ax, h, az, 30); Snd.pop('E6'); }, null, tt));
-    if (fx === 'steam') tl.call(() => Snd.bell(), null, 2.4);
-    if (list.length || fx === 'facts') (list.length ? list : [p.text || '']).slice(0, 3).forEach((txt, i) => tl.call(() => {
-      const f = document.createElement('div'); f.className = 'tFact'; f.textContent = txt; layer.querySelector('.tFacts').appendChild(f);
-      gsap.fromTo(f, { y: -18, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: 0.55, ease: 'back.out(2)' }); Snd.blip();
-    }, null, 1.6 + i * 2.6));
-    tl.call(() => { D3.confetti(ax, h + 0.6, az, 36); Snd.fanfare(); }, null, 9.1);
+    T.tl = tl;
+    // captions: one fact at a time
+    lines.slice(0, 3).forEach((txt, i) => tl.call(() => { const f = $('.tFact', layer); f.textContent = txt; gsap.fromTo(f, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.45 }); }, null, 1.8 + i * 2.6));
+    // signature moments (and October leaves drifting through every tour)
+    const K = sig.kind;
+    for (let tt = 0.5; tt < 9.5; tt += K === 'harvest' ? 0.35 : 0.9) tl.call(() => leaves(ax + (Math.random() - 0.5) * 6, h + 3, az + (Math.random() - 0.5) * 3, K === 'harvest' ? 6 : 2), null, tt);
+    if (K === 'bells') [3.4, 4.2, 5].forEach(tt => tl.call(() => { Snd.bell(); D3.sparkle(ax, h, az, 8); }, null, tt));
+    if (K === 'sea') [3.3, 4.4, 5.6, 6.6].forEach((tt, i) => tl.call(() => { spray(ax + (i % 2 ? 1.2 : -1.2), az + 1.2); Snd.splash(); }, null, tt));
+    if (K === 'feast') { for (let tt = 3.2; tt < 7; tt += 0.4) tl.call(() => D3._.FX.emit(ax + (Math.random() - 0.5) * 1.4, 0.9, az + 0.8, ['#ffffff', '#fff4e2'], 3, 0.5, { g: -1.2, life: 1.4 }), null, tt); [3.6, 4.1].forEach((tt, i) => tl.call(() => Snd.pop(i ? 'E7' : 'C7'), null, tt)); }
+    if (K === 'shop') [3.4, 5].forEach(tt => tl.call(() => { D3.confetti(ax, h, az, 24); Snd.pop('E6'); }, null, tt));
+    if (K === 'festive') [3.5, 5.2].forEach(tt => tl.call(() => D3.confetti(ax, h + 0.8, az, 30), null, tt));
+    if (K === 'sparkle') tl.call(() => Snd.fanfare(), null, 5.1);
+    if (K === 'beam') tl.call(() => D3.sparkle(ax, h, az, 30), null, 5);
     function finish(natural) {
-      if (!T) return;
-      const cur = T; T = null;
-      cur.tl.kill();
-      cur.birds.forEach(b => b.g.parent && b.g.parent.remove(b.g));
-      D3._.skyColors(top0, bot0); D3._.sun.color.set('#fff1dc');
-      gsap.to(cam, { zoom: keep.zoom, pitch: keep.pitch, ty: 0, yawGoal: Math.round(cam.yawGoal / (Math.PI / 2)) * (Math.PI / 2), duration: 0.8, ease: 'power2.inOut', onComplete: () => { cam.focus = null; cam.follow = null; } });
-      gsap.to(layer.querySelector('.tTop'), { yPercent: -100, duration: 0.45, ease: 'power2.in' });
-      gsap.to(layer.querySelector('.tBot'), { yPercent: 100, duration: 0.45, ease: 'power2.in', onComplete: () => { layer.hidden = true; document.body.classList.remove('touring'); } });
+      if (!T) return; T = null;
+      tl.kill();
+      bs.forEach(b => b.g.parent && b.g.parent.remove(b.g)); if (lights) lights.g.parent.remove(lights.g);
+      D3._.skyColors(base[0], base[1]); D3._.sun.color.set('#fff1dc'); D3._.sun.intensity = 0.6; D3._.hemi.intensity = 0.55;
+      gsap.to(cam, { zoom: keep.zoom, pitch: keep.pitch, ty: 0, yawGoal: Math.round(keep.yaw / (Math.PI / 2)) * (Math.PI / 2), duration: 0.8, ease: 'power2.inOut', onComplete: () => { if (!MG) { cam.focus = null; cam.follow = null; } } });
+      gsap.to(layer, { opacity: 0, duration: 0.35, onComplete: () => { layer.hidden = true; layer.style.opacity = 1; gsap.set([...bands, $('.tVig', layer), $('.tStamp', layer)], { opacity: 0 }); document.body.classList.remove('touring'); } });
       q.obj.scale.set(1, 1, 1);
       if (!natural) Snd.blip();
-      setTimeout(() => { if (EX) EX.busy = false; done && done(); }, 480);
+      setTimeout(() => { if (EX) EX.busy = false; done && done(); }, 420);
     }
     T.skip = () => finish(false);
   }
   layer.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); if (T && T.skip) T.skip(); });
 
-  // first visit to a place plays its tour, then opens the card as normal
-  const baseInteract = interact;
+  /* ---------- place mini-games ---------- */
+  function mgOpen(eyebrow, title, hint, n) {
+    MG = { n, got: 0, off: [] };
+    $('.mgEyebrow', mg).textContent = eyebrow; $('.mgTitle', mg).textContent = title; $('.mgHint', mg).textContent = hint;
+    $('.mgDots', mg).innerHTML = n ? Array(n).fill('<b></b>').join('') : '';
+    $('.mgFrame', mg).style.display = 'none'; const act = $('.mgAct', mg); act.hidden = true; act.onclick = null;
+    mg.hidden = false; document.body.classList.add('touring'); EX.busy = true; showPrompt(null); hush();
+    gsap.fromTo($('.mgCard', mg), { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'back.out(1.8)' });
+  }
+  function mgDot() { MG.got++; const d = $('.mgDots', mg).children[MG.got - 1]; if (d) { d.classList.add('on'); gsap.fromTo(d, { scale: 1.8 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1,.4)' }); } }
+  function mgClose(done) {
+    if (!MG) return; const m = MG; MG = null;
+    m.off.forEach(f => f());
+    const cam = D3.cam; gsap.to(cam, { zoom: 1, pitch: 0.6, ty: 0, yawGoal: Math.round(cam.yawGoal / (Math.PI / 2)) * (Math.PI / 2), duration: 0.7, onComplete: () => { cam.focus = null; cam.follow = null; } });
+    gsap.to(mg, { opacity: 0, duration: 0.3, onComplete: () => { mg.hidden = true; mg.style.opacity = 1; document.body.classList.remove('touring'); } });
+    setTimeout(() => { if (EX) EX.busy = false; done && done(); }, 380);
+  }
+  $('.mgSkip', mg).onclick = e => { e.stopPropagation(); if (MG && MG.skip) MG.skip(); };
+
+  // Frame the shot: the landmark drifts; snap when it sits inside the frame
+  function frameTheShot(p, done) {
+    const q = D3.S3.pois[p.id], ax = q.obj.position.x, az = q.obj.position.z, h = q.baseY || 2, cam = D3.cam;
+    mgOpen('Mini-game · photo spot', 'Frame the shot', `Snap when ${p.title || 'it'} sits inside the frame.`, 0);
+    $('.mgFrame', mg).style.display = '';
+    const act = $('.mgAct', mg); act.hidden = false; act.textContent = 'Snap';
+    cam.follow = 0.04; gsap.to(cam, { zoom: 1.3, pitch: 0.45, ty: h * 0.35, duration: 0.8 });
+    let t = 0, tries = 0, inside = false, taken = false;
+    const tick = () => {
+      t += 0.016;
+      cam.focus = { x: (ax + Math.sin(t * 0.9) * 2.4) * TILE, y: (az + Math.cos(t * 0.6) * 0.8) * TILE };
+      cam.yawGoal = Math.sin(t * 0.35) * 0.5;
+      const s = D3.toScreen(ax, h * 0.45, az), fr = $('.mgFrame', mg).getBoundingClientRect(), pad = fr.width * 0.22;
+      inside = s.x > fr.left + pad && s.x < fr.right - pad && s.y > fr.top + pad * 0.6 && s.y < fr.bottom - pad * 0.6;
+      $('.mgFrame', mg).classList.toggle('hot', inside);
+    };
+    gsap.ticker.add(tick); MG.off.push(() => gsap.ticker.remove(tick));
+    const shoot = good => {
+      taken = true;
+      Snd.crack(); buzz(25); gsap.fromTo($('.mgFlash', mg), { opacity: 0.9 }, { opacity: 0, duration: 0.5 });
+      const img = D3.snap(360);
+      S.snaps = S.snaps || {}; S.snaps[dkey(p.id)] = img;
+      if (!isDone(p.id)) { markDone(p.id); S.polaroids.push({ stop: STOPID, photo: { img }, cap: p.cap || p.title }); award((p.stars ?? 1) + (good ? 1 : 0), p.delta || { energy: -2 }, good ? 'Perfect shot · +2 stars' : 'Snapshot saved · +1 star'); }
+      save();
+      $('.mgHint', mg).textContent = good ? 'Perfect shot! It’s in your Polaroids.' : 'Close enough, it’s a holiday. Saved to your Polaroids.';
+      act.hidden = true; if (good) D3.confetti(ax, h, az, 40);
+      setTimeout(() => mgClose(done), 1200);
+    };
+    act.onclick = e => { e.stopPropagation(); if (taken) return; if (inside) shoot(true); else if (++tries >= 3) shoot(false); else { Snd.thunk('G1'); $('.mgHint', mg).textContent = 'Not quite. Wait until the frame turns gold.'; } };
+    MG.skip = () => mgClose(done);
+  }
+  // Spot the details: three sparkles on the landmark, each reveals a fact
+  function spotDetails(p, done) {
+    const q = D3.S3.pois[p.id], ax = q.obj.position.x, az = q.obj.position.z, h = q.baseY || 2, cam = D3.cam;
+    const fs = facts(p); while (fs.length < 3) fs.push(['Look closer: every stone here has a story.', 'Locals have walked past this for centuries.', 'Worth a second look on the way back.'][fs.length]);
+    mgOpen('Mini-game · sight', 'Spot the details', 'Tap the three sparkles on the landmark.', 3);
+    cam.follow = 0.05; cam.focus = { x: ax * TILE, y: az * TILE }; gsap.to(cam, { zoom: 1.9, pitch: 0.45, ty: h * 0.4, duration: 0.8 });
+    const spots = [[-0.7, 0.3, 0.7], [0.75, 0.6, 0.6], [0.1, 0.92, 0.35]].map(([dx, fy, dz]) => {
+      const g = grp(D3._.world, ax + dx, Math.max(0.4, h * fy), az + dz);
+      mk(G_STAR, '#ffd166', [0.34, 0.34, 0.34], [0, 0, 0], g, { glow: true }); mk(G_SPH, '#fff6c8', [0.5, 0.5, 0.5], [0, 0, 0], g, { glow: true, alpha: 0.35 });
+      return { g, found: false };
+    });
+    let t = 0;
+    const tick = () => { t += 0.016; cam.yawGoal = Math.sin(t * 0.3) * 0.45; spots.forEach((s, i) => { if (!s.found) { s.g.rotation.y = t * 2 + i; const k = 1 + Math.sin(t * 5 + i) * 0.15; s.g.scale.set(k, k, k); } }); };
+    gsap.ticker.add(tick);
+    const onTap = e => {
+      if (!MG || e.target.closest('.mgSkip')) return;
+      const hit = spots.find(s => { if (s.found) return false; const sp = D3.toScreen(s.g.position.x, s.g.position.y, s.g.position.z); return Math.hypot(sp.x - e.clientX, sp.y - e.clientY) < 48; });
+      if (!hit) return;
+      hit.found = true; Snd.pop(['C6', 'E6', 'G6'][MG.got]); buzz(15);
+      D3.sparkle(hit.g.position.x, hit.g.position.y, hit.g.position.z, 20);
+      gsap.to(hit.g.scale, { x: 0, y: 0, z: 0, duration: 0.35, ease: 'back.in(2)' });
+      $('.mgHint', mg).textContent = fs[MG.got];
+      mgDot();
+      if (MG.got >= 3) { if (!isDone(p.id)) { markDone(p.id); award((p.stars ?? 1) + 1, p.delta || null, 'All details spotted · +2 stars'); } D3.confetti(ax, h, az, 40); Snd.fanfare(); setTimeout(() => mgClose(done), 1600); }
+    };
+    mg.addEventListener('pointerdown', onTap);
+    MG.off.push(() => { gsap.ticker.remove(tick); mg.removeEventListener('pointerdown', onTap); spots.forEach(s => s.g.parent && s.g.parent.remove(s.g)); });
+    MG.skip = () => mgClose(done);
+    MG.spots = spots;
+  }
+  // Taste the menu: real dishes rise up one at a time; tap each to taste
+  function tasteMenu(p, done) {
+    const q = D3.S3.pois[p.id], ax = q.obj.position.x, az = q.obj.position.z, cam = D3.cam;
+    const ids = (typeof MENU_FOR !== 'undefined' && MENU_FOR[`${STOPID}:${p.id}`]) || [];
+    let dishes = ids.flatMap(k => (typeof MENUS !== 'undefined' && MENUS[k] && MENUS[k].dishes) || []).map(d => d.replace(/\s*[-–—:]\s*€?\s*[\d.,]+\s*€?.*$/, '').replace(/\s*\(.*?\)\s*/g, ' ').trim()).filter(d => d.length > 2 && d.length < 40);
+    if (dishes.length < 3) dishes = dishes.concat((p.options || []).map(o => o.name));
+    dishes = dishes.slice(0, 3);
+    while (dishes.length < 3) dishes.push(['Bread for the sauce', 'Something from the specials board', 'A little dessert'][dishes.length]);
+    mgOpen('Mini-game · taste the menu', 'Taste the menu', 'Tap each dish as it arrives.', 3);
+    cam.follow = 0.05; cam.focus = { x: ax * TILE, y: (az + 0.9) * TILE }; gsap.to(cam, { zoom: 1.9, pitch: 0.42, ty: 2, duration: 0.8 });
+    const COLS = ['#ffd166', '#e8913a', '#c4574a', '#86cf6c', '#f4a7a0'];
+    const plates = dishes.map((name, i) => {
+      const g = grp(D3._.world, ax + (i - 1) * 1.15, -0.5, az + 1.4);
+      mk(G_CYL, '#ffffff', [0.7, 0.05, 0.7], [0, 0, 0], g); mk(G_SPH, COLS[i % 5], [0.42, 0.22, 0.36], [0, 0.1, 0], g); mk(G_SPH, COLS[(i + 2) % 5], [0.16, 0.12, 0.16], [0.1, 0.22, 0.05], g);
+      const l = label(name, 1.3); l.position.set(0, 0.62, 0); g.add(l);
+      return { g, name, eaten: false, up: false };
+    });
+    plates.forEach((pl, i) => gsap.to(pl.g.position, { y: 2.3, duration: 0.7, ease: 'back.out(1.8)', delay: 0.4 + i * 0.9, onStart: () => { pl.up = true; Snd.pop('G5'); } }));
+    let t = 0;
+    const tick = () => { t += 0.016; plates.forEach((pl, i) => { if (pl.up && !pl.eaten) { pl.g.rotation.y = Math.sin(t * 1.5 + i) * 0.3; if (Math.random() < 0.05) D3._.FX.emit(pl.g.position.x, pl.g.position.y + 0.2, pl.g.position.z, ['#ffffff'], 1, 0.4, { g: -1, life: 1 }); } }); };
+    gsap.ticker.add(tick);
+    const REACT = ['Mmm!', 'Oh wow.', 'Chef’s kiss.', 'Annette was right.', 'Seconds, please.'];
+    const onTap = e => {
+      if (!MG || e.target.closest('.mgSkip')) return;
+      const hit = plates.find(pl => { if (!pl.up || pl.eaten) return false; const sp = D3.toScreen(pl.g.position.x, pl.g.position.y + 0.2, pl.g.position.z); return Math.hypot(sp.x - e.clientX, sp.y - e.clientY) < 60; });
+      if (!hit) return;
+      hit.eaten = true; Snd.pop(['C6', 'E6', 'G6'][MG.got]); buzz(15);
+      D3.sparkle(hit.g.position.x, hit.g.position.y + 0.3, hit.g.position.z, 16);
+      gsap.to(hit.g.rotation, { y: '+=' + TAU, duration: 0.6 }); gsap.to(hit.g.position, { y: -0.6, duration: 0.5, delay: 0.5, ease: 'back.in(2)' });
+      $('.mgHint', mg).textContent = `${hit.name}: ${pick(REACT)}`;
+      mgDot();
+      if (MG.got >= 3) { award(1, null, 'Tasted the menu · +1 star'); Snd.fanfare(); setTimeout(() => mgClose(done), 1500); }
+    };
+    mg.addEventListener('pointerdown', onTap);
+    MG.off.push(() => { gsap.ticker.remove(tick); mg.removeEventListener('pointerdown', onTap); plates.forEach(pl => pl.g.parent && pl.g.parent.remove(pl.g)); });
+    MG.skip = () => mgClose(done);
+    MG.plates = plates;
+  }
+  const MINI = { photo: frameTheShot, info: spotDetails, eat: tasteMenu };
+
+  // first visit: tour, then the place's mini-game, then its card
+  const _bi = interact;
+  const baseInteract = p => _bi(p && p.type === 'photo' && S.snaps && S.snaps[dkey(p.id)] ? { ...p, photo: { img: S.snaps[dkey(p.id)] } } : p);
   interact = function (p) {
-    if (!EX || EX.busy || T) return;
+    if (!EX || EX.busy || T || MG) return;
     const key = '_tour:' + (p && p.id);
-    if (TOURABLE(p) && !isDone(key) && !REDUCED) { markDone(key); playTour(p, () => baseInteract(p)); return; }
+    if (TOURABLE(p) && !isDone(key) && !REDUCED) {
+      markDone(key);
+      playTour(p, () => { const m = MINI[p.type]; if (m && D3.S3.pois[p.id] && D3.S3.pois[p.id].obj) m(p, () => baseInteract(p)); else baseInteract(p); });
+      return;
+    }
     baseInteract(p);
   };
-  // a replay button on the cards that have a tour
+  // replay button on cards that have a tour
   const baseModal = modal;
   modal = function (html, o) {
     const sh = baseModal(html, o);
@@ -4554,7 +4768,15 @@ if (typeof D3 !== 'undefined' && D3) (() => {
     }
     return sh;
   };
-  window.__cobsTour = { play: id => { const p = SCN && SCN.pois.find(q => q.id === id); if (p) { EX.busy = false; playTour(p); } }, get running() { return !!T; } };
+  // your own snapshot becomes the Polaroid
+  const basePhotoArt = photoArt;
+  photoArt = function (ph, w, h, title) { if (ph && ph.img) return `<img src="${ph.img}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`; return basePhotoArt(ph, w, h, title); };
+  window.__cobsTour = {
+    play: id => { const p = SCN && SCN.pois.find(q => q.id === id); if (p) { EX.busy = false; playTour(p); } },
+    mini: id => { const p = SCN && SCN.pois.find(q => q.id === id); if (p && MINI[p.type]) { EX.busy = false; MINI[p.type](p, () => {}); } },
+    tapAll: () => { if (!MG) return 0; const list = MG.spots || MG.plates || []; let n = 0; list.forEach(o => { const s = D3.toScreen(o.g.position.x, o.g.position.y + (MG.plates ? 0.2 : 0), o.g.position.z); mg.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: s.x, clientY: s.y })); n++; }); return n; },
+    get running() { return !!(T || MG); },
+  };
 })();
 /* ================= FLOW: arrive, explore, leave, drive, repeat ================= */
 const MUSIC = { france: 'france', basque: 'basque', rioja: 'basque', germany: 'germany' };
