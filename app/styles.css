@@ -146,6 +146,8 @@ a.summary-open.food-link { background: var(--green); }
 a.summary-open.food-link:hover { background: var(--ink); }
 a.summary-open.ov-link { background: var(--gold); color: var(--ink); }
 a.summary-open.ov-link:hover { background: var(--ink); color: var(--paper); }
+a.summary-open.game-link { background: var(--ink); color: var(--paper); }
+a.summary-open.game-link:hover { background: var(--rioja); }
 
 .summary-open {
   margin: 1.4rem 0 0.4rem;
@@ -876,7 +878,8 @@ a.summary-open.ov-link:hover { background: var(--ink); color: var(--paper); }
 /* ── Site nav (sub-pages) ── */
 .site-nav {
   display: flex;
-  gap: 1.4rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.4rem;
   padding: 1rem 2rem 0;
   font-size: 0.75rem;
   font-weight: 600;

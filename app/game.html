@@ -57,6 +57,8 @@ button{font:inherit;color:inherit}
 .title-actions{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:12px;z-index:3;padding:0 20px}
 .title-actions .btn{width:min(320px,100%)}
 .fine{font-family:Caveat,cursive;font-size:20px;color:var(--ink)}
+.site-back{font-family:Fredoka,sans-serif;font-size:13px;letter-spacing:.04em;color:var(--ink);opacity:.7;text-decoration:none;border-bottom:1.5px solid currentColor;padding-bottom:1px}
+.site-back:hover{opacity:1}
 
 /* ---------- crew ---------- */
 #crew{background:var(--paper);padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));overflow-y:auto}
@@ -452,6 +454,7 @@ body,#app{background:var(--paper);color:var(--ink)}
       <button class="btn" id="btnStart">Start the road trip</button>
       <button class="btn ghost small" id="btnContinue" hidden>Continue where we left off</button>
       <div class="fine">Advice transcribed faithfully from Annette</div>
+      <a class="site-back" href="index.html">← Back to the trip site</a>
     </div>
   </section>
 
@@ -1004,11 +1007,11 @@ const Snd = (() => {
       bar(ev, b, 0, 0, { k:'b', n: roots[b] }); bar(ev, b, 1, 0, { k:'c', n: chords[b] }); bar(ev, b, 2, 0, { k:'c', n: chords[b] });
       mel[b].forEach((n, i) => { if (n) bar(ev, b, Math.floor(i / 2), (i % 2) * 2, { k:'m', n }); });
     }
-    const part = new Tone.Part((t, e) => {
+    const part = new Tone.Part((t, e) => { try {
       if (e.k === 'b') bass.triggerAttackRelease(e.n, '8n', t);
       else if (e.k === 'c') chord.triggerAttackRelease(e.n, '16n', t);
       else reed.triggerAttackRelease(e.n, '8n', t);
-    }, ev);
+    } catch (err) { /* a note landing on a stale transport time must not kill the loop */ } }, ev);
     part.loop = true; part.loopEnd = '8m';
     return { part, bus, bpm: 150, sig: 3 };
   }
@@ -1034,13 +1037,13 @@ const Snd = (() => {
       mel[b].forEach((n, i) => { if (n) bar(ev, b, Math.floor(i / 2), (i % 2) * 2, { k:'m', n }); });
       for (let i = 0; i < 6; i++) bar(ev, b, Math.floor(i / 2), (i % 2) * 2, { k: i % 3 === 0 ? 'skin' : 'tamb', acc: i === 0 });
     }
-    const part = new Tone.Part((t, e) => {
+    const part = new Tone.Part((t, e) => { try {
       if (e.k === 'b') bass.triggerAttackRelease(e.n, '8n', t);
       else if (e.k === 'c') chord.triggerAttackRelease(e.n, '16n', t);
       else if (e.k === 'm') trik.triggerAttackRelease(e.n, '16n', t);
       else if (e.k === 'skin') skin.triggerAttackRelease(e.acc ? 'A2' : 'E3', '16n', t);
       else pandero.triggerAttackRelease('32n', t, .6);
-    }, ev);
+    } catch (err) { /* a note landing on a stale transport time must not kill the loop */ } }, ev);
     part.loop = true; part.loopEnd = '8m';
     return { part, bus, bpm: 168, sig: 3 };
   }
@@ -1061,12 +1064,12 @@ const Snd = (() => {
       bar(ev, b, 1, 0, { k:'s' }); bar(ev, b, 3, 0, { k:'s' });
       mel[b].forEach((n, i) => { if (n) bar(ev, b, i, 0, { k:'m', n }); });
     }
-    const part = new Tone.Part((t, e) => {
+    const part = new Tone.Part((t, e) => { try {
       if (e.k === 't') tuba.triggerAttackRelease(e.n, '8n', t);
       else if (e.k === 'c') brass.triggerAttackRelease(e.n, '16n', t);
       else if (e.k === 's') snare.triggerAttackRelease('32n', t);
       else tpt.triggerAttackRelease(e.n, '8n', t);
-    }, ev);
+    } catch (err) { /* a note landing on a stale transport time must not kill the loop */ } }, ev);
     part.loop = true; part.loopEnd = '8m';
     return { part, bus, bpm: 112, sig: 4 };
   }
@@ -5098,7 +5101,7 @@ function scrapbook() {
     <div class="tape"><h3>The Cobs</h3><div class="cob-cards">${ORDER.map(id => {
       const b = Object.entries(S.players[id].best).sort((a, c) => c[1] - a[1]).slice(0, 3);
       const buys = S.souvenirs.filter(x => x.by === id).map(x => x.name);
-      return `<div class="cob-card">${avatar(id)}<b>${CREW[id].name}</b>${buys.length ? `<ul><li>Bought: ${buys.join(', ')}</li></ul>` : ''}</div>`; }).join('')}</div></div>
+      return `<div class="cob-card">${avatar(id)}<b>${CREW[id].name}</b><span class="ttl">${titleFor(id)}</span>${buys.length ? `<ul><li>Bought: ${buys.join(', ')}</li></ul>` : ''}</div>`; }).join('')}</div></div>
     <div class="tape"><h3>Tomato salads eaten in Basque country</h3><div class="tomato-big">${ICON.tomato}<span>${m.tomato}</span></div><p class="note" style="text-align:center;margin:4px 0 0">${m.tomato >= 10 ? 'Annette’s commandment: honoured.' : 'Annette said as many as possible. Room for improvement.'}</p></div>
     <div class="tape"><h3>Final meters</h3><div class="meter-row"><div>Kitty<b>€${Math.round(m.budget).toLocaleString('en-AU')}</b></div><div>Energy<b>${Math.round(m.energy)}</b></div><div>Hunger<b>${Math.round(m.hunger)}</b></div><div>Fridge<b>${m.fridge} cheeses</b></div><div>Boot<b>${m.boot} bottles</b></div><div>Restless<b>${S.restless}×</b></div></div></div>
     <div class="tape"><h3>Passport</h3><div class="stamp-grid">${S.stamps.map(id => stampSVG(id, '')).join('')}</div></div>

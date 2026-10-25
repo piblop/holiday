@@ -24,6 +24,18 @@ destination photos load live from the Wikipedia REST API (fallback tiles offline
 - **Trip summary** (button in the hero) — the whole itinerary as one table with the
   book-now list and open decisions. Print/save-PDF friendly.
 
+## Cobs on Tour — the game (`app/game.html`)
+
+A phone-first, pass-the-phone road-trip game over the same itinerary: 18 stops, Paris to
+Bamberg. Each stop is a 3D toy diorama (three.js) you walk around; the first visit to a place
+plays a 10-second cinematic tour, then one easy mini-game, then the place's card (eat, shop,
+photo, fact). Leaving a stop pays the nights, stamps the passport, sends a postcard and drives
+the coast road to the next stop on the map. Progress saves in `localStorage`
+(`cobs-on-tour-v2`). Linked from the site nav ("Game") and the hero.
+
+`window.__cobs` and `window.__cobsTour` expose the state and tour/mini-game hooks for
+scripted testing.
+
 ## Editing the plan
 
 All content lives in `app/src/data.js` (one object per stop: coords, dates, highlights,
